@@ -1,4 +1,4 @@
-package guru.qas.martini;
+package guru.qas.martini.parser;
 
 import java.io.IOException;
 

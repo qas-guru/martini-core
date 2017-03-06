@@ -1,6 +1,7 @@
-package guru.qas.martini;
+package guru.qas.martini.parser;
 
 import java.io.IOException;
+import java.util.List;
 
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -13,16 +14,16 @@ import org.springframework.core.io.support.ResourcePatternUtils;
 import com.google.common.collect.Lists;
 
 @Configurable
-public class DefaultFeatureResourceLoader implements InitializingBean, FeatureResourceLoader {
+class DefaultFeatureResourceLoader implements InitializingBean, FeatureResourceLoader {
 
-	private static final String PATTERN = "classpath*:*.feature";
+	private static final String PATTERN = "classpath*:**/*.feature";
 
 
 	private final ResourceLoader resourceLoader;
 	private ResourcePatternResolver resolver;
 
 	@Autowired
-	protected DefaultFeatureResourceLoader(ResourceLoader resourceLoader) {
+	DefaultFeatureResourceLoader(ResourceLoader resourceLoader) {
 		this.resourceLoader = resourceLoader;
 	}
 
@@ -32,7 +33,7 @@ public class DefaultFeatureResourceLoader implements InitializingBean, FeatureRe
 	}
 
 	@Override
-	public Iterable<Resource> getResources() throws IOException {
+	public List<Resource> getResources() throws IOException {
 		Resource[] resources = resolver.getResources(PATTERN);
 		return Lists.newArrayList(resources);
 	}

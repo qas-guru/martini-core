@@ -9,6 +9,8 @@ import org.springframework.stereotype.Service;
 
 import com.google.common.collect.ImmutableSet;
 
+import guru.qas.martini.parser.FeatureResourceLoader;
+
 @Service
 public class Martini {
 
@@ -28,7 +30,8 @@ public class Martini {
 		return featureResources;
 	}
 
-	public void doSomething() {
+	public void doSomething() throws IOException {
 		System.out.println("hello");
+		Collection<Resource> featureResources = getFeatureResources();
 	}
 }
