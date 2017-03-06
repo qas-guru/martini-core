@@ -2,8 +2,6 @@ package guru.qas.martini.parser;
 
 import java.io.IOException;
 import java.util.List;
-import java.util.function.Function;
-import java.util.stream.Stream;
 
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.support.ClassPathXmlApplicationContext;
@@ -34,17 +32,6 @@ public class DefaultFeatureResourceLoaderTest {
 	@Test
 	public void testDefaultConfiguration() throws IOException {
 		List<Resource> resources = bean.getResources();
-		Stream<String> stream = resources.stream().map(new ResourceToFilenameFunction());
-		assertThat(stream)
-			.contains("test1.feature")
-			.withFailMessage("expected to find test1.feature in resources");
-	}
-
-	private static final class ResourceToFilenameFunction implements Function<Resource, String> {
-
-		@Override
-		public String apply(Resource resource) {
-			return null == resource ? null : resource.getFilename();
-		}
+		assertThat(resources.size()).isEqualTo(4).withFailMessage("expected four resources to be located");
 	}
 }
