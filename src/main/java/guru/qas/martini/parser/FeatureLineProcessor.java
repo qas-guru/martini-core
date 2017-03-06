@@ -10,19 +10,20 @@ import org.springframework.core.io.Resource;
 import com.google.common.collect.Lists;
 import com.google.common.io.LineProcessor;
 
-import static com.google.common.base.Preconditions.checkNotNull;
+import static com.google.common.base.Preconditions.*;
 
 class FeatureLineProcessor implements LineProcessor<Feature> {
-	private static final Pattern PATTERN_FEATURE = Pattern.compile("^Feature:\\s*(.*)$");
 
-	protected final Resource resource;
+	private static final Pattern PATTERN_FEATURE = Pattern.compile("^Feature\\s*:(.*)$");
+
+	private final Resource resource;
 	private final List<String> buffer;
-
-	protected String title;
+	private final DefaultFeature.Builder builder;
 
 	FeatureLineProcessor(Resource resource) {
 		this.resource = resource;
 		buffer = Lists.newArrayList();
+		builder = DefaultFeature.builder();
 	}
 
 	@Override
@@ -32,15 +33,17 @@ class FeatureLineProcessor implements LineProcessor<Feature> {
 		String trimmed = s.trim();
 		Matcher matcher = PATTERN_FEATURE.matcher(trimmed);
 		if (matcher.find()) {
-			title = matcher.group(1);
-		} else {
+			String title = matcher.group(1).trim();
+			builder.setTitle(title);
+		}
+		else {
 			buffer.add(trimmed);
 		}
-		return null == title;
+		return !builder.isTitleSet();
 	}
 
 	@Override
 	public Feature getResult() {
-		throw new UnsupportedOperationException();
+		return builder.build(resource);
 	}
 }

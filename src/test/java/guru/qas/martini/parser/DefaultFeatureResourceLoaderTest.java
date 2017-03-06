@@ -32,6 +32,6 @@ public class DefaultFeatureResourceLoaderTest {
 	@Test
 	public void testDefaultConfiguration() throws IOException {
 		List<Resource> resources = bean.getResources();
-		assertThat(resources.size()).isEqualTo(4).withFailMessage("expected four resources to be located");
+		assertThat(resources.size()).isEqualTo(5).withFailMessage("expected four resources to be located");
 	}
 }

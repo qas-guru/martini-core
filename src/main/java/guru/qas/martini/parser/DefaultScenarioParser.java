@@ -33,7 +33,7 @@ class DefaultScenarioParser implements ScenarioParser {
 
 		String line;
 		do {
-			reader.mark(Integer.MAX_VALUE);
+			reader.mark(1000);
 			line = reader.readLine();
 		} while (null != line && processor.processLine(line));
 
