@@ -8,8 +8,8 @@ Feature: Functionality of the Reporting Subsystem
   @Smoke
   @Meta("Firefox")
   Scenario: A Corner Case
-    This is the detailed description for my Scenario.
-    This is a warning note.
+  This is the detailed description for my Scenario.
+  This is a warning note.
     # This is a comment under the Scenario.
 
     Given a pre-existing condition
