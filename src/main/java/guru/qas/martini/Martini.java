@@ -13,8 +13,6 @@ import gherkin.AstBuilder;
 import gherkin.Parser;
 import gherkin.TokenMatcher;
 import gherkin.ast.GherkinDocument;
-import gherkin.deps.com.google.gson.Gson;
-import gherkin.deps.com.google.gson.GsonBuilder;
 import gherkin.pickles.Compiler;
 import gherkin.pickles.Pickle;
 
@@ -24,8 +22,8 @@ public class Martini {
 	public void doSomething() throws IOException {
 		System.out.println("hello");
 
-		Gson gson = new GsonBuilder().setPrettyPrinting().create();
-		Parser<GherkinDocument> parser = new Parser<>(new AstBuilder());
+		AstBuilder astBuilder = new AstBuilder();
+		Parser<GherkinDocument> parser = new Parser<>(astBuilder);
 		TokenMatcher matcher = new TokenMatcher();
 		Compiler compiler = new Compiler();
 		List<Pickle> pickles = new ArrayList<>();
