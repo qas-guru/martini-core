@@ -11,7 +11,7 @@ public class MartiniTest {
 	@Test
 	public void testSomething() throws IOException {
 		ApplicationContext context = new ClassPathXmlApplicationContext("/guru/martini/applicationContext.xml");
-		Martini application = context.getBean(Martini.class);
+		Bartender application = context.getBean(Bartender.class);
 		application.doSomething();
 	}
 }

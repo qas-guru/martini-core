@@ -12,14 +12,13 @@ import org.springframework.stereotype.Service;
 import gherkin.AstBuilder;
 import gherkin.Parser;
 import gherkin.TokenMatcher;
-import gherkin.ast.Feature;
 import gherkin.pickles.Compiler;
 
 import gherkin.ast.GherkinDocument;
 import gherkin.pickles.Pickle;
 
 @Service
-public class Martini {
+public class Bartender {
 
 	public void doSomething() throws IOException {
 		System.out.println("hello");
@@ -41,6 +40,9 @@ public class Martini {
 			// Document has comments and descriptions.
 			// Pickle has actual resource location and incorporates parent steps.
 			// Marry the two on name/location for complete information.
+			// Give that thing a name (mixer, like for cocktails?)
+			// FILTER scenarios we don't want
+			// Then remaining things married to step implementations will be known as a Martini.
 
 			System.out.println("breakpoint");
 			// Location is missing the resource it came from
