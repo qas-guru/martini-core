@@ -12,8 +12,10 @@ import org.springframework.stereotype.Service;
 import gherkin.AstBuilder;
 import gherkin.Parser;
 import gherkin.TokenMatcher;
-import gherkin.ast.GherkinDocument;
+import gherkin.ast.Feature;
 import gherkin.pickles.Compiler;
+
+import gherkin.ast.GherkinDocument;
 import gherkin.pickles.Pickle;
 
 @Service
@@ -26,18 +28,23 @@ public class Martini {
 		Parser<GherkinDocument> parser = new Parser<>(astBuilder);
 		TokenMatcher matcher = new TokenMatcher();
 		Compiler compiler = new Compiler();
-		List<Pickle> pickles = new ArrayList<>();
 
 		ClassPathResource resource = new ClassPathResource("/sample.feature");
 		try (InputStream is = resource.getInputStream();
 			 InputStreamReader isr = new InputStreamReader(is)
 		) {
 			GherkinDocument document = parser.parse(isr, matcher);
-			String resourcePath = resource.getPath();
-			List<Pickle> pickle = compiler.compile(document, resourcePath);
-			pickles.addAll(pickle);
+			//Feature feature = document.getFeature();
+			String path = resource.getURL().toExternalForm();
+			List<Pickle> pickles = compiler.compile(document, path);
+
+			// Document has comments and descriptions.
+			// Pickle has actual resource location and incorporates parent steps.
+			// Marry the two on name/location for complete information.
+
+			System.out.println("breakpoint");
+			// Location is missing the resource it came from
 		}
 
-		System.out.println("breakpoint");
 	}
 }
