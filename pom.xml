@@ -68,6 +68,14 @@
 			<scope>test</scope>
 		</dependency>
 
+		<!-- https://mvnrepository.com/artifact/io.cucumber/gherkin -->
+		<dependency>
+		    <groupId>io.cucumber</groupId>
+		    <artifactId>gherkin</artifactId>
+		    <version>4.0.0</version>
+		</dependency>
+
+
 		<!-- https://mvnrepository.com/artifact/org.assertj/assertj-core -->
 		<dependency>
 		    <groupId>org.assertj</groupId>
