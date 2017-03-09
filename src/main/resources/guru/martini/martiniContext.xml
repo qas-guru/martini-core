@@ -10,4 +10,11 @@
 
 	<context:component-scan base-package="guru.qas.martini"/>
 
+	<bean id="gherkinParser" class="gherkin.Parser">
+		<constructor-arg>
+			<bean class="gherkin.AstBuilder"/>
+		</constructor-arg>
+	</bean>
+
+	<bean id="gherkinCompiler" class="gherkin.pickles.Compiler"/>
 </beans>

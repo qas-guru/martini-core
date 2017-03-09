@@ -16,6 +16,6 @@ public class MartiniTest {
 			"classpath*:**/martiniContext.xml", "/applicationContext.xml");
 
 		Bartender application = context.getBean(Bartender.class);
-		application.getMuddles();
+		application.doSomething();
 	}
 }

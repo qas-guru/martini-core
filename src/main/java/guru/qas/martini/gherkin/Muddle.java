@@ -1,4 +1,4 @@
-package guru.qas.martini;
+package guru.qas.martini.gherkin;
 
 import gherkin.ast.Feature;
 import gherkin.pickles.Pickle;

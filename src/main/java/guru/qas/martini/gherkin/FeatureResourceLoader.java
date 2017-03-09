@@ -1,4 +1,4 @@
-package guru.qas.martini.feature;
+package guru.qas.martini.gherkin;
 
 import java.io.IOException;
 
