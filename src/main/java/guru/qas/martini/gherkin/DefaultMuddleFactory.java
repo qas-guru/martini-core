@@ -7,7 +7,6 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
-import java.util.concurrent.atomic.AtomicReference;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Configurable;
@@ -31,31 +30,20 @@ class DefaultMuddleFactory implements MuddleFactory {
 	private final Parser<GherkinDocument> parser;
 	private final Compiler compiler;
 
-	private final AtomicReference<ImmutableList<Muddle>> reference;
-
 	@Autowired
 	DefaultMuddleFactory(FeatureResourceLoader loader, Parser<GherkinDocument> parser, Compiler compiler) {
 		this.loader = loader;
 		this.parser = parser;
 		this.compiler = compiler;
-		reference = new AtomicReference<>();
 	}
 
 	@Override
 	public List<Muddle> getMuddles() {
-		synchronized (reference) {
-			ImmutableList<Muddle> muddles = reference.get();
-			return null == muddles ? loadMuddles() : muddles;
-		}
-	}
-
-	private List<Muddle> loadMuddles() {
 		try {
 			Resource[] resources = loader.getResources();
-			ImmutableList<Muddle> muddles = getMuddles(resources);
-			reference.set(muddles);
-			return muddles;
-		} catch (IOException e) {
+			return getMuddles(resources);
+		}
+		catch (IOException e) {
 			throw new MartiniException("unable to load feature resources", e);
 		}
 	}
