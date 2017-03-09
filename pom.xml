@@ -15,6 +15,8 @@
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<java.version>1.8</java.version>
+		<spring.version>4.3.7.RELEASE</spring.version>
+		<slf4j.version>1.7.24</slf4j.version>
 	</properties>
 
 	<build>
@@ -43,28 +45,28 @@
 		<dependency>
 		    <groupId>org.springframework</groupId>
 		    <artifactId>spring-core</artifactId>
-		    <version>4.3.7.RELEASE</version>
+		    <version>${spring.version}</version>
 		</dependency>
 
 		<!-- https://mvnrepository.com/artifact/org.springframework/spring-context -->
 		<dependency>
 		    <groupId>org.springframework</groupId>
 		    <artifactId>spring-context</artifactId>
-		    <version>4.3.7.RELEASE</version>
+		    <version>${spring.version}</version>
 		</dependency>
 
 		<!-- https://mvnrepository.com/artifact/org.slf4j/slf4j-api -->
 		<dependency>
 		    <groupId>org.slf4j</groupId>
 		    <artifactId>slf4j-api</artifactId>
-		    <version>1.7.24</version>
+		    <version>${slf4j.version}</version>
 		</dependency>
 
 		<!-- https://mvnrepository.com/artifact/org.slf4j/slf4j-simple -->
 		<dependency>
 		    <groupId>org.slf4j</groupId>
 		    <artifactId>slf4j-simple</artifactId>
-		    <version>1.7.24</version>
+		    <version>${slf4j.version}</version>
 			<scope>test</scope>
 		</dependency>
 
