@@ -11,6 +11,6 @@
 
 	<import resource="classpath*:**/martiniContext.xml"/>
 
-	<context:component-scan base-package="guru.qas.martini.test"/>
+	<context:component-scan base-package="fixture"/>
 
 </beans>

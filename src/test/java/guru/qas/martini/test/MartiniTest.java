@@ -11,7 +11,9 @@ import org.testng.annotations.Test;
 
 import com.google.common.collect.Sets;
 
+import fixture.TestSteps;
 import guru.qas.martini.Bartender;
+import guru.qas.martini.annotation.Given;
 import guru.qas.martini.annotation.Steps;
 
 import static com.google.common.base.Preconditions.*;
@@ -47,5 +49,18 @@ public class MartiniTest {
 
 		Object o = context.getBean(expectedName);
 		checkState(TestSteps.class.isInstance(o), "bean returned for name %s is not of expected type", expectedName);
+	}
+
+	@Test
+	public void testGivenScanning() {
+		String[] names = context.getBeanNamesForAnnotation(Given.class);
+		checkNotNull(names, "no @Given methods found");
+
+//		String expectedName = "testSteps";
+//		Set<String> asSet = Sets.newHashSet(names);
+//		checkState(asSet.contains("testSteps"), "did not find bean name %s in annotated @Steps components", expectedName);
+//
+//		Object o = context.getBean(expectedName);
+//		checkState(TestSteps.class.isInstance(o), "bean returned for name %s is not of expected type", expectedName);
 	}
 }
