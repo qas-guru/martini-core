@@ -19,6 +19,8 @@ public class Bartender {
 	public void doSomething() {
 		List<Muddle> muddles = muddleFactory.getMuddles();
 		System.out.println("breakpoint");
-	}
 
+		// Now, find all the steps.
+		// And match the steps to the muddles to create Cocktails.
+	}
 }

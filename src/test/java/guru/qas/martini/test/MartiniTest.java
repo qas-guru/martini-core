@@ -12,9 +12,7 @@ public class MartiniTest {
 
 	@Test
 	public void testSomething() throws IOException {
-		ApplicationContext context = new ClassPathXmlApplicationContext(
-			"classpath*:**/martiniContext.xml", "/applicationContext.xml");
-
+		ApplicationContext context = new ClassPathXmlApplicationContext("applicationContext.xml");
 		Bartender application = context.getBean(Bartender.class);
 		application.doSomething();
 	}
