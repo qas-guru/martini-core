@@ -8,8 +8,8 @@ import org.springframework.context.support.ClassPathXmlApplicationContext;
 public class Main {
 
 	public static void main(String[] args) throws IOException {
-		ApplicationContext context = new ClassPathXmlApplicationContext("/guru/martini/applicationContext.xml");
+		ApplicationContext context = new ClassPathXmlApplicationContext("/guru/martini/martiniContext.xml");
 		Bartender application = context.getBean(Bartender.class);
-		application.doSomething();
+		application.getMuddles();
 	}
 }
