@@ -13,12 +13,12 @@ import org.springframework.util.ReflectionUtils;
 import static com.google.common.base.Preconditions.*;
 
 @Component
-class StepsAnnotationProcessor implements BeanPostProcessor, ApplicationContextAware {
+public class StepsAnnotationProcessor implements BeanPostProcessor, ApplicationContextAware {
 
 	private ApplicationContext context;
 	private GivenCallback givenCallback;
 
-	GivenCallback getGivenCallback() {
+	public GivenCallback getGivenCallback() {
 		return givenCallback;
 	}
 

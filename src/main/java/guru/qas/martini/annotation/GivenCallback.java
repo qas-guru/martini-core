@@ -8,21 +8,22 @@ import java.util.regex.Pattern;
 import org.springframework.core.annotation.AnnotationUtils;
 import org.springframework.util.ReflectionUtils;
 
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
 
 import static com.google.common.base.Preconditions.checkState;
 
-final class GivenCallback implements ReflectionUtils.MethodCallback {
+public final class GivenCallback implements ReflectionUtils.MethodCallback {
 
 	private Map<String, Pattern> patternIndex = Maps.newHashMap();
 	private Map<Pattern, Method> methodIndex = Maps.newHashMap();
 
-	Map<String, Pattern> getPatternIndex() {
-		return patternIndex;
+	public Map<String, Pattern> getPatternIndex() {
+		return ImmutableMap.copyOf(patternIndex);
 	}
 
-	Map<Pattern, Method> getMethodIndex() {
-		return methodIndex;
+	public Map<Pattern, Method> getMethodIndex() {
+		return ImmutableMap.copyOf(methodIndex);
 	}
 
 	@Override
