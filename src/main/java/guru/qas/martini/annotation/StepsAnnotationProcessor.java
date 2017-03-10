@@ -37,16 +37,22 @@ public class StepsAnnotationProcessor implements BeanPostProcessor, ApplicationC
 	public Object postProcessAfterInitialization(Object bean, String beanName) throws BeansException {
 		try {
 			Class<?> wrapped = AopUtils.getTargetClass(bean);
-			Class<?> declaring = AnnotationUtils.findAnnotationDeclaringClass(Steps.class, wrapped);
-			if (null != declaring) {
-				processStepsBean(beanName, wrapped);
+			if (!isSpring(wrapped)) {
+				Class<?> declaring = AnnotationUtils.findAnnotationDeclaringClass(Steps.class, wrapped);
+				if (null != declaring) {
+					processStepsBean(beanName, wrapped);
+				}
 			}
 			return bean;
 		}
 		catch (Exception e) {
 			throw new FatalBeanException("unable to process @Steps beans", e);
 		}
+	}
 
+	private static boolean isSpring(Class c) {
+		String name = c.getCanonicalName();
+		return name.startsWith("org.spring");
 	}
 
 	private void processStepsBean(String beanName, Class wrapped) {
