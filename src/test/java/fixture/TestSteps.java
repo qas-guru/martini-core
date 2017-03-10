@@ -14,12 +14,15 @@ public class TestSteps {
 		System.out.println("breakpoint");
 	}
 
-	@Given("a pre-existing condition")
+	@Given("a given")
 	public void aGiven() {
 	}
 
 	@Given("another \"(.+)\" here")
 	public void anotherStep(String myParameter) {
 		System.out.println("myParameter");
+	}
+
+	private void aPrivateMethod() {
 	}
 }
