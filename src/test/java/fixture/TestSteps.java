@@ -14,7 +14,7 @@ public class TestSteps {
 		System.out.println("breakpoint");
 	}
 
-	@Given("a given step")
+	@Given("a pre-existing condition")
 	public void aGiven() {
 	}
 
