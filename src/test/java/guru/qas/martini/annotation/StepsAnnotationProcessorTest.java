@@ -7,12 +7,16 @@ import java.util.regex.Pattern;
 
 import org.springframework.beans.FatalBeanException;
 import org.springframework.beans.factory.config.ConfigurableListableBeanFactory;
+import org.springframework.beans.factory.support.BeanDefinitionRegistry;
+import org.springframework.beans.factory.support.GenericBeanDefinition;
 import org.springframework.context.support.ClassPathXmlApplicationContext;
 import org.testng.annotations.Test;
 
-import failures.DuplicateBeanA;
-import failures.DuplicateBeanB;
+import nonfixture.DuplicateGivenBeanA;
+import nonfixture.DuplicateGivenBeanB;
 import fixture.TestSteps;
+import nonfixture.MultipleGivenBean;
+import nonfixture.PrivateGivenMethodBean;
 
 import static com.google.common.base.Preconditions.*;
 
@@ -39,17 +43,62 @@ public class StepsAnnotationProcessorTest {
 
 	@Test(expectedExceptions = FatalBeanException.class)
 	public void testDuplicateStep() {
+		DuplicateGivenBeanA beanA = new DuplicateGivenBeanA();
+		DuplicateGivenBeanB beanB = new DuplicateGivenBeanB();
+		ClassPathXmlApplicationContext context = getContext(beanA, beanB);
+
+		process(context, beanA);
+		process(context, beanB);
+	}
+
+	private static ClassPathXmlApplicationContext getContext(Object... beans) {
+		ClassPathXmlApplicationContext context = new ClassPathXmlApplicationContext("emptyContext.xml");
+		ConfigurableListableBeanFactory factory = context.getBeanFactory();
+		for (Object bean : beans) {
+			factory.registerSingleton(bean.getClass().getName(), bean);
+		}
+		return context;
+	}
+
+	private static void process(ClassPathXmlApplicationContext context, Object... beans) {
+		StepsAnnotationProcessor processor = context.getBean(StepsAnnotationProcessor.class);
+		for (Object bean : beans) {
+			processor.postProcessAfterInitialization(bean, bean.getClass().getName());
+		}
+	}
+
+	@Test
+	public void testMultipleGivenRegex() {
+		MultipleGivenBean bean = new MultipleGivenBean();
+		ClassPathXmlApplicationContext context = getContext(bean);
+		process(context, bean);
+
+		StepsAnnotationProcessor processor = context.getBean(StepsAnnotationProcessor.class);
+		GivenCallback givenCallback = processor.getGivenCallback();
+		Map<String, Pattern> patternIndex = givenCallback.getPatternIndex();
+		checkState(2 == patternIndex.size(),
+			"expected two patterns for a single @Given having multiple strings values");
+	}
+
+	@Test(expectedExceptions = FatalBeanException.class)
+	public void testInaccessibleMethod() {
+		PrivateGivenMethodBean bean = new PrivateGivenMethodBean();
+		ClassPathXmlApplicationContext context = getContext(bean);
+		process(context, bean);
+	}
+
+	@Test(expectedExceptions = FatalBeanException.class)
+	public void testNonSingletonSteps() {
 		ClassPathXmlApplicationContext context = new ClassPathXmlApplicationContext("emptyContext.xml");
 		ConfigurableListableBeanFactory factory = context.getBeanFactory();
 
-		DuplicateBeanA beanA = new DuplicateBeanA();
-		factory.registerSingleton(DuplicateBeanA.class.getName(), beanA);
+		GenericBeanDefinition definition = new GenericBeanDefinition();
+		definition.setBeanClass(DuplicateGivenBeanA.class);
+		definition.setLazyInit(false);
+		definition.setScope("prototype");
 
-		DuplicateBeanB beanB = new DuplicateBeanB();
-		factory.registerSingleton(DuplicateBeanB.class.getName(), beanB);
-
-		StepsAnnotationProcessor processor = context.getBean(StepsAnnotationProcessor.class);
-		processor.postProcessAfterInitialization(beanA, DuplicateBeanA.class.getName());
-		processor.postProcessAfterInitialization(beanB, DuplicateBeanB.class.getName());
+		BeanDefinitionRegistry registry = BeanDefinitionRegistry.class.cast(factory);
+		registry.registerBeanDefinition(DuplicateGivenBeanA.class.getName(), definition);
+		process(context, new DuplicateGivenBeanA());
 	}
 }

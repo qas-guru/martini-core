@@ -1,10 +1,10 @@
-package failures;
+package nonfixture;
 
 import guru.qas.martini.annotation.Given;
 import guru.qas.martini.annotation.Steps;
 
 @Steps
-public class DuplicateBeanB {
+public class DuplicateGivenBeanA {
 	@Given("a duplicate step")
 	public void duplicateStepA() {
 	}

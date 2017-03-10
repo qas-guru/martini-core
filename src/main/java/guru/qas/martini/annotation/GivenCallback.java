@@ -27,19 +27,34 @@ final class GivenCallback implements ReflectionUtils.MethodCallback {
 
 	@Override
 	public void doWith(Method method) throws IllegalArgumentException, IllegalAccessException {
+		processAnnotation(method);
+		processContainerAnnotation(method);
+	}
+
+	private void processAnnotation(Method method) {
 		Given annotation = AnnotationUtils.findAnnotation(method, Given.class);
 		if (null != annotation) {
-			doWith(method, annotation);
+			doWithAnnotation(method, annotation);
 		}
 	}
 
-	private void doWith(Method method, Given annotation) {
+	private void doWithAnnotation(Method method, Given annotation) {
 		checkState(Modifier.isPublic(method.getModifiers()), "Method is not public: %s", method);
 		String regex = annotation.value().trim();
-		checkState(!regex.isEmpty(), "@Given requires a non-empty regex value.");
-		checkState(!patternIndex.containsKey(regex), "Multiple methods found for @Given annotation \"%s\"", regex);
+		checkState(!regex.isEmpty(), "@Given requires non-empty regex values.");
+		checkState(!patternIndex.containsKey(regex), "Multiple methods found for @Given regex \"%s\"", regex);
 		Pattern pattern = Pattern.compile(regex);
 		patternIndex.put(regex, pattern);
 		methodIndex.put(pattern, method);
+	}
+
+	private void processContainerAnnotation(Method method) {
+		GivenContainer container = AnnotationUtils.findAnnotation(method, GivenContainer.class);
+		if (null != container) {
+			Given[] annotations = container.value();
+			for (Given annotation : annotations) {
+				doWithAnnotation(method, annotation);
+			}
+		}
 	}
 }
