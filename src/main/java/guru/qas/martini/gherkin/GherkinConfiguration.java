@@ -13,7 +13,7 @@ import static com.google.common.base.Preconditions.checkState;
 
 @Configuration
 @Lazy
-class BeanConfiguration implements BeanFactoryAware {
+class GherkinConfiguration implements BeanFactoryAware {
 
 	private AutowireCapableBeanFactory beanFactory;
 
