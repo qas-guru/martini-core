@@ -12,13 +12,14 @@ import org.springframework.util.ReflectionUtils;
 
 import static com.google.common.base.Preconditions.*;
 
+@SuppressWarnings("WeakerAccess")
 @Component
 public class StepsAnnotationProcessor implements BeanPostProcessor, ApplicationContextAware {
 
-	private ApplicationContext context;
-	private GivenCallback givenCallback;
+	protected ApplicationContext context;
+	protected GivenCallback givenCallback;
 
-	public GivenCallback getGivenCallback() {
+	protected GivenCallback getGivenCallback() {
 		return givenCallback;
 	}
 
@@ -50,12 +51,12 @@ public class StepsAnnotationProcessor implements BeanPostProcessor, ApplicationC
 		}
 	}
 
-	private static boolean isSpring(Class c) {
+	protected boolean isSpring(Class c) {
 		String name = c.getCanonicalName();
 		return name.startsWith("org.spring");
 	}
 
-	private void processStepsBean(String beanName, Class wrapped) {
+	protected void processStepsBean(String beanName, Class wrapped) {
 		checkState(context.isSingleton(beanName), "Beans annotated @Steps must have singleton scope.");
 		ReflectionUtils.doWithMethods(wrapped, givenCallback);
 	}
