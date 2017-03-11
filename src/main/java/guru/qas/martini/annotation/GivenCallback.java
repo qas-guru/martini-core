@@ -11,35 +11,42 @@ import org.springframework.util.ReflectionUtils;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
 
-import static com.google.common.base.Preconditions.checkState;
+import static com.google.common.base.Preconditions.*;
 
-public final class GivenCallback implements ReflectionUtils.MethodCallback {
+@SuppressWarnings("WeakerAccess")
+public class GivenCallback implements ReflectionUtils.MethodCallback {
 
-	private Map<String, Pattern> patternIndex = Maps.newHashMap();
-	private Map<Pattern, Method> methodIndex = Maps.newHashMap();
+	final Map<String, Pattern> patternIndex;
+	final Map<Pattern, Method> methodIndex;
 
-	public Map<String, Pattern> getPatternIndex() {
+	protected Map<String, Pattern> getPatternIndex() {
 		return ImmutableMap.copyOf(patternIndex);
 	}
 
-	public Map<Pattern, Method> getMethodIndex() {
+	protected Map<Pattern, Method> getMethodIndex() {
 		return ImmutableMap.copyOf(methodIndex);
+	}
+
+	protected GivenCallback() {
+		patternIndex = Maps.newHashMap();
+		methodIndex = Maps.newHashMap();
 	}
 
 	@Override
 	public void doWith(Method method) throws IllegalArgumentException, IllegalAccessException {
+		checkNotNull(method, "null Method");
 		processAnnotation(method);
 		processContainerAnnotation(method);
 	}
 
-	private void processAnnotation(Method method) {
+	protected void processAnnotation(Method method) {
 		Given annotation = AnnotationUtils.findAnnotation(method, Given.class);
 		if (null != annotation) {
 			doWithAnnotation(method, annotation);
 		}
 	}
 
-	private void doWithAnnotation(Method method, Given annotation) {
+	protected void doWithAnnotation(Method method, Given annotation) {
 		checkState(Modifier.isPublic(method.getModifiers()), "Method is not public: %s", method);
 		String regex = annotation.value().trim();
 		checkState(!regex.isEmpty(), "@Given requires non-empty regex values.");
@@ -49,7 +56,7 @@ public final class GivenCallback implements ReflectionUtils.MethodCallback {
 		methodIndex.put(pattern, method);
 	}
 
-	private void processContainerAnnotation(Method method) {
+	protected void processContainerAnnotation(Method method) {
 		GivenContainer container = AnnotationUtils.findAnnotation(method, GivenContainer.class);
 		if (null != container) {
 			Given[] annotations = container.value();
