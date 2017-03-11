@@ -18,6 +18,11 @@ public class DefaultMartini implements Martini {
 	protected final Recipe recipe;
 	protected final ImmutableMap<Step, StepImplementation> stepIndex;
 
+	@Override
+	public Recipe getRecipe() {
+		return recipe;
+	}
+
 	protected DefaultMartini(Recipe recipe, ImmutableMap<Step, StepImplementation> stepIndex) {
 		this.recipe = recipe;
 		this.stepIndex = stepIndex;
@@ -28,7 +33,7 @@ public class DefaultMartini implements Martini {
 		Feature feature = recipe.getFeature();
 		Pickle pickle = recipe.getPickle();
 		PickleLocation location = pickle.getLocations().get(0);
-		return String.format("Feature: %s\nLocation: resource %s\nScenario: %s\nLocation: line %s\n",
+		return String.format("Feature: %s\nResource: %s\nScenario: %s\nLine: %s",
 			feature.getName(),
 			location.getPath(),
 			pickle.getName(),
