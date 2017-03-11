@@ -7,9 +7,18 @@ import gherkin.ast.Step;
 
 public interface StepImplementation {
 
-	Pattern getPattern();
+	StepImplementation UNIMPLEMENTED = new StepImplementation() {
+	};
 
-	Method getMethod();
+	default Pattern getPattern() {
+		throw new UnsupportedOperationException();
+	}
 
-	boolean isMatch(Step recipe);
+	default Method getMethod() {
+		throw new UnsupportedOperationException();
+	}
+
+	default boolean isMatch(Step recipe) {
+		throw new UnsupportedOperationException();
+	}
 }

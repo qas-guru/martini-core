@@ -94,7 +94,7 @@ public class StepsAnnotationProcessorTest {
 
 		MultipleGivenBean steps = context.getBean(MultipleGivenBean.class);
 		Class<?> wrapped = AopUtils.getTargetClass(steps);
-		Method method = wrapped.getMethod("doSomething");
+		Method method = wrapped.getMethod("getMartinis");
 
 		Map<String, GivenStep> givenBeanIndex = context.getBeansOfType(GivenStep.class);
 		Collection<GivenStep> givens = givenBeanIndex.values();
@@ -110,7 +110,7 @@ public class StepsAnnotationProcessorTest {
 		}
 
 		int count = matches.size();
-		assertEquals(count, 2, "wrong number of GivenStep objects registered for MultipleGivenBean.doSomething()");
+		assertEquals(count, 2, "wrong number of GivenStep objects registered for MultipleGivenBean.getMartinis()");
 
 		Set<String> expected = Sets.newHashSet(
 			"this is regular expression one", "this is regular expression two");

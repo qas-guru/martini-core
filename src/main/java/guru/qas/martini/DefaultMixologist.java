@@ -73,12 +73,7 @@ public class DefaultMixologist implements Mixologist, InitializingBean, Applicat
 		this.recipes = builder.build();
 	}
 
-	public void doSomething() {
-		ImmutableList<Martini> martinis = getMartinis();
-		System.out.println("breakpoint");
-	}
-
-	protected ImmutableList<Martini> getMartinis() {
+	public ImmutableList<Martini> getMartinis() {
 		synchronized (martinisReference) {
 			ImmutableList<Martini> martinis = martinisReference.get();
 			if (null == martinis) {
@@ -87,15 +82,19 @@ public class DefaultMixologist implements Mixologist, InitializingBean, Applicat
 
 				ImmutableList.Builder<Martini> builder = ImmutableList.builder();
 				for (Recipe recipe : recipes) {
+					DefaultMartini.Builder martiniBuilder = DefaultMartini.builder().setRecipe(recipe);
+
 					Feature feature = recipe.getFeature();
 					List<ScenarioDefinition> scenarios = feature.getChildren();
 					for (ScenarioDefinition scenario : scenarios) {
 						List<gherkin.ast.Step> gherkinSteps = scenario.getSteps();
 						for (gherkin.ast.Step gherkinStep : gherkinSteps) {
-							Martini martini = getMartini(recipe, gherkinStep, implementations);
-							builder.add(martini);
+							StepImplementation implementation = getImplementation(gherkinStep, implementations);
+							martiniBuilder.add(gherkinStep, implementation);
 						}
 					}
+					Martini martini = martiniBuilder.build();
+					builder.add(martini);
 				}
 				martinis = builder.build();
 				martinisReference.set(martinis);
@@ -104,7 +103,7 @@ public class DefaultMixologist implements Mixologist, InitializingBean, Applicat
 		}
 	}
 
-	private Martini getMartini(Recipe recipe, gherkin.ast.Step step, Collection<StepImplementation> implementations) {
+	private StepImplementation getImplementation( gherkin.ast.Step step, Collection<StepImplementation> implementations) {
 
 		List<StepImplementation> matches = Lists.newArrayList();
 		for (StepImplementation implementation : implementations) {
@@ -117,7 +116,6 @@ public class DefaultMixologist implements Mixologist, InitializingBean, Applicat
 		checkState(count < 2, "ambigous step; %s matches found for step %s", step);
 		checkState(!unimplementedStepsFatal || 1 == count, "no implementation found matching step %s", step);
 
-		StepImplementation implementation = 0 == count ? null : matches.get(0);
-		return new DefaultMartini(recipe, step, implementation);
+		return 0 == count ? StepImplementation.UNIMPLEMENTED : matches.get(0);
 	}
 }
