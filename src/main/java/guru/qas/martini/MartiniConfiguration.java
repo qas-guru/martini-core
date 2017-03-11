@@ -13,7 +13,7 @@ import static com.google.common.base.Preconditions.*;
 
 @Configuration
 @Lazy
-public class MartiniConfiguration implements BeanFactoryAware {
+class MartiniConfiguration implements BeanFactoryAware {
 
 	private AutowireCapableBeanFactory beanFactory;
 
@@ -22,17 +22,14 @@ public class MartiniConfiguration implements BeanFactoryAware {
 		checkState(AutowireCapableBeanFactory.class.isInstance(beanFactory),
 			"BeanFactory must be of type AutowireCapableBeanFactory but found %s", beanFactory.getClass());
 		this.beanFactory = AutowireCapableBeanFactory.class.cast(beanFactory);
-
 	}
 
-
 	@Bean
-	Mixologist getBartender(
-		@Value("${gherkin.bartender:#{null}") Class<? extends Mixologist> impl
+	Mixologist getMixologist(
+		@Value("${gherkin.mixologist:#{null}") Class<? extends Mixologist> impl
 	) {
 		return null == impl ?
 			beanFactory.createBean(DefaultMixologist.class) :
 			beanFactory.createBean(impl);
-
 	}
 }
