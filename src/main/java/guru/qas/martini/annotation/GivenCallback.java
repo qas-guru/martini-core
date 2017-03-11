@@ -36,6 +36,23 @@ public class GivenCallback implements ReflectionUtils.MethodCallback {
 		processGivenContainer(method);
 	}
 
+	/*
+	    @Override
+    public Object postProcessBeforeInitialization(final Object bean, String name) throws BeansException {
+        ReflectionUtils.doWithFields(bean.getClass(), new ReflectionUtils.FieldCallback() {
+            public void doWith(Field field) throws IllegalArgumentException, IllegalAccessException {
+                // make the field accessible if defined private
+                ReflectionUtils.makeAccessible(field);
+                if (field.getAnnotation(Log.class) != null) {
+                    Logger log = LoggerFactory.getLogger(bean.getClass());
+                    field.set(bean, log);
+                }
+            }
+        });
+        return bean;
+    }
+	 */
+
 	protected void processGiven(Method method) {
 		Given annotation = AnnotationUtils.findAnnotation(method, Given.class);
 		if (null != annotation) {

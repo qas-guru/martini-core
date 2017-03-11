@@ -1,4 +1,4 @@
 package guru.qas.martini.step;
 
-public interface GivenStep extends Step {
+public interface GivenStep extends StepImplementation {
 }
