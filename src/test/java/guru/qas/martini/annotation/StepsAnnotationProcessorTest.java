@@ -2,9 +2,14 @@ package guru.qas.martini.annotation;
 
 import java.io.IOException;
 import java.lang.reflect.Method;
+import java.util.Collection;
+import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.springframework.aop.support.AopUtils;
 import org.springframework.beans.FatalBeanException;
 import org.springframework.beans.factory.config.ConfigurableListableBeanFactory;
 import org.springframework.beans.factory.support.BeanDefinitionRegistry;
@@ -12,33 +17,47 @@ import org.springframework.beans.factory.support.GenericBeanDefinition;
 import org.springframework.context.support.ClassPathXmlApplicationContext;
 import org.testng.annotations.Test;
 
+import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
+
+import guru.qas.martini.step.GivenStep;
 import nonfixture.DuplicateGivenBeanA;
 import nonfixture.DuplicateGivenBeanB;
 import fixture.TestSteps;
 import nonfixture.MultipleGivenBean;
 import nonfixture.PrivateGivenMethodBean;
 
-import static com.google.common.base.Preconditions.*;
+import static org.testng.Assert.*;
 
 public class StepsAnnotationProcessorTest {
 
 	@Test
-	public void testPostProcessAfterInitialization() throws IOException {
+	public void testPostProcessAfterInitialization() throws IOException, NoSuchMethodException {
 		ClassPathXmlApplicationContext context = new ClassPathXmlApplicationContext("applicationContext.xml");
-		String[] beanNames = context.getBeanNamesForType(TestSteps.class);
-		Object bean = context.getBean(beanNames[0]);
+		TestSteps steps = context.getBean(TestSteps.class);
 
-		StepsAnnotationProcessor processor = context.getBean(StepsAnnotationProcessor.class);
-		GivenCallback callback = processor.getGivenCallback();
-		Map<String, Pattern> patternIndex = callback.getPatternIndex();
-		Pattern pattern = patternIndex.get("a given");
-		checkNotNull(pattern, "regex 'a given' not found in GivenCallback");
+		Class<?> wrapped = AopUtils.getTargetClass(steps);
+		Method method = wrapped.getMethod("anotherStep", String.class);
 
-		Map<Pattern, Method> methodIndex = callback.getMethodIndex();
-		Method method = methodIndex.get(pattern);
-		checkNotNull(method, "expected method not found in GivenCallback");
-		Class<?> declaringClass = method.getDeclaringClass();
-		checkState(declaringClass.equals(bean.getClass()), "method comes from incorrect class");
+		Map<String, GivenStep> givenBeanIndex = context.getBeansOfType(GivenStep.class);
+		Collection<GivenStep> givens = givenBeanIndex.values();
+
+		List<GivenStep> matches = Lists.newArrayList();
+		for (GivenStep given : givens) {
+			Method givenMethod = given.getMethod();
+			if (givenMethod.equals(method)) {
+				matches.add(given);
+			}
+		}
+
+		int count = matches.size();
+		assertEquals(count, 1, "wrong number of GivenStep objects registered for TestSteps.anotherStep()");
+
+		GivenStep match = matches.get(0);
+		Pattern pattern = match.getPattern();
+		Matcher matcher = pattern.matcher("another \"(.+)\" here");
+		assertTrue(matcher.find(), "expected Pattern to match Gherkin regular expression");
+		assertEquals(matcher.groupCount(), 1, "wrong number of parameters captured for TestSteps.anotherStep()");
 	}
 
 	@Test(expectedExceptions = FatalBeanException.class)
@@ -68,16 +87,34 @@ public class StepsAnnotationProcessorTest {
 	}
 
 	@Test
-	public void testMultipleGivenRegex() {
-		MultipleGivenBean bean = new MultipleGivenBean();
-		ClassPathXmlApplicationContext context = getContext(bean);
-		process(context, bean);
+	public void testMultipleGivenRegex() throws NoSuchMethodException {
+		MultipleGivenBean source = new MultipleGivenBean();
+		ClassPathXmlApplicationContext context = getContext(source);
+		process(context, source);
 
-		StepsAnnotationProcessor processor = context.getBean(StepsAnnotationProcessor.class);
-		GivenCallback givenCallback = processor.getGivenCallback();
-		Map<String, Pattern> patternIndex = givenCallback.getPatternIndex();
-		checkState(2 == patternIndex.size(),
-			"expected two patterns for a single @Given having multiple strings values");
+		MultipleGivenBean steps = context.getBean(MultipleGivenBean.class);
+		Class<?> wrapped = AopUtils.getTargetClass(steps);
+		Method method = wrapped.getMethod("doSomething");
+
+		Map<String, GivenStep> givenBeanIndex = context.getBeansOfType(GivenStep.class);
+		Collection<GivenStep> givens = givenBeanIndex.values();
+
+		Set<String> matches = Sets.newHashSetWithExpectedSize(2);
+		for (GivenStep given : givens) {
+			Method givenMethod = given.getMethod();
+			if (givenMethod.equals(method)) {
+				Pattern pattern = given.getPattern();
+				String regex = pattern.pattern();
+				matches.add(regex);
+			}
+		}
+
+		int count = matches.size();
+		assertEquals(count, 2, "wrong number of GivenStep objects registered for MultipleGivenBean.doSomething()");
+
+		Set<String> expected = Sets.newHashSet(
+			"this is regular expression one", "this is regular expression two");
+		assertEquals(matches, expected, "Steps contain wrong regex Pattern objects");
 	}
 
 	@Test(expectedExceptions = FatalBeanException.class)

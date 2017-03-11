@@ -3,7 +3,9 @@ package guru.qas.martini.annotation;
 import org.springframework.aop.support.AopUtils;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.FatalBeanException;
+import org.springframework.beans.factory.config.AutowireCapableBeanFactory;
 import org.springframework.beans.factory.config.BeanPostProcessor;
+import org.springframework.beans.factory.config.ConfigurableListableBeanFactory;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
 import org.springframework.core.annotation.AnnotationUtils;
@@ -26,7 +28,11 @@ public class StepsAnnotationProcessor implements BeanPostProcessor, ApplicationC
 	@Override
 	public void setApplicationContext(ApplicationContext context) throws BeansException {
 		this.context = context;
-		this.givenCallback = new GivenCallback();
+		AutowireCapableBeanFactory beanFactory = context.getAutowireCapableBeanFactory();
+		checkState(ConfigurableListableBeanFactory.class.isInstance(beanFactory),
+			"Martini requires the use of a ConfigurableListableBeanFactory");
+		ConfigurableListableBeanFactory configurable = ConfigurableListableBeanFactory.class.cast(beanFactory);
+		this.givenCallback = new GivenCallback(configurable);
 	}
 
 	@Override
@@ -47,7 +53,7 @@ public class StepsAnnotationProcessor implements BeanPostProcessor, ApplicationC
 			return bean;
 		}
 		catch (Exception e) {
-			throw new FatalBeanException("unable to process @Steps beans", e);
+			throw new FatalBeanException("unable to processGivenContainer @Steps beans", e);
 		}
 	}
 

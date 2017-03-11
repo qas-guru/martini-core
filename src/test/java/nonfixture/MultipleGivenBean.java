@@ -8,6 +8,6 @@ public class MultipleGivenBean {
 
 	@Given("this is regular expression one")
 	@Given("this is regular expression two")
-	public void doSometing(){
+	public void doSomething(){
 	}
 }

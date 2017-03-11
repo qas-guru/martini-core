@@ -2,66 +2,67 @@ package guru.qas.martini.annotation;
 
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
-import java.util.Map;
+import java.util.Set;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.regex.Pattern;
 
+import org.springframework.beans.factory.config.ConfigurableListableBeanFactory;
 import org.springframework.core.annotation.AnnotationUtils;
 import org.springframework.util.ReflectionUtils;
 
-import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
+
+import guru.qas.martini.step.DefaultGivenStep;
 
 import static com.google.common.base.Preconditions.*;
 
 @SuppressWarnings("WeakerAccess")
 public class GivenCallback implements ReflectionUtils.MethodCallback {
 
-	final Map<String, Pattern> patternIndex;
-	final Map<Pattern, Method> methodIndex;
+	protected final ConfigurableListableBeanFactory beanFactory;
+	protected final AtomicInteger atomicInteger;
+	protected final Set<String> regularExpressions;
 
-	protected Map<String, Pattern> getPatternIndex() {
-		return ImmutableMap.copyOf(patternIndex);
-	}
-
-	protected Map<Pattern, Method> getMethodIndex() {
-		return ImmutableMap.copyOf(methodIndex);
-	}
-
-	protected GivenCallback() {
-		patternIndex = Maps.newHashMap();
-		methodIndex = Maps.newHashMap();
+	protected GivenCallback(ConfigurableListableBeanFactory beanFactory) {
+		this.beanFactory = beanFactory;
+		this.atomicInteger = new AtomicInteger();
+		this.regularExpressions = Sets.newHashSet();
 	}
 
 	@Override
 	public void doWith(Method method) throws IllegalArgumentException, IllegalAccessException {
 		checkNotNull(method, "null Method");
-		processAnnotation(method);
-		processContainerAnnotation(method);
+		processGiven(method);
+		processGivenContainer(method);
 	}
 
-	protected void processAnnotation(Method method) {
+	protected void processGiven(Method method) {
 		Given annotation = AnnotationUtils.findAnnotation(method, Given.class);
 		if (null != annotation) {
-			doWithAnnotation(method, annotation);
+			process(method, annotation);
 		}
 	}
 
-	protected void doWithAnnotation(Method method, Given annotation) {
+	protected void process(Method method, Given annotation) {
 		checkState(Modifier.isPublic(method.getModifiers()), "Method is not public: %s", method);
 		String regex = annotation.value().trim();
 		checkState(!regex.isEmpty(), "@Given requires non-empty regex values.");
-		checkState(!patternIndex.containsKey(regex), "Multiple methods found for @Given regex \"%s\"", regex);
+		checkState(!regularExpressions.contains(regex), "Multiple methods found for @Given regex \"%s\"", regex);
 		Pattern pattern = Pattern.compile(regex);
-		patternIndex.put(regex, pattern);
-		methodIndex.put(pattern, method);
+		regularExpressions.add(regex);
+
+		String name = String.format("given%s", atomicInteger.getAndIncrement());
+
+		DefaultGivenStep step = new DefaultGivenStep(pattern, method);
+		beanFactory.registerSingleton(name, step);
 	}
 
-	protected void processContainerAnnotation(Method method) {
+	protected void processGivenContainer(Method method) {
 		GivenContainer container = AnnotationUtils.findAnnotation(method, GivenContainer.class);
 		if (null != container) {
 			Given[] annotations = container.value();
 			for (Given annotation : annotations) {
-				doWithAnnotation(method, annotation);
+				process(method, annotation);
 			}
 		}
 	}
