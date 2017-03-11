@@ -11,11 +11,12 @@ import org.springframework.context.annotation.Lazy;
 
 import static com.google.common.base.Preconditions.checkState;
 
+@SuppressWarnings("WeakerAccess")
 @Configuration
 @Lazy
-class GherkinConfiguration implements BeanFactoryAware {
+public class GherkinConfiguration implements BeanFactoryAware {
 
-	private AutowireCapableBeanFactory beanFactory;
+	protected AutowireCapableBeanFactory beanFactory;
 
 	@Override
 	public void setBeanFactory(BeanFactory beanFactory) throws BeansException {
@@ -25,7 +26,7 @@ class GherkinConfiguration implements BeanFactoryAware {
 	}
 
 	@Bean
-	GherkinResourceLoader getFeatureResourceLoader(
+	protected GherkinResourceLoader getFeatureResourceLoader(
 		@Value("${gherkin.resource.loader:#{null}}") Class<? extends GherkinResourceLoader> impl
 	) {
 		return null == impl ?
@@ -34,7 +35,7 @@ class GherkinConfiguration implements BeanFactoryAware {
 	}
 
 	@Bean
-	Mixology getMixology(
+	protected Mixology getMixology(
 		@Value("${martini.mixology:#{null}}") Class<? extends Mixology> impl
 	) {
 		return null == impl ?

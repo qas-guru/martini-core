@@ -11,11 +11,12 @@ import org.springframework.context.annotation.Lazy;
 
 import static com.google.common.base.Preconditions.*;
 
+@SuppressWarnings("WeakerAccess")
 @Configuration
 @Lazy
-class MartiniConfiguration implements BeanFactoryAware {
+public class MartiniConfiguration implements BeanFactoryAware {
 
-	private AutowireCapableBeanFactory beanFactory;
+	protected AutowireCapableBeanFactory beanFactory;
 
 	@Override
 	public void setBeanFactory(BeanFactory beanFactory) throws BeansException {
@@ -25,7 +26,7 @@ class MartiniConfiguration implements BeanFactoryAware {
 	}
 
 	@Bean
-	Mixologist getMixologist(
+	protected Mixologist getMixologist(
 		@Value("${gherkin.mixologist:#{null}") Class<? extends Mixologist> impl
 	) {
 		return null == impl ?

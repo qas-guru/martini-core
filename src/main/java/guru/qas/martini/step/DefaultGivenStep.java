@@ -3,6 +3,8 @@ package guru.qas.martini.step;
 import java.lang.reflect.Method;
 import java.util.regex.Pattern;
 
+import guru.qas.martini.gherkin.Recipe;
+
 import static com.google.common.base.Preconditions.checkNotNull;
 
 @SuppressWarnings("WeakerAccess")
@@ -25,5 +27,10 @@ public class DefaultGivenStep implements GivenStep {
 	@Override
 	public Method getMethod() {
 		return method;
+	}
+
+	@Override
+	public boolean isMatch(Recipe recipe) {
+		throw new UnsupportedOperationException();
 	}
 }

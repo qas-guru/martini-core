@@ -21,10 +21,6 @@ public class StepsAnnotationProcessor implements BeanPostProcessor, ApplicationC
 	protected ApplicationContext context;
 	protected GivenCallback givenCallback;
 
-	protected GivenCallback getGivenCallback() {
-		return givenCallback;
-	}
-
 	@Override
 	public void setApplicationContext(ApplicationContext context) throws BeansException {
 		this.context = context;

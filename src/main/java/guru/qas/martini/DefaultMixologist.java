@@ -1,89 +1,91 @@
 package guru.qas.martini;
 
 import java.io.IOException;
+import java.util.Collection;
+import java.util.Map;
+import java.util.concurrent.atomic.AtomicReference;
 
+import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.ApplicationContextAware;
 import org.springframework.core.io.Resource;
 import org.springframework.stereotype.Service;
+
+import com.google.common.collect.ImmutableList;
+
 
 import guru.qas.martini.gherkin.Mixology;
 import guru.qas.martini.gherkin.Recipe;
 import guru.qas.martini.gherkin.GherkinResourceLoader;
+import guru.qas.martini.step.Step;
 
 @SuppressWarnings("WeakerAccess")
 @Service
-public class DefaultMixologist implements Mixologist, InitializingBean {
+public class DefaultMixologist implements Mixologist, InitializingBean, ApplicationContextAware {
 
 	protected final GherkinResourceLoader loader;
 	protected final Mixology mixology;
+	protected final boolean missingStepFatal;
+	protected final AtomicReference<ImmutableList<Martini>> martinisReference;
+
+	protected ApplicationContext context;
+	protected ImmutableList<Recipe> recipes;
 
 	@Autowired
-	protected DefaultMixologist(GherkinResourceLoader loader, Mixology mixology) {
+	protected DefaultMixologist(
+		GherkinResourceLoader loader,
+		Mixology mixology,
+		@Value("${missing.step.fatal:#{false}}") boolean missingStepFatal
+	) {
 		this.loader = loader;
 		this.mixology = mixology;
+		this.missingStepFatal = missingStepFatal;
+		this.martinisReference = new AtomicReference<>();
+	}
+
+	@Override
+	public void setApplicationContext(ApplicationContext context) throws BeansException {
+		this.context = context;
 	}
 
 	@Override
 	public void afterPropertiesSet() throws Exception {
+		recipes = null;
+		martinisReference.set(null);
 		Resource[] resources = loader.getFeatureResources();
 		initialize(resources);
 	}
 
 	protected void initialize(Resource[] resources) throws IOException {
+		ImmutableList.Builder<Recipe> builder = ImmutableList.builder();
 		for (Resource resource : resources) {
-			initialize(resource);
+			Iterable<Recipe> recipes = mixology.get(resource);
+			builder.addAll(recipes);
 		}
-	}
-
-	protected void initialize(Resource resource) throws IOException {
-		Iterable<Recipe> recipes = mixology.get(resource);
-		initialize(recipes);
-	}
-
-	protected void initialize(Iterable<Recipe> recipes) {
-		for (Recipe recipe : recipes) {
-			initialize(recipe);
-		}
-	}
-
-	protected void initialize(Recipe recipe) {
-		System.out.println("Got a recipe: " + recipe);
+		this.recipes = builder.build();
 	}
 
 	public void doSomething() {
+		ImmutableList<Martini> martinis = getMartinis();
 		System.out.println("breakpoint");
 	}
 
-//	public void doSomething() {
-//		List<Recipe> mixology = this.mixology.getMuddles();
-//
-//		GivenCallback callback = processor.getGivenCallback();
-//		Map<Pattern, Method> index = callback.getMethodIndex();
-//
-//		for (Recipe muddle : mixology) {
-//			Pickle pickle = muddle.getPickle();
-//			List<PickleStep> steps = pickle.getSteps();
-//			for (PickleStep step : steps) {
-//				String text = step.getText();
-//				List<Pattern> matches = Lists.newArrayList();
-//				for (Pattern pattern : index.keySet()) {
-//					Matcher matcher = pattern.matcher(text);
-//					if (matcher.find()) {
-//						matches.add(pattern);
-//					}
-//				}
-//
-//				checkState(matches.size() < 2,
-//					"ambiguous step for regex %s, matches %s", text, Joiner.on(", ").join(matches));
-//
-//				// TODO: check capturing groups against number of expected parameters in method
-//				System.out.println("breakpoint");
-//			}
-//
-//		}
-//		// Now, find all the steps.
-//		// And match the steps to the mixology to create Cocktails.
-//		// Recipe, Pattern and Method.
-//	}
+	protected ImmutableList<Martini> getMartinis() {
+		synchronized (martinisReference) {
+			ImmutableList<Martini> martinis = martinisReference.get();
+			if (null == martinis) {
+				Map<String, Step> index = context.getBeansOfType(Step.class);
+				Collection<Step> steps = index.values();
+
+				ImmutableList.Builder<Martini> builder = ImmutableList.builder();
+				for (Recipe recipe : recipes) {
+					System.out.println("breakpoint");
+				}
+			}
+			return martinis;
+		}
+	}
 }
