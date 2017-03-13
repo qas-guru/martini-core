@@ -6,11 +6,10 @@
 
 	<groupId>guru.qas</groupId>
 	<artifactId>martini-core</artifactId>
-	<version>1.0-SNAPSHOT</version>
+	<version>0.0.0</version>
 	<packaging>jar</packaging>
 
-	<name>martini-core</name>
-
+	<name>${project.groupId}:${project.artifactId}</name>
 	<description>Martini: Core Libraries for Java</description>
 	<url>https://github.com/qas-guru/martini-core</url>
 
