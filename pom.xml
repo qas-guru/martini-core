@@ -9,8 +9,8 @@
 	<version>1.0-SNAPSHOT</version>
 	<packaging>jar</packaging>
 
-	<name>Martini</name>
-	<url>https://github.com/qas-guru/martini</url>
+	<name>Martini Core</name>
+	<url>https://github.com/qas-guru/martini-core</url>
 
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -93,7 +93,6 @@
 		    <version>6.11</version>
 			<scope>test</scope>
 		</dependency>
-
 
 	</dependencies>
 

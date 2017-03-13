@@ -94,7 +94,7 @@ public class StepsAnnotationProcessorTest {
 
 		MultipleGivenBean steps = context.getBean(MultipleGivenBean.class);
 		Class<?> wrapped = AopUtils.getTargetClass(steps);
-		Method method = wrapped.getMethod("getMartinis");
+		Method method = wrapped.getMethod("doSomething");
 
 		Map<String, GivenStep> givenBeanIndex = context.getBeansOfType(GivenStep.class);
 		Collection<GivenStep> givens = givenBeanIndex.values();
