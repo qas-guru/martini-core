@@ -65,7 +65,7 @@ public class DefaultMixologistTest {
 		String expected = "Feature: Functionality of the Reporting Subsystem\n" +
 			"Resource: " + path + "\n" +
 			"Scenario: A Corner Case\n" +
-			"Line: 10";
+			"Line: 25";
 
 		assertEquals(toString, expected, "wrong information returned through toString()");
 	}
