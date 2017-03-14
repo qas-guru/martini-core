@@ -14,17 +14,9 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package guru.qas.martini;
+package guru.qas.martini.event;
 
-import java.util.Map;
+public interface MartiniEventPublisher {
 
-import gherkin.ast.Step;
-import guru.qas.martini.gherkin.Recipe;
-import guru.qas.martini.step.StepImplementation;
-
-public interface Martini {
-
-	Recipe getRecipe();
-
-	Map<Step, StepImplementation> getStepIndex();
+	void publish(MartiniEvent event);
 }

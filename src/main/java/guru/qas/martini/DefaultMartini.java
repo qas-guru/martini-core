@@ -17,6 +17,7 @@ limitations under the License.
 package guru.qas.martini;
 
 import java.util.LinkedHashMap;
+import java.util.Map;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
@@ -28,6 +29,9 @@ import gherkin.pickles.PickleLocation;
 import guru.qas.martini.gherkin.Recipe;
 import guru.qas.martini.step.StepImplementation;
 
+/**
+ * Default implementation of a Martini.
+ */
 @SuppressWarnings("WeakerAccess")
 public class DefaultMartini implements Martini {
 
@@ -37,6 +41,11 @@ public class DefaultMartini implements Martini {
 	@Override
 	public Recipe getRecipe() {
 		return recipe;
+	}
+
+	@Override
+	public Map<Step, StepImplementation> getStepIndex() {
+		return stepIndex;
 	}
 
 	protected DefaultMartini(Recipe recipe, ImmutableMap<Step, StepImplementation> stepIndex) {

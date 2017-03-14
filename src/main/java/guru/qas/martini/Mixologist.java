@@ -18,6 +18,13 @@ package guru.qas.martini;
 
 import java.util.Collection;
 
+/**
+ * The main Martini core endpoint from which Martini instances may be obtained.
+ */
 public interface Mixologist {
+
+	/**
+	 * @return all available Martini instances
+	 */
 	Collection<Martini> getMartinis();
 }

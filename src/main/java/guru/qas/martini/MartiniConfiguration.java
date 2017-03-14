@@ -26,11 +26,10 @@ import org.springframework.context.annotation.Configuration;
 
 import static com.google.common.base.Preconditions.*;
 
-@SuppressWarnings("WeakerAccess")
 @Configuration
-public class MartiniConfiguration implements BeanFactoryAware {
+class MartiniConfiguration implements BeanFactoryAware {
 
-	protected AutowireCapableBeanFactory beanFactory;
+	private AutowireCapableBeanFactory beanFactory;
 
 	@Override
 	public void setBeanFactory(BeanFactory beanFactory) throws BeansException {
@@ -40,7 +39,7 @@ public class MartiniConfiguration implements BeanFactoryAware {
 	}
 
 	@Bean
-	protected Mixologist getMixologist(
+	Mixologist getMixologist(
 		@Value("${gherkin.mixologist:#{null}}") Class<? extends Mixologist> impl
 	) {
 		return null == impl ?

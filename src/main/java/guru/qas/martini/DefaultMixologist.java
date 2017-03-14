@@ -43,6 +43,9 @@ import guru.qas.martini.step.StepImplementation;
 
 import static com.google.common.base.Preconditions.*;
 
+/**
+ * Default implementation of a Mixologist.
+ */
 @SuppressWarnings("WeakerAccess")
 @Configurable
 public class DefaultMixologist implements Mixologist, InitializingBean, ApplicationContextAware {
@@ -89,6 +92,7 @@ public class DefaultMixologist implements Mixologist, InitializingBean, Applicat
 		this.recipes = builder.build();
 	}
 
+	@Override
 	public ImmutableList<Martini> getMartinis() {
 		synchronized (martinisReference) {
 			ImmutableList<Martini> martinis = martinisReference.get();

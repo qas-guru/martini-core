@@ -1,5 +1,5 @@
 <assembly>
-	<id>jmeter-bin</id>
+	<id>jmeter-dependencies</id>
 	<formats>
 		<format>zip</format>
 		<format>dir</format>

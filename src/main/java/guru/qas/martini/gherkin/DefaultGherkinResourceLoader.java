@@ -25,6 +25,9 @@ import org.springframework.core.io.ResourceLoader;
 import org.springframework.core.io.support.PathMatchingResourcePatternResolver;
 import org.springframework.core.io.support.ResourcePatternResolver;
 
+/**
+ * Default implementation of a GherkinResourceLoader.
+ */
 @SuppressWarnings("WeakerAccess")
 @Configurable
 public class DefaultGherkinResourceLoader implements GherkinResourceLoader {

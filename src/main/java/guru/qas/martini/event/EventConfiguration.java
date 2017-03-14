@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package guru.qas.martini.gherkin;
+package guru.qas.martini.event;
 
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.BeanFactory;
@@ -29,11 +29,10 @@ import static com.google.common.base.Preconditions.checkState;
 
 @Configuration
 @Lazy
-class GherkinConfiguration implements BeanFactoryAware {
+class EventConfiguration implements BeanFactoryAware {
 
 	private AutowireCapableBeanFactory beanFactory;
 
-	@Override
 	public void setBeanFactory(BeanFactory beanFactory) throws BeansException {
 		checkState(AutowireCapableBeanFactory.class.isInstance(beanFactory),
 			"BeanFactory must be of type AutowireCapableBeanFactory but found %s", beanFactory.getClass());
@@ -41,19 +40,12 @@ class GherkinConfiguration implements BeanFactoryAware {
 	}
 
 	@Bean
-	GherkinResourceLoader getFeatureResourceLoader(
-		@Value("${gherkin.resource.loader:#{null}}") Class<? extends GherkinResourceLoader> impl
+	MartiniEventPublisher getMartiniEventPublisher(
+		@Value("${martini.event.publisher:#{null}}") Class<? extends MartiniEventPublisher> impl
 	) {
 		return null == impl ?
-			beanFactory.createBean(DefaultGherkinResourceLoader.class) :
+			beanFactory.createBean(DefaultMartiniEventPublisher.class) :
 			beanFactory.createBean(impl);
-	}
 
-	@Bean
-	Mixology getMixology(
-		@Value("${martini.mixology:#{null}}") Class<? extends Mixology> impl
-	) {
-		return null == impl ?
-			beanFactory.createBean(DefaultMixology.class) : beanFactory.createBean(impl);
 	}
 }
