@@ -25,11 +25,11 @@ import java.util.concurrent.atomic.AtomicReference;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Configurable;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
 import org.springframework.core.io.Resource;
-import org.springframework.stereotype.Service;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
@@ -44,7 +44,7 @@ import guru.qas.martini.step.StepImplementation;
 import static com.google.common.base.Preconditions.*;
 
 @SuppressWarnings("WeakerAccess")
-@Service
+@Configurable
 public class DefaultMixologist implements Mixologist, InitializingBean, ApplicationContextAware {
 
 	protected final GherkinResourceLoader loader;
