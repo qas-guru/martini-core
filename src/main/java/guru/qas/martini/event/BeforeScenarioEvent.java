@@ -16,7 +16,9 @@ limitations under the License.
 
 package guru.qas.martini.event;
 
-public interface MartiniEventPublisher {
+import guru.qas.martini.Martini;
 
-	void publish(MartiniEvent event);
+public interface BeforeScenarioEvent extends MartiniEvent {
+
+	Martini getMartini();
 }

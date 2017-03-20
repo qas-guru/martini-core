@@ -16,12 +16,8 @@ limitations under the License.
 
 package guru.qas.martini.event;
 
-import guru.qas.martini.Martini;
-
 @SuppressWarnings("WeakerAccess")
 public interface MartiniEvent {
 
 	long getTimestamp();
-
-	Martini getMartini();
 }

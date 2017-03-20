@@ -14,28 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package guru.qas.martini;
+package guru.qas.martini.event;
 
-import java.util.Map;
-import java.util.Set;
-
-import gherkin.ast.Step;
-import gherkin.ast.Tag;
-import guru.qas.martini.gherkin.Recipe;
-import guru.qas.martini.step.StepImplementation;
-
-public interface Martini {
-
-	Recipe getRecipe();
-
-	Map<Step, StepImplementation> getStepIndex();
-
-	Set<Tag> getFeatureTags();
-
-	Set<Tag> getScenarioTags();
-
-	/**
-	 * @return both feature and scenario tags
-	 */
-	Set<Tag> getTags();
+public interface BeforeSuiteEvent extends MartiniEvent {
 }

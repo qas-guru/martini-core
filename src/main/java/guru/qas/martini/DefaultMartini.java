@@ -16,14 +16,21 @@ limitations under the License.
 
 package guru.qas.martini;
 
+import java.util.Collections;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Maps;
 
 import gherkin.ast.Feature;
+import gherkin.ast.Location;
+import gherkin.ast.ScenarioDefinition;
 import gherkin.ast.Step;
+import gherkin.ast.Tag;
 import gherkin.pickles.Pickle;
 import gherkin.pickles.PickleLocation;
 import guru.qas.martini.gherkin.Recipe;
@@ -51,6 +58,26 @@ public class DefaultMartini implements Martini {
 	protected DefaultMartini(Recipe recipe, ImmutableMap<Step, StepImplementation> stepIndex) {
 		this.recipe = recipe;
 		this.stepIndex = stepIndex;
+	}
+
+	@Override
+	public Set<Tag> getFeatureTags() {
+		Feature feature = recipe.getFeature();
+		List<Tag> tags = feature.getTags();
+		return ImmutableSet.copyOf(tags);
+	}
+
+	@Override
+	public Set<Tag> getScenarioTags() {
+		return Collections.emptySet();
+	}
+
+	@Override
+	public Set<Tag> getTags() {
+		return ImmutableSet.<Tag>builder()
+			.addAll(getFeatureTags())
+			.addAll(getScenarioTags())
+			.build();
 	}
 
 	@Override

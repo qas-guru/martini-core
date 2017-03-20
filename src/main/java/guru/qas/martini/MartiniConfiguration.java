@@ -23,6 +23,9 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.beans.factory.config.AutowireCapableBeanFactory;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Lazy;
+import org.springframework.core.convert.ConversionService;
+import org.springframework.core.convert.support.DefaultConversionService;
 
 import static com.google.common.base.Preconditions.*;
 
@@ -45,5 +48,11 @@ class MartiniConfiguration implements BeanFactoryAware {
 		return null == impl ?
 			beanFactory.createBean(DefaultMixologist.class) :
 			beanFactory.createBean(impl);
+	}
+
+	@Bean(name = MartiniConstants.BEAN_NAME_CONVERSION_SERVICE)
+	@Lazy
+	ConversionService getMartiniConversionService() {
+		return new DefaultConversionService();
 	}
 }
