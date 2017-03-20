@@ -34,7 +34,7 @@ public interface StepImplementation {
 		throw new UnsupportedOperationException();
 	}
 
-	default boolean isMatch(Step recipe) {
+	default boolean isMatch(Step step) {
 		throw new UnsupportedOperationException();
 	}
 }

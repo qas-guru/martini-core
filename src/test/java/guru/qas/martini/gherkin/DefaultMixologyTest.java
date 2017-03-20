@@ -18,26 +18,54 @@ package guru.qas.martini.gherkin;
 
 import java.io.IOException;
 
+import org.springframework.context.ApplicationContext;
 import org.springframework.context.support.ClassPathXmlApplicationContext;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.Resource;
+import org.testng.annotations.AfterClass;
+import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
 import com.google.common.collect.Iterables;
 
 import static org.testng.Assert.assertEquals;
 
+@SuppressWarnings("WeakerAccess")
 public class DefaultMixologyTest {
+
+	protected ClassPathXmlApplicationContext context;
+	protected DefaultMixology factory;
+
+	@BeforeClass
+	public void setUpClass() {
+		context = new ClassPathXmlApplicationContext("applicationContext.xml");
+		factory = context.getBean(DefaultMixology.class);
+	}
+
+	@AfterClass
+	public void tearDownClass() {
+		factory = null;
+		if (null != context) {
+			context.close();
+		}
+		context = null;
+	}
 
 	@Test
 	public void testMixology() throws IOException {
-		ClassPathXmlApplicationContext context = new ClassPathXmlApplicationContext("applicationContext.xml");
-		DefaultMixology factory = context.getBean(DefaultMixology.class);
-
 		Resource resource = new ClassPathResource("/subsystem/sample.feature");
 		Iterable<Recipe> recipes = factory.get(resource);
 
 		int recipeCount = Iterables.size(recipes);
 		assertEquals(1, recipeCount, "wrong number of Recipe objects returned");
+	}
+
+	@Test
+	public void testParameterization() throws IOException {
+		Resource resource = new ClassPathResource("/subsystem/parameters.feature");
+		Iterable<Recipe> recipes = factory.get(resource);
+
+		int recipeCount = Iterables.size(recipes);
+		assertEquals(2, recipeCount, "wrong number of Recipe objects returned");
 	}
 }

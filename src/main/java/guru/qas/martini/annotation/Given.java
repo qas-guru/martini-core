@@ -23,8 +23,8 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 @Retention(RetentionPolicy.RUNTIME)
-@Repeatable(GivenContainer.class)
 @Target({ElementType.TYPE, ElementType.METHOD})
+@Repeatable(GivenContainer.class)
 public @interface Given {
 
 	String value();

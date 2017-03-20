@@ -18,34 +18,23 @@ package fixture;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 
 import guru.qas.martini.annotation.Given;
 import guru.qas.martini.annotation.Steps;
-import guru.qas.martini.gherkin.Mixology;
 
+@SuppressWarnings("WeakerAccess")
 @Steps
-public class TestSteps {
-	private static final Logger LOGGER = LoggerFactory.getLogger(TestSteps.class);
+public class ParameterizedTestSteps {
 
-	@SuppressWarnings("FieldCanBeLocal")
-	private final Mixology mixology;
+	protected static final Logger LOGGER = LoggerFactory.getLogger(ParameterizedTestSteps.class);
 
-	@Autowired
-	TestSteps(Mixology mixology) {
-		this.mixology = mixology;
+	@Given("^a pre-existing condition without arguments$")
+	public void aPreExistingConditionWithoutArguments() throws Throwable {
+		LOGGER.info("executing aPreExistingWithoutArguments");
 	}
 
-	@Given("^a pre-existing condition$")
-	@Given("^a given$")
-	public void aGiven() {
-	}
-
-	@Given("^another \"(.+)\" here$")
-	public void anotherStep(String myParameter) {
-		LOGGER.info("executing with parameter {}", myParameter);
-	}
-
-	private void aPrivateMethod() {
+	@Given("^a pre-existing condition known as \"(.+)\"$")
+	public void aPreExistingConditionKnownAs(String condition) throws Throwable {
+		LOGGER.info("executing aPreExistingConditionKnownAs(String)");
 	}
 }
