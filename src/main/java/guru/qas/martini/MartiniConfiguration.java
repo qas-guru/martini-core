@@ -25,7 +25,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.core.convert.ConversionService;
-import org.springframework.core.convert.support.DefaultConversionService;
+import org.springframework.core.env.AbstractEnvironment;
 
 import static com.google.common.base.Preconditions.*;
 
@@ -50,9 +50,19 @@ class MartiniConfiguration implements BeanFactoryAware {
 			beanFactory.createBean(impl);
 	}
 
-	@Bean(name = MartiniConstants.BEAN_NAME_CONVERSION_SERVICE)
+	/**
+	 * @param environment Spring Environment
+	 * @param beanName    name of Conversion Service bean Martini should utilize
+	 * @return specified, or Environment default, conversion service.
+	 */
+	@SuppressWarnings("unused") // Required by runtime engines.
 	@Lazy
-	ConversionService getMartiniConversionService() {
-		return new DefaultConversionService();
+	ConversionService getConversionService(
+		AbstractEnvironment environment,
+		@Value("${conversion.service.bean.name:#{null}") String beanName
+	) {
+		return null == beanName ?
+			environment.getConversionService() :
+			beanFactory.getBean(beanName, ConversionService.class);
 	}
 }
