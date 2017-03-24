@@ -19,26 +19,12 @@ package guru.qas.martini.step;
 import java.lang.reflect.Method;
 import java.util.regex.Pattern;
 
-import gherkin.ast.Step;
+@SuppressWarnings("WeakerAccess")
+public class DefaultAndStep extends AbstractDefaultStep implements GivenStep {
 
-public interface StepImplementation {
+	protected final static String KEYWORD = "And";
 
-	StepImplementation UNIMPLEMENTED = new StepImplementation() {
-	};
-
-	default String getKeyword() {
-		return "[unimplemented]";
-	}
-
-	default Pattern getPattern() {
-		throw new UnsupportedOperationException();
-	}
-
-	default Method getMethod() {
-		throw new UnsupportedOperationException();
-	}
-
-	default boolean isMatch(Step step) {
-		throw new UnsupportedOperationException();
+	public DefaultAndStep(Pattern pattern, Method method) {
+		super(pattern, method, KEYWORD);
 	}
 }

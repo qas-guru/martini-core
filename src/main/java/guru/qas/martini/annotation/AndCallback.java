@@ -23,43 +23,43 @@ import java.util.regex.Pattern;
 import org.springframework.beans.factory.config.ConfigurableListableBeanFactory;
 import org.springframework.core.annotation.AnnotationUtils;
 
-import guru.qas.martini.step.DefaultGivenStep;
+import guru.qas.martini.step.DefaultAndStep;
 
 import static com.google.common.base.Preconditions.*;
 
 @SuppressWarnings("WeakerAccess")
-public class GivenCallback extends AbstractAnnotationCallback {
+public class AndCallback extends AbstractAnnotationCallback {
 
-	protected GivenCallback(ConfigurableListableBeanFactory beanFactory) {
+	protected AndCallback(ConfigurableListableBeanFactory beanFactory) {
 		super(beanFactory);
 	}
 
 	protected void processAnnotation(Method method) {
-		Given annotation = AnnotationUtils.findAnnotation(method, Given.class);
+		And annotation = AnnotationUtils.findAnnotation(method, And.class);
 		if (null != annotation) {
 			process(method, annotation);
 		}
 	}
 
-	protected void process(Method method, Given annotation) {
+	protected void process(Method method, And annotation) {
 		checkState(Modifier.isPublic(method.getModifiers()), "Method is not public: %s", method);
 		String regex = annotation.value().trim();
-		checkState(!regex.isEmpty(), "@Given requires non-empty regex values.");
-		checkState(!regularExpressions.contains(regex), "Multiple methods found for @Given regex \"%s\"", regex);
+		checkState(!regex.isEmpty(), "@And requires non-empty regex values.");
+		checkState(!regularExpressions.contains(regex), "Multiple methods found for @And regex \"%s\"", regex);
 		Pattern pattern = Pattern.compile(regex);
 		regularExpressions.add(regex);
 
-		String name = String.format("given%s", atomicInteger.getAndIncrement());
+		String name = String.format("and%s", atomicInteger.getAndIncrement());
 
-		DefaultGivenStep step = new DefaultGivenStep(pattern, method);
+		DefaultAndStep step = new DefaultAndStep(pattern, method);
 		beanFactory.registerSingleton(name, step);
 	}
 
 	protected void processAnnotationContainer(Method method) {
-		GivenContainer container = AnnotationUtils.findAnnotation(method, GivenContainer.class);
+		AndContainer container = AnnotationUtils.findAnnotation(method, AndContainer.class);
 		if (null != container) {
-			Given[] annotations = container.value();
-			for (Given annotation : annotations) {
+			And[] annotations = container.value();
+			for (And annotation : annotations) {
 				process(method, annotation);
 			}
 		}

@@ -16,29 +16,5 @@ limitations under the License.
 
 package guru.qas.martini.step;
 
-import java.lang.reflect.Method;
-import java.util.regex.Pattern;
-
-import gherkin.ast.Step;
-
-public interface StepImplementation {
-
-	StepImplementation UNIMPLEMENTED = new StepImplementation() {
-	};
-
-	default String getKeyword() {
-		return "[unimplemented]";
-	}
-
-	default Pattern getPattern() {
-		throw new UnsupportedOperationException();
-	}
-
-	default Method getMethod() {
-		throw new UnsupportedOperationException();
-	}
-
-	default boolean isMatch(Step step) {
-		throw new UnsupportedOperationException();
-	}
+public interface AndStep extends StepImplementation {
 }

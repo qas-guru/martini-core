@@ -14,31 +14,16 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package guru.qas.martini.step;
+package guru.qas.martini.annotation;
 
-import java.lang.reflect.Method;
-import java.util.regex.Pattern;
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
 
-import gherkin.ast.Step;
+@Target({ElementType.TYPE, ElementType.METHOD})
+@Retention(RetentionPolicy.RUNTIME)
+public @interface AndContainer {
 
-public interface StepImplementation {
-
-	StepImplementation UNIMPLEMENTED = new StepImplementation() {
-	};
-
-	default String getKeyword() {
-		return "[unimplemented]";
-	}
-
-	default Pattern getPattern() {
-		throw new UnsupportedOperationException();
-	}
-
-	default Method getMethod() {
-		throw new UnsupportedOperationException();
-	}
-
-	default boolean isMatch(Step step) {
-		throw new UnsupportedOperationException();
-	}
+	And[] value();
 }

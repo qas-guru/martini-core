@@ -29,6 +29,7 @@ import org.springframework.core.annotation.AnnotationUtils;
 import org.springframework.stereotype.Component;
 import org.springframework.util.ReflectionUtils;
 
+import com.google.common.collect.ImmutableList;
 import static com.google.common.base.Preconditions.*;
 
 @Component
@@ -36,7 +37,7 @@ import static com.google.common.base.Preconditions.*;
 class StepsAnnotationProcessor implements BeanPostProcessor, ApplicationContextAware {
 
 	private ApplicationContext context;
-	private GivenCallback givenCallback;
+	private ImmutableList<ReflectionUtils.MethodCallback> callbacks;
 
 	@Override
 	public void setApplicationContext(ApplicationContext context) throws BeansException {
@@ -45,7 +46,10 @@ class StepsAnnotationProcessor implements BeanPostProcessor, ApplicationContextA
 		checkState(ConfigurableListableBeanFactory.class.isInstance(beanFactory),
 			"Martini requires the use of a ConfigurableListableBeanFactory");
 		ConfigurableListableBeanFactory configurable = ConfigurableListableBeanFactory.class.cast(beanFactory);
-		this.givenCallback = new GivenCallback(configurable);
+		callbacks = ImmutableList.<ReflectionUtils.MethodCallback>builder()
+			.add(new GivenCallback(configurable))
+			.add(new AndCallback(configurable))
+			.build();
 	}
 
 	@Override
@@ -66,7 +70,7 @@ class StepsAnnotationProcessor implements BeanPostProcessor, ApplicationContextA
 			return bean;
 		}
 		catch (Exception e) {
-			throw new FatalBeanException("unable to processGivenContainer @Steps beans", e);
+			throw new FatalBeanException("unable to processAnnotationContainer @Steps beans", e);
 		}
 	}
 
@@ -77,6 +81,8 @@ class StepsAnnotationProcessor implements BeanPostProcessor, ApplicationContextA
 
 	private void processStepsBean(String beanName, Class wrapped) {
 		checkState(context.isSingleton(beanName), "Beans annotated @Steps must have singleton scope.");
-		ReflectionUtils.doWithMethods(wrapped, givenCallback);
+		for (ReflectionUtils.MethodCallback callback : callbacks) {
+			ReflectionUtils.doWithMethods(wrapped, callback);
+		}
 	}
 }
