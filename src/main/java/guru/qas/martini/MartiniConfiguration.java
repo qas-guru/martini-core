@@ -57,9 +57,10 @@ class MartiniConfiguration implements BeanFactoryAware {
 	 */
 	@SuppressWarnings("unused") // Required by runtime engines.
 	@Lazy
+	@Bean
 	ConversionService getConversionService(
 		AbstractEnvironment environment,
-		@Value("${conversion.service.bean.name:#{null}") String beanName
+		@Value("${conversion.service.bean.name:#{null}}") String beanName
 	) {
 		return null == beanName ?
 			environment.getConversionService() :
