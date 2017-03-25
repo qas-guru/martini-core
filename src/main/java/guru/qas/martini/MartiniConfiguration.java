@@ -21,11 +21,14 @@ import org.springframework.beans.factory.BeanFactory;
 import org.springframework.beans.factory.BeanFactoryAware;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.beans.factory.config.AutowireCapableBeanFactory;
+import org.springframework.beans.factory.config.CustomScopeConfigurer;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.core.convert.ConversionService;
 import org.springframework.core.env.AbstractEnvironment;
+
+import guru.qas.martini.scope.ScenarioScope;
 
 import static com.google.common.base.Preconditions.*;
 
@@ -55,7 +58,6 @@ class MartiniConfiguration implements BeanFactoryAware {
 	 * @param beanName    name of Conversion Service bean Martini should utilize
 	 * @return specified, or Environment default, conversion service.
 	 */
-	@SuppressWarnings("unused") // Required by runtime engines.
 	@Lazy
 	@Bean
 	ConversionService getConversionService(
@@ -65,5 +67,13 @@ class MartiniConfiguration implements BeanFactoryAware {
 		return null == beanName ?
 			environment.getConversionService() :
 			beanFactory.getBean(beanName, ConversionService.class);
+	}
+
+	@Bean
+	@Lazy
+	public CustomScopeConfigurer customScopeConfigurer(ScenarioScope scope) {
+		CustomScopeConfigurer configurer = new CustomScopeConfigurer();
+		configurer.addScope("scenario", scope);
+		return configurer;
 	}
 }
