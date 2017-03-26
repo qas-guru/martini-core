@@ -76,8 +76,9 @@ public class RegEx {
 		StandardEvaluationContext ctx = new StandardEvaluationContext();
 		ctx.setRootObject(new RegEx());
 
+
 		SpelExpressionParser parser = new SpelExpressionParser();
-		Expression expression = parser.parseExpression("isSmoke() and !isFire()");
+		Expression expression = parser.parseExpression("isSmoke() and (isSmoke() and isFire())");
 		Object value = expression.getValue(ctx);
 		System.out.println("value: " + value);
 	}
