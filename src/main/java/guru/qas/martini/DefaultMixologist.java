@@ -34,6 +34,9 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
 import org.springframework.core.io.Resource;
+import org.springframework.expression.Expression;
+import org.springframework.expression.spel.standard.SpelExpressionParser;
+import org.springframework.expression.spel.support.StandardEvaluationContext;
 
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
@@ -186,5 +189,30 @@ public class DefaultMixologist implements Mixologist, InitializingBean, Applicat
 		String summary = Joiner.on('\n').join(details);
 		String stepText = step.getText();
 		return String.format("ambiguous step; %s matches found for step: %s\n%s", count, stepText, summary);
+	}
+
+	@Override
+	public Collection<Martini> getMartinis(String spelFilter) {
+		String trimmed = checkNotNull(spelFilter, "null String").trim();
+		checkArgument(!trimmed.isEmpty(), "empty String");
+
+		SpelExpressionParser parser = new SpelExpressionParser();
+		Expression expression = parser.parseExpression(spelFilter);
+		return getMartinis(expression);
+	}
+
+	protected Collection<Martini> getMartinis(Expression expression) {
+		StandardEvaluationContext context = new StandardEvaluationContext();
+
+		ImmutableList<Martini> martinis = getMartinis();
+		List<Martini> matches = Lists.newArrayListWithCapacity(martinis.size());
+		for (Martini martini : martinis) {
+			DefaultMartiniFilter filter = new DefaultMartiniFilter(martini);
+			Boolean match = expression.getValue(context, filter, Boolean.class);
+			if (match) {
+				matches.add(martini);
+			}
+		}
+		return matches;
 	}
 }

@@ -16,11 +16,13 @@ limitations under the License.
 
 package guru.qas.martini;
 
+import java.util.Collection;
 import java.util.Map;
-import java.util.Set;
 
 import gherkin.ast.Step;
 import gherkin.ast.Tag;
+import gherkin.pickles.PickleTag;
+import guru.qas.martini.gherkin.MartiniTag;
 import guru.qas.martini.gherkin.Recipe;
 import guru.qas.martini.step.StepImplementation;
 
@@ -30,12 +32,12 @@ public interface Martini {
 
 	Map<Step, StepImplementation> getStepIndex();
 
-	Set<Tag> getFeatureTags();
+	Collection<Tag> getFeatureTags();
 
-	Set<Tag> getScenarioTags();
+	Collection<PickleTag> getScenarioTags();
 
 	/**
 	 * @return both feature and scenario tags
 	 */
-	Set<Tag> getTags();
+	Collection<MartiniTag> getTags();
 }

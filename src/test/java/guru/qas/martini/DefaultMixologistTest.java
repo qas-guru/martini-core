@@ -20,10 +20,10 @@ import java.io.IOException;
 import java.lang.reflect.Method;
 import java.util.Collection;
 import java.util.Map;
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.springframework.context.support.ClassPathXmlApplicationContext;
-import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.Resource;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
@@ -72,15 +72,15 @@ public class DefaultMixologistTest {
 		checkState(null != match, "no Martini loaded for sample.feature:A Corner Case");
 		String toString = match.toString();
 
-		Resource resource = new ClassPathResource("/subsystem/sample.feature");
-		String path = resource.getURL().toExternalForm();
-
-		String expected = "Feature: Functionality of the Reporting Subsystem\n" +
-			"Resource: " + path + "\n" +
+		String regex = "Feature: Functionality of the Reporting Subsystem\n" +
+			"Resource: (.+)\n" +
 			"Scenario: A Corner Case\n" +
 			"Line: 25";
 
-		assertEquals(toString, expected, "wrong information returned through toString()");
+		Pattern pattern = Pattern.compile(regex);
+		Matcher matcher = pattern.matcher(toString);
+		assertTrue(matcher.find(), String.format(
+			"wrong information returned through toString(); expected pattern %s but found %s", regex, toString));
 	}
 
 	protected Martini getMartini(String featureName, String scenarioName) {

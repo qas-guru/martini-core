@@ -16,23 +16,23 @@ limitations under the License.
 
 package guru.qas.martini;
 
-import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
+import java.util.concurrent.atomic.AtomicReference;
 
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 
 import gherkin.ast.Feature;
-import gherkin.ast.Location;
-import gherkin.ast.ScenarioDefinition;
 import gherkin.ast.Step;
 import gherkin.ast.Tag;
 import gherkin.pickles.Pickle;
 import gherkin.pickles.PickleLocation;
+import gherkin.pickles.PickleTag;
+import guru.qas.martini.gherkin.MartiniTag;
 import guru.qas.martini.gherkin.Recipe;
 import guru.qas.martini.step.StepImplementation;
 
@@ -44,6 +44,7 @@ public class DefaultMartini implements Martini {
 
 	protected final Recipe recipe;
 	protected final ImmutableMap<Step, StepImplementation> stepIndex;
+	protected final AtomicReference<List<MartiniTag>> martiniTagsRef;
 
 	@Override
 	public Recipe getRecipe() {
@@ -58,26 +59,42 @@ public class DefaultMartini implements Martini {
 	protected DefaultMartini(Recipe recipe, ImmutableMap<Step, StepImplementation> stepIndex) {
 		this.recipe = recipe;
 		this.stepIndex = stepIndex;
+		this.martiniTagsRef = new AtomicReference<>();
 	}
 
 	@Override
-	public Set<Tag> getFeatureTags() {
+	public List<Tag> getFeatureTags() {
 		Feature feature = recipe.getFeature();
 		List<Tag> tags = feature.getTags();
-		return ImmutableSet.copyOf(tags);
+		return ImmutableList.copyOf(tags);
 	}
 
 	@Override
-	public Set<Tag> getScenarioTags() {
-		return Collections.emptySet();
+	public List<PickleTag> getScenarioTags() {
+		Pickle pickle = recipe.getPickle();
+		return pickle.getTags();
 	}
 
 	@Override
-	public Set<Tag> getTags() {
-		return ImmutableSet.<Tag>builder()
-			.addAll(getFeatureTags())
-			.addAll(getScenarioTags())
-			.build();
+	public List<MartiniTag> getTags() {
+		List<MartiniTag> martiniTags;
+		synchronized(martiniTagsRef) {
+			martiniTags = martiniTagsRef.get();
+			if (null == martiniTags) {
+				martiniTags = Lists.newArrayList();
+				List<Tag> featureTags = getFeatureTags();
+				for (Tag featureTag : featureTags) {
+					MartiniTag tag = MartiniTag.builder().build(featureTag);
+					martiniTags.add(tag);
+				}
+				for (PickleTag pickleTag : getScenarioTags()) {
+					MartiniTag tag = MartiniTag.builder().build(pickleTag);
+					martiniTags.add(tag);
+				}
+			}
+			martiniTagsRef.set(martiniTags);
+		}
+		return martiniTags;
 	}
 
 	@Override
@@ -87,7 +104,7 @@ public class DefaultMartini implements Martini {
 		PickleLocation location = pickle.getLocations().get(0);
 		return String.format("Feature: %s\nResource: %s\nScenario: %s\nLine: %s",
 			feature.getName(),
-			location.getPath(),
+			recipe.getSource(),
 			pickle.getName(),
 			location.getLine());
 	}

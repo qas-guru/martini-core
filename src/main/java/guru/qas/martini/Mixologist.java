@@ -27,4 +27,10 @@ public interface Mixologist {
 	 * @return all available Martini instances
 	 */
 	Collection<Martini> getMartinis();
+
+	/**
+	 * @param spelFilter Spring SPeL expression, e.g. "isSmoke()"
+	 * @return all matching Martini instances
+	 */
+	Collection<Martini> getMartinis(String spelFilter);
 }

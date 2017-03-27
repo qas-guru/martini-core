@@ -21,6 +21,8 @@ import java.util.List;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicReference;
 
+import org.springframework.core.io.Resource;
+
 import com.google.common.collect.Sets;
 
 import gherkin.ast.Feature;
@@ -34,9 +36,14 @@ import static com.google.common.base.Preconditions.checkState;
 @SuppressWarnings("WeakerAccess")
 public class Recipe {
 
+	protected final Resource source;
 	protected final Feature feature;
 	protected final Pickle pickle;
 	protected final AtomicReference<ScenarioDefinition> definitionRef;
+
+	public Resource getSource() {
+		return source;
+	}
 
 	public Feature getFeature() {
 		return feature;
@@ -46,7 +53,8 @@ public class Recipe {
 		return pickle;
 	}
 
-	protected Recipe(Feature feature, Pickle pickle) {
+	protected Recipe(Resource source, Feature feature, Pickle pickle) {
+		this.source = source;
 		this.feature = feature;
 		this.pickle = pickle;
 		definitionRef = new AtomicReference<>();

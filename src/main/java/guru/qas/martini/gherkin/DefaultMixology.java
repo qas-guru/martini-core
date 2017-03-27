@@ -19,7 +19,6 @@ package guru.qas.martini.gherkin;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -55,33 +54,29 @@ public class DefaultMixology implements Mixology {
 	@Override
 	public Iterable<Recipe> get(Resource resource) throws IOException {
 		checkNotNull(resource, "null Resource");
-
-		URL location = resource.getURL();
 		TokenMatcher matcher = new TokenMatcher();
 
 		try (InputStream is = resource.getInputStream();
 			 InputStreamReader isr = new InputStreamReader(is)
 		) {
 			GherkinDocument document = parser.parse(isr, matcher);
-			return getRecipes(location, document);
+			return getRecipes(resource, document);
 		}
 	}
 
-	protected List<Recipe> getRecipes(URL location, GherkinDocument document) throws IOException {
+	protected List<Recipe> getRecipes(Resource source, GherkinDocument document) throws IOException {
 		Feature feature = document.getFeature();
-		String path = location.toExternalForm();
-		List<Pickle> pickles = compiler.compile(document, path);
-		return getRecipes(feature, pickles);
+		List<Pickle> pickles = compiler.compile(document);
+		return getRecipes(source, feature, pickles);
 	}
 
-	protected List<Recipe> getRecipes(Feature feature, Collection<Pickle> pickles) {
+	protected List<Recipe> getRecipes(Resource source, Feature feature, Collection<Pickle> pickles) {
 		ArrayList<Recipe> recipes = Lists.newArrayListWithExpectedSize(pickles.size());
 		for (Pickle pickle : pickles) {
-			Recipe recipe = new Recipe(feature, pickle);
+			Recipe recipe = new Recipe(source, feature, pickle);
 			recipes.add(recipe);
 		}
 		return recipes;
 	}
-
 
 }
