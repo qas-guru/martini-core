@@ -16,21 +16,13 @@ limitations under the License.
 
 package guru.qas.martini;
 
-import java.util.Collection;
-import java.util.Map;
+public class MartiniException extends Exception {
 
-import gherkin.ast.Step;
-import guru.qas.martini.gherkin.MartiniTag;
-import guru.qas.martini.gherkin.Recipe;
-import guru.qas.martini.step.StepImplementation;
+	public MartiniException(String message) {
+		super(message);
+	}
 
-public interface Martini {
-
-	String getId();
-
-	Recipe getRecipe();
-
-	Map<Step, StepImplementation> getStepIndex();
-
-	Collection<MartiniTag> getTags();
+	public MartiniException(String message, Throwable cause) {
+		super(message, cause);
+	}
 }

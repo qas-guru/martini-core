@@ -16,22 +16,12 @@ limitations under the License.
 
 package guru.qas.martini.gherkin;
 
-import java.util.Iterator;
-import java.util.List;
-import java.util.Set;
-import java.util.concurrent.atomic.AtomicReference;
-
 import org.springframework.core.io.Resource;
 
-import com.google.common.collect.Sets;
-
 import gherkin.ast.Feature;
-import gherkin.ast.Location;
 import gherkin.ast.ScenarioDefinition;
 import gherkin.pickles.Pickle;
 import gherkin.pickles.PickleLocation;
-
-import static com.google.common.base.Preconditions.checkState;
 
 @SuppressWarnings("WeakerAccess")
 public class Recipe {
@@ -39,7 +29,8 @@ public class Recipe {
 	protected final Resource source;
 	protected final Feature feature;
 	protected final Pickle pickle;
-	protected final AtomicReference<ScenarioDefinition> definitionRef;
+	protected final PickleLocation location;
+	protected final ScenarioDefinition definition;
 
 	public Resource getSource() {
 		return source;
@@ -53,34 +44,33 @@ public class Recipe {
 		return pickle;
 	}
 
-	protected Recipe(Resource source, Feature feature, Pickle pickle) {
-		this.source = source;
-		this.feature = feature;
-		this.pickle = pickle;
-		definitionRef = new AtomicReference<>();
+	public PickleLocation getLocation() {
+		return location;
 	}
 
 	public ScenarioDefinition getScenarioDefinition() {
-		synchronized (definitionRef) {
-			ScenarioDefinition definition = definitionRef.get();
-			if (null == definition) {
-				List<PickleLocation> locations = pickle.getLocations();
-				Set<Integer> lines = Sets.newHashSetWithExpectedSize(locations.size());
-				for (PickleLocation location : locations) {
-					int line = location.getLine();
-					lines.add(line);
-				}
-				List<ScenarioDefinition> definitions = feature.getChildren();
-				for (Iterator<ScenarioDefinition> i = definitions.iterator(); null == definition && i.hasNext(); ) {
-					ScenarioDefinition candidate = i.next();
-					Location location = candidate.getLocation();
-					int line = location.getLine();
-					definition = lines.contains(line) ? candidate : null;
-				}
-				checkState(null != definition, "unable to locate ScenarioDefinition in Feature");
-				definitionRef.set(definition);
-			}
-			return definition;
-		}
+		return definition;
+	}
+
+	protected Recipe(
+		Resource source,
+		Feature feature,
+		Pickle pickle,
+		PickleLocation location,
+		ScenarioDefinition definition
+	) {
+		this.source = source;
+		this.feature = feature;
+		this.pickle = pickle;
+		this.location = location;
+		this.definition = definition;
+	}
+
+	public String getId() {
+		String featureName = getFeature().getName();
+		String scenarioName = getPickle().getName();
+		int line = getLocation().getLine();
+		String formatted = String.format("%s:%s:%s", featureName, scenarioName, line);
+		return formatted.replaceAll("\\s+", "_");
 	}
 }

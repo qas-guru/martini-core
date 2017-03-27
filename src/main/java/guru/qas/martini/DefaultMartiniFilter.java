@@ -16,18 +16,17 @@ limitations under the License.
 
 package guru.qas.martini;
 
-import java.util.Iterator;
 import java.util.List;
 
-import com.google.common.collect.Iterables;
+import com.google.common.collect.Lists;
 
-import gherkin.ast.Tag;
 import guru.qas.martini.gherkin.MartiniTag;
 
-@SuppressWarnings("WeakerAccess")
+@SuppressWarnings({"WeakerAccess", "unused"})
 public class DefaultMartiniFilter {
 
-	private static final String TAG_SMOKE = "Smoke";
+	private static final String TAG_SMOKE = "@Smoke";
+	private static final String TAG_WIP = "@WIP";
 
 	protected final Martini martini;
 
@@ -35,20 +34,31 @@ public class DefaultMartiniFilter {
 		this.martini = martini;
 	}
 
-	protected boolean isSmoke() {
+	// MUST be public for MethodReference to locate functionality.
+	public boolean isSmoke() {
 		return isTagged(TAG_SMOKE);
-
 	}
 
-	protected boolean isTagged(String tagName) {
+	public boolean isWIP() {
+		return isTagged(TAG_WIP);
+	}
+
+	// MUST be public for MethodReference to locate functionality.
+	public boolean isTagged(String tagName) {
+		List<MartiniTag> matches = getTags(tagName);
+		return !matches.isEmpty();
+	}
+
+	public List<MartiniTag> getTags(String tagName) {
 		String trimmed = tagName.trim();
 		Iterable<MartiniTag> tags = martini.getTags();
-		boolean match = false;
-		for (Iterator<MartiniTag> i = tags.iterator(); !match && i.hasNext(); ) {
-			MartiniTag tag = i.next();
-			String candidateTagName = tag.getName();
-			match = trimmed.equals(candidateTagName);
+		List<MartiniTag> matches = Lists.newArrayList();
+		for (MartiniTag tag : tags) {
+			String formatted = String.format("@%s", tag.getName());
+			if (formatted.equals(tagName)) {
+				matches.add(tag);
+			}
 		}
-		return match;
+		return matches;
 	}
 }

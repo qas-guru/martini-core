@@ -19,12 +19,16 @@ package guru.qas.martini;
 import java.io.IOException;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicReference;
+
+import javax.annotation.Nullable;
 
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.InitializingBean;
@@ -33,8 +37,15 @@ import org.springframework.beans.factory.annotation.Configurable;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
+import org.springframework.core.convert.TypeDescriptor;
 import org.springframework.core.io.Resource;
+import org.springframework.expression.AccessException;
+import org.springframework.expression.BeanResolver;
+import org.springframework.expression.EvaluationContext;
 import org.springframework.expression.Expression;
+import org.springframework.expression.MethodExecutor;
+import org.springframework.expression.MethodResolver;
+import org.springframework.expression.TypedValue;
 import org.springframework.expression.spel.standard.SpelExpressionParser;
 import org.springframework.expression.spel.support.StandardEvaluationContext;
 
@@ -50,6 +61,7 @@ import gherkin.pickles.Pickle;
 import gherkin.pickles.PickleLocation;
 import gherkin.pickles.PickleStep;
 import guru.qas.martini.gherkin.GherkinResourceLoader;
+import guru.qas.martini.gherkin.MartiniTag;
 import guru.qas.martini.gherkin.Mixology;
 import guru.qas.martini.gherkin.Recipe;
 import guru.qas.martini.step.StepImplementation;
@@ -192,17 +204,26 @@ public class DefaultMixologist implements Mixologist, InitializingBean, Applicat
 	}
 
 	@Override
-	public Collection<Martini> getMartinis(String spelFilter) {
-		String trimmed = checkNotNull(spelFilter, "null String").trim();
-		checkArgument(!trimmed.isEmpty(), "empty String");
+	public Collection<Martini> getMartinis(@Nullable String spelFilter) {
+		String trimmed = null == spelFilter ? "" : spelFilter.trim();
 
-		SpelExpressionParser parser = new SpelExpressionParser();
-		Expression expression = parser.parseExpression(spelFilter);
-		return getMartinis(expression);
+		Collection<Martini> martinis = null;
+		if (!trimmed.isEmpty()) {
+			SpelExpressionParser parser = new SpelExpressionParser();
+			Expression expression = parser.parseExpression(spelFilter);
+			martinis = getMartinis(expression);
+		}
+		return null == martinis ? getMartinis() : martinis;
 	}
 
 	protected Collection<Martini> getMartinis(Expression expression) {
 		StandardEvaluationContext context = new StandardEvaluationContext();
+		MartiniBeanResolver beanResolver = new MartiniBeanResolver();
+		context.setBeanResolver(beanResolver);
+		List<MethodResolver> methodResolvers = context.getMethodResolvers();
+		ArrayList<MethodResolver> modifiedList = Lists.newArrayList(methodResolvers);
+		modifiedList.add(new MartiniMethodResolver());
+		context.setMethodResolvers(modifiedList);
 
 		ImmutableList<Martini> martinis = getMartinis();
 		List<Martini> matches = Lists.newArrayListWithCapacity(martinis.size());
@@ -214,5 +235,58 @@ public class DefaultMixologist implements Mixologist, InitializingBean, Applicat
 			}
 		}
 		return matches;
+	}
+
+	class MartiniMethodResolver implements MethodResolver {
+
+		@Override
+		public MethodExecutor resolve(
+			EvaluationContext context, Object targetObject, String name, List<TypeDescriptor> argumentTypes
+		) throws AccessException {
+			MethodExecutor executor;
+			switch (name) {
+				case "containsArgument":
+					executor = new ContainsArgumentExecutor();
+					break;
+				default:
+					throw new UnsupportedOperationException(name);
+			}
+			return executor;
+		}
+	}
+
+	class ContainsArgumentExecutor implements MethodExecutor {
+
+		@Override
+		public TypedValue execute(EvaluationContext context, Object target, Object... arguments) throws AccessException {
+			checkNotNull(arguments, "null Object[]");
+			checkState(1 == arguments.length, "wrong number of arguments, expected single String but got %s", arguments);
+			Object o = arguments[0];
+			checkState(String.class.isInstance(o), "argument is not an instance of String");
+			String argument = String.class.cast(o);
+
+			boolean evaluation = false;
+			if (null != target) {
+				checkState(Collection.class.isInstance(target), "operating on non-Collection target %s", target);
+				Collection collection = Collection.class.cast(target);
+				for (Iterator<Object> i = collection.iterator(); !evaluation && i.hasNext();) {
+					o = i.next();
+					checkState(MartiniTag.class.isInstance(o), "operating on non-MartiniTag target %s", o);
+					MartiniTag tag = MartiniTag.class.cast(o);
+					String tagArgument = tag.getArgument();
+					evaluation = argument.equals(tagArgument);
+				}
+			}
+			return new TypedValue(evaluation);
+		}
+	}
+
+	class MartiniBeanResolver implements BeanResolver {
+
+		@Override
+		public Object resolve(EvaluationContext context, String beanName) throws AccessException {
+			System.out.println("breakpoint");
+			return null;
+		}
 	}
 }

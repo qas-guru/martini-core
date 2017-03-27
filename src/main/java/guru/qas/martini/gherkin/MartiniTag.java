@@ -16,22 +16,36 @@ limitations under the License.
 
 package guru.qas.martini.gherkin;
 
-import gherkin.ast.Tag;
-import gherkin.pickles.PickleTag;
+import java.util.Objects;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
-import static com.google.common.base.Preconditions.checkNotNull;
+import gherkin.pickles.PickleTag;
+import guru.qas.martini.MartiniException;
+
+import static com.google.common.base.Preconditions.*;
 
 @SuppressWarnings("WeakerAccess")
 public class MartiniTag {
 
 	protected final String name;
+	protected final String argument;
 
 	public String getName() {
 		return name;
 	}
 
+	public String getArgument() {
+		return argument;
+	}
+
 	protected MartiniTag(String name) {
+		this(name, null);
+	}
+
+	protected MartiniTag(String name, String argument) {
 		this.name = name;
+		this.argument = argument;
 	}
 
 	public static Builder builder() {
@@ -41,19 +55,60 @@ public class MartiniTag {
 	@SuppressWarnings("WeakerAccess")
 	public static class Builder {
 
+		protected static final Pattern PATTERN_SIMPLE = Pattern.compile("^@(.+)$");
+		protected static final Pattern PATTERN_ARGUMENTED = Pattern.compile("^@(.+)\\(\"(.+)\"\\)$");
+
 		protected Builder() {
 		}
 
-		public MartiniTag build(Tag featureTag) {
-			checkNotNull(featureTag, "null Tag");
-			String name = featureTag.getName();
-			return new MartiniTag(name);
+		public MartiniTag build(PickleTag pickleTag) throws MartiniException {
+			checkNotNull(pickleTag, "null PickleTag");
+			String value = pickleTag.getName().trim();
+			try {
+				MartiniTag tag = getArgumented(value);
+				return null == tag ? getSimple(value) : tag;
+			}
+			catch (Exception e) {
+				throw new MartiniException("unable to create MartiniTag", e);
+			}
 		}
 
-		public MartiniTag build(PickleTag pickleTag) {
-			checkNotNull(pickleTag, "null PickleTag");
-			String name = pickleTag.getName();
+		protected MartiniTag getArgumented(String value) {
+			Matcher matcher = PATTERN_ARGUMENTED.matcher(value);
+
+			MartiniTag tag = null;
+			if (matcher.find()) {
+				String name = matcher.group(1);
+				String argument = matcher.group(2).trim();
+				tag = new MartiniTag(name, argument);
+				checkState(!matcher.find(), "illegal tag syntax: %s", value);
+			}
+			return tag;
+		}
+
+		protected MartiniTag getSimple(String value) {
+			Matcher matcher = PATTERN_SIMPLE.matcher(value);
+			checkState(matcher.find(), "illegal tag syntax: %s", value);
+			String name = matcher.group(1);
 			return new MartiniTag(name);
 		}
+	}
+
+	@Override
+	public boolean equals(Object o) {
+		if (this == o) {
+			return true;
+		}
+		if (!(o instanceof MartiniTag)) {
+			return false;
+		}
+		MartiniTag that = (MartiniTag) o;
+		return Objects.equals(getName(), that.getName()) &&
+			Objects.equals(getArgument(), that.getArgument());
+	}
+
+	@Override
+	public int hashCode() {
+		return Objects.hash(getName(), getArgument());
 	}
 }

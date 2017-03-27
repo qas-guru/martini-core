@@ -18,6 +18,8 @@ package guru.qas.martini;
 
 import java.util.Collection;
 
+import javax.annotation.Nullable;
+
 /**
  * The main Martini core endpoint from which Martini instances may be obtained.
  */
@@ -32,5 +34,5 @@ public interface Mixologist {
 	 * @param spelFilter Spring SPeL expression, e.g. "isSmoke()"
 	 * @return all matching Martini instances
 	 */
-	Collection<Martini> getMartinis(String spelFilter);
+	Collection<Martini> getMartinis(@Nullable String spelFilter);
 }

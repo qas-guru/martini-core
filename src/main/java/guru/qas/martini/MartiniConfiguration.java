@@ -71,7 +71,7 @@ class MartiniConfiguration implements BeanFactoryAware {
 
 	@Bean
 	@Lazy
-	public CustomScopeConfigurer customScopeConfigurer(ScenarioScope scope) {
+	public static CustomScopeConfigurer customScopeConfigurer(ScenarioScope scope) {
 		CustomScopeConfigurer configurer = new CustomScopeConfigurer();
 		configurer.addScope("scenario", scope);
 		return configurer;
