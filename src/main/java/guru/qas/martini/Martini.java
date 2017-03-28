@@ -33,4 +33,22 @@ public interface Martini {
 	Map<Step, StepImplementation> getStepIndex();
 
 	Collection<MartiniTag> getTags();
+
+	/**
+	 * Convenience method.
+	 * @return name stored in Recipe's Feature
+	 */
+	String getFeatureName();
+
+	/**
+	 * Convenience method.
+	 * @return name stored in Recipe's Pickle
+	 */
+	String getScenarioName();
+
+	/**
+	 * Convenience method.
+	 * @return line stored in Pickle's PickleLocation
+	 */
+	int getScenarioLine();
 }

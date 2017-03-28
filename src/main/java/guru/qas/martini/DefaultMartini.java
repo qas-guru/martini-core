@@ -26,8 +26,11 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 
+import gherkin.ast.Feature;
+import gherkin.ast.ScenarioDefinition;
 import gherkin.ast.Step;
 import gherkin.pickles.Pickle;
+import gherkin.pickles.PickleLocation;
 import gherkin.pickles.PickleTag;
 import guru.qas.martini.tag.MartiniTag;
 import guru.qas.martini.gherkin.Recipe;
@@ -71,6 +74,24 @@ public class DefaultMartini implements Martini {
 	@Override
 	public String getId() {
 		return recipe.getId();
+	}
+
+	@Override
+	public String getFeatureName() {
+		Feature feature = getRecipe().getFeature();
+		return feature.getName();
+	}
+
+	@Override
+	public String getScenarioName() {
+		ScenarioDefinition definition = getRecipe().getScenarioDefinition();
+		return definition.getName();
+	}
+
+	@Override
+	public int getScenarioLine() {
+		PickleLocation location = getRecipe().getLocation();
+		return location.getLine();
 	}
 
 	@Override
@@ -128,7 +149,8 @@ public class DefaultMartini implements Martini {
 				try {
 					MartiniTag tag = builder.build(pickleTag);
 					tags.add(tag);
-				} catch (MartiniException e) {
+				}
+				catch (MartiniException e) {
 					throw new RuntimeException("unable to create Martini for scenario " + recipe.getId(), e);
 				}
 			}

@@ -19,24 +19,21 @@ limitations under the License.
 <beans xmlns="http://www.springframework.org/schema/beans"
 	   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	   xmlns:context="http://www.springframework.org/schema/context"
+	   xmlns:martini="http://qas.guru/schema/martini"
+
 	   xsi:schemaLocation="http://www.springframework.org/schema/beans
 	   					   http://www.springframework.org/schema/beans/spring-beans.xsd
 
 	   					   http://www.springframework.org/schema/context
-	   					   http://www.springframework.org/schema/context/spring-context.xsd">
+	   					   http://www.springframework.org/schema/context/spring-context.xsd
+
+							http://qas.guru/schema/martini
+							http://qas.guru/schema/martini/martini-beans.xsd">
 
 
 	<import resource="classpath*:**/martiniContext.xml"/>
 
 	<context:component-scan base-package="fixture"/>
 
-	<bean class="guru.qas.martini.tag.DefaultCategory">
-		<constructor-arg name="name" value="AdHoc"/>
-		<constructor-arg name="parentNames">
-			<list>
-				<value>Reporting</value>
-				<value>Core</value>
-			</list>
-		</constructor-arg>
-	</bean>
+	<martini:category name="AdHoc" parentNames="Reporting, Core"/>
 </beans>
