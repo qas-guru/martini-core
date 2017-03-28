@@ -16,7 +16,7 @@ limitations under the License.
 
 package guru.qas.martini.tag;
 
-public interface Classifications {
+public interface Categories {
 
 	boolean isMatch(String classification, MartiniTag tag);
 }

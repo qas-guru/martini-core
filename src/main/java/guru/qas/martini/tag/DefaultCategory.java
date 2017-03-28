@@ -26,7 +26,7 @@ import com.google.common.collect.ImmutableList;
 import static com.google.common.base.Preconditions.*;
 
 @SuppressWarnings("WeakerAccess")
-public class DefaultClassification implements Classification {
+public class DefaultCategory implements Category {
 
 	protected final String name;
 	protected final ImmutableList<String> parentNames;
@@ -39,7 +39,7 @@ public class DefaultClassification implements Classification {
 		return parentNames;
 	}
 
-	public DefaultClassification(String name, @Nullable Collection<String> parentNames) {
+	public DefaultCategory(String name, @Nullable Collection<String> parentNames) {
 		this.name = checkNotNull(name, "null String").trim();
 		checkState(!this.name.isEmpty(), "empty String");
 		ImmutableList.Builder<String> builder = ImmutableList.builder();
@@ -56,10 +56,10 @@ public class DefaultClassification implements Classification {
 		if (this == o) {
 			return true;
 		}
-		if (!(o instanceof DefaultClassification)) {
+		if (!(o instanceof DefaultCategory)) {
 			return false;
 		}
-		DefaultClassification that = (DefaultClassification) o;
+		DefaultCategory that = (DefaultCategory) o;
 		return Objects.equals(getName(), that.getName());
 	}
 

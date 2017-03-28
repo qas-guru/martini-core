@@ -16,7 +16,7 @@ limitations under the License.
 
 package guru.qas.martini.tag;
 
-public interface Classification {
+public interface Category {
 
 	String getName();
 	Iterable<String> getParentNames();

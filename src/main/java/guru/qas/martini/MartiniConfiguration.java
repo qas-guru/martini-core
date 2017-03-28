@@ -28,8 +28,8 @@ import org.springframework.context.annotation.Lazy;
 import org.springframework.core.convert.ConversionService;
 import org.springframework.core.env.AbstractEnvironment;
 
-import guru.qas.martini.tag.Classifications;
-import guru.qas.martini.tag.DefaultClassifications;
+import guru.qas.martini.tag.Categories;
+import guru.qas.martini.tag.DefaultCategories;
 import guru.qas.martini.scope.ScenarioScope;
 
 import static com.google.common.base.Preconditions.*;
@@ -80,11 +80,11 @@ class MartiniConfiguration implements BeanFactoryAware {
 	}
 
 	@Bean
-	public Classifications getClassifications(
-		@Value("${classifications:#{null}}") Class<? extends Classifications> impl
+	public Categories getClassifications(
+		@Value("${classifications:#{null}}") Class<? extends Categories> impl
 	) {
 		return null == impl ?
-			beanFactory.createBean(DefaultClassifications.class) :
+			beanFactory.createBean(DefaultCategories.class) :
 			beanFactory.createBean(impl);
 	}
 }

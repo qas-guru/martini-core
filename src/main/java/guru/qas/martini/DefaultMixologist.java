@@ -47,7 +47,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 
-import guru.qas.martini.tag.Classifications;
+import guru.qas.martini.tag.Categories;
 import gherkin.ast.Location;
 import gherkin.ast.ScenarioDefinition;
 import gherkin.ast.Step;
@@ -71,7 +71,7 @@ public class DefaultMixologist implements Mixologist, InitializingBean, Applicat
 
 	protected final GherkinResourceLoader loader;
 	protected final Mixology mixology;
-	protected final Classifications classifications;
+	protected final Categories categories;
 	protected final boolean unimplementedStepsFatal;
 	protected final AtomicReference<ImmutableList<Martini>> martinisReference;
 
@@ -82,12 +82,12 @@ public class DefaultMixologist implements Mixologist, InitializingBean, Applicat
 	protected DefaultMixologist(
 		GherkinResourceLoader loader,
 		Mixology mixology,
-		Classifications classifications,
+		Categories categories,
 		@Value("${unimplemented.steps.fatal:#{false}}") boolean missingStepFatal
 	) {
 		this.loader = loader;
 		this.mixology = mixology;
-		this.classifications = classifications;
+		this.categories = categories;
 		this.unimplementedStepsFatal = missingStepFatal;
 		this.martinisReference = new AtomicReference<>();
 	}
@@ -217,7 +217,7 @@ public class DefaultMixologist implements Mixologist, InitializingBean, Applicat
 		StandardEvaluationContext context = new StandardEvaluationContext();
 		List<MethodResolver> methodResolvers = context.getMethodResolvers();
 		ArrayList<MethodResolver> modifiedList = Lists.newArrayList(methodResolvers);
-		modifiedList.add(new TagResolver(classifications));
+		modifiedList.add(new TagResolver(categories));
 		context.setMethodResolvers(modifiedList);
 
 		ImmutableList<Martini> martinis = getMartinis();

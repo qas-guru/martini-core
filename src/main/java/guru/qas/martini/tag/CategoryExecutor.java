@@ -29,10 +29,10 @@ import guru.qas.martini.Martini;
 @SuppressWarnings("WeakerAccess")
 class CategoryExecutor implements MethodExecutor {
 
-	protected final Classifications classifications;
+	protected final Categories categories;
 
-	CategoryExecutor(Classifications classifications) {
-		this.classifications = classifications;
+	CategoryExecutor(Categories categories) {
+		this.categories = categories;
 	}
 
 	@Override
@@ -53,7 +53,7 @@ class CategoryExecutor implements MethodExecutor {
 		boolean evaluation = false;
 		for (Iterator<MartiniTag> i = tags.iterator(); !evaluation && i.hasNext(); ) {
 			MartiniTag tag = i.next();
-			evaluation = classifications.isMatch(category, tag);
+			evaluation = categories.isMatch(category, tag);
 		}
 		return new TypedValue(evaluation);
 	}

@@ -30,7 +30,7 @@ limitations under the License.
 
 	<context:component-scan base-package="fixture"/>
 
-	<bean class="guru.qas.martini.tag.DefaultClassification">
+	<bean class="guru.qas.martini.tag.DefaultCategory">
 		<constructor-arg name="name" value="AdHoc"/>
 		<constructor-arg name="parentNames">
 			<list>

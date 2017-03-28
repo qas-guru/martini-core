@@ -34,10 +34,10 @@ public class TagResolver implements MethodResolver {
 	protected static final Pattern PATTERN = Pattern.compile("^is(\\S+)$");
 	protected static final String METHOD_CATEGORY = "Category";
 
-	protected final Classifications classifications;
+	protected final Categories categories;
 
-	public TagResolver(Classifications classifications) {
-		this.classifications = classifications;
+	public TagResolver(Categories categories) {
+		this.categories = categories;
 	}
 
 	@Override
@@ -66,6 +66,6 @@ public class TagResolver implements MethodResolver {
 	protected MethodExecutor resolve(String name) {
 		Matcher matcher = PATTERN.matcher(name);
 		String tagName = matcher.find() ? matcher.group(1) : null;
-		return METHOD_CATEGORY.equals(tagName) ? new CategoryExecutor(classifications) : new TagExecutor(tagName);
+		return METHOD_CATEGORY.equals(tagName) ? new CategoryExecutor(categories) : new TagExecutor(tagName);
 	}
 }

@@ -33,13 +33,13 @@ import com.google.common.collect.Sets;
 
 @Configurable
 @SuppressWarnings("WeakerAccess")
-public class DefaultClassifications implements Classifications, ApplicationContextAware, InitializingBean {
+public class DefaultCategories implements Categories, ApplicationContextAware, InitializingBean {
 
-	protected static final String TAG_NAME = "Classification";
+	protected static final String TAG_NAME = "Category";
 	protected final Multimap<String, String> ascendingHierarchy;
 	protected ApplicationContext applicationContext;
 
-	public DefaultClassifications() {
+	public DefaultCategories() {
 		ascendingHierarchy = HashMultimap.create();
 	}
 
@@ -50,12 +50,12 @@ public class DefaultClassifications implements Classifications, ApplicationConte
 
 	@Override
 	public void afterPropertiesSet() throws Exception {
-		Map<String, Classification> beans = applicationContext.getBeansOfType(Classification.class);
-		Collection<Classification> classifications = beans.values();
+		Map<String, Category> beans = applicationContext.getBeansOfType(Category.class);
+		Collection<Category> categories = beans.values();
 
-		for (Classification classification : classifications) {
-			String name = classification.getName();
-			Iterable<String> parentNames = classification.getParentNames();
+		for (Category category : categories) {
+			String name = category.getName();
+			Iterable<String> parentNames = category.getParentNames();
 
 			if (Iterables.isEmpty(parentNames)) {
 				ascendingHierarchy.put(name, null);
