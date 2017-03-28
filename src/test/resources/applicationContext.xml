@@ -30,4 +30,13 @@ limitations under the License.
 
 	<context:component-scan base-package="fixture"/>
 
+	<bean class="guru.qas.martini.tag.DefaultClassification">
+		<constructor-arg name="name" value="AdHoc"/>
+		<constructor-arg name="parentNames">
+			<list>
+				<value>Reporting</value>
+				<value>Core</value>
+			</list>
+		</constructor-arg>
+	</bean>
 </beans>

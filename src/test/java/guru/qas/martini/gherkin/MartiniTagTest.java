@@ -20,6 +20,7 @@ import org.testng.annotations.Test;
 
 import gherkin.pickles.PickleTag;
 import guru.qas.martini.MartiniException;
+import guru.qas.martini.tag.MartiniTag;
 
 import static org.testng.Assert.*;
 

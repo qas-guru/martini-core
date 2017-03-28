@@ -15,7 +15,7 @@
 
 # This is a comment.
 
-@Classification("Reporting")
+@Classification("AdHoc")
 @Meta("Selenium")
 Feature: Functionality of the Reporting Subsystem
   This is the basic description for my functionality.

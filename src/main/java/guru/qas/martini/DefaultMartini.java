@@ -29,7 +29,7 @@ import com.google.common.collect.Sets;
 import gherkin.ast.Step;
 import gherkin.pickles.Pickle;
 import gherkin.pickles.PickleTag;
-import guru.qas.martini.gherkin.MartiniTag;
+import guru.qas.martini.tag.MartiniTag;
 import guru.qas.martini.gherkin.Recipe;
 import guru.qas.martini.step.StepImplementation;
 
@@ -76,6 +76,16 @@ public class DefaultMartini implements Martini {
 	@Override
 	public String toString() {
 		return getId();
+	}
+
+	@Override
+	public int hashCode() {
+		return getId().hashCode();
+	}
+
+	@Override
+	public boolean equals(Object obj) {
+		return null != obj && Martini.class.isInstance(obj) && Martini.class.cast(obj).getId().equals(getId());
 	}
 
 	protected static Builder builder() {

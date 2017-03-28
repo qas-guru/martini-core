@@ -14,23 +14,10 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package guru.qas.martini;
+package guru.qas.martini.tag;
 
-import java.util.Collection;
-import java.util.Map;
+public interface Classification {
 
-import gherkin.ast.Step;
-import guru.qas.martini.tag.MartiniTag;
-import guru.qas.martini.gherkin.Recipe;
-import guru.qas.martini.step.StepImplementation;
-
-public interface Martini {
-
-	String getId();
-
-	Recipe getRecipe();
-
-	Map<Step, StepImplementation> getStepIndex();
-
-	Collection<MartiniTag> getTags();
+	String getName();
+	Iterable<String> getParentNames();
 }

@@ -33,14 +33,11 @@ import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 
 import fixture.ParameterizedTestSteps;
-import gherkin.ast.Feature;
 import gherkin.ast.Step;
-import gherkin.pickles.Pickle;
-import guru.qas.martini.gherkin.MartiniTag;
-import guru.qas.martini.gherkin.Recipe;
+import guru.qas.martini.tag.MartiniTag;
 import guru.qas.martini.step.StepImplementation;
 
-import static com.google.common.base.Preconditions.checkState;
+import static com.google.common.base.Preconditions.*;
 import static com.google.common.base.Predicates.notNull;
 import static org.testng.Assert.*;
 
@@ -67,31 +64,18 @@ public class DefaultMixologistTest {
 
 	@Test
 	public void testGetMartinis() throws IOException {
-		Martini match = getMartini("Functionality of the Reporting Subsystem", "A Corner Case");
-
-		checkState(null != match, "no Martini loaded for sample.feature:A Corner Case");
-
-		String expected = "Functionality_of_the_Reporting_Subsystem:A_Corner_Case:25";
-		assertEquals(match.getId(), expected, "wrong ID returned");
-		assertEquals(match.toString(), expected, "toString() not returning ID");
+		String id = "Functionality_of_the_Reporting_Subsystem:A_Corner_Case:25";
+		Martini match = getMartini(id);
+		checkState(null != match, "no Martini found matching ID [%s]", id);
 	}
 
-	protected Martini getMartini(String featureName, String scenarioName) {
+	protected Martini getMartini(String expected) {
 		Martini match = null;
 		ImmutableList<Martini> martinis = mixologist.getMartinis();
-		for (Martini martini : martinis) {
-			Recipe recipe = martini.getRecipe();
-			Feature feature = recipe.getFeature();
-			String fName = feature.getName().trim();
-			if (featureName.equals(fName)) {
-				Pickle pickle = recipe.getPickle();
-				String sName = pickle.getName().trim();
-				if (scenarioName.equals(sName)) {
-					checkState(null == match,
-						"more than one Martini found for %s:%s", featureName, scenarioName);
-					match = martini;
-				}
-			}
+		for (Iterator<Martini> i = martinis.iterator(); null == match && i.hasNext(); ) {
+			Martini candidate = i.next();
+			String id = candidate.getId();
+			match = expected.equals(id) ? candidate : null;
 		}
 		return match;
 	}
@@ -99,7 +83,10 @@ public class DefaultMixologistTest {
 	@SuppressWarnings("Guava")
 	@Test
 	public void testGetParameterizedMartini() throws NoSuchMethodException {
-		Martini martini = getMartini("Parameterized Method Calls", "A Parameterized Case");
+		String id = "Parameterized_Method_Calls:A_Parameterized_Case:25";
+		Martini martini = getMartini(id);
+		checkState(null != martini, "no Martini found matching ID [%s]", id);
+
 		Map<Step, StepImplementation> stepIndex = martini.getStepIndex();
 		Collection<StepImplementation> implementations = stepIndex.values();
 		ImmutableList<StepImplementation> filtered = FluentIterable.from(implementations).filter(notNull()).toList();
@@ -139,7 +126,7 @@ public class DefaultMixologistTest {
 	public void testGetFilteredMartinis() {
 		String filter = "isSmoke()";
 		Collection<Martini> martinis = mixologist.getMartinis(filter);
-		checkState(!martinis.isEmpty(), "no martinis returned for actionable filter " + filter);
+		checkState(!martinis.isEmpty(), "no martinis returned for actionable tag " + filter);
 		for (Martini martini : martinis) {
 			Collection<MartiniTag> tags = martini.getTags();
 			boolean foundTag = false;
@@ -154,22 +141,51 @@ public class DefaultMixologistTest {
 
 	@Test
 	public void testGetComplexSPeL() {
+		String id = "Functionality_of_the_Reporting_Subsystem:A_Corner_Case:25";
+		Martini expected = this.getMartini(id);
+		checkNotNull(expected, "no Martini found matching ID [%s]", id);
+
 		String filter = "getTags('@Meta').?[getArgument()?.equals('Selenium')].size() > 0";
 		Collection<Martini> martinis = mixologist.getMartinis(filter);
-		checkState(!martinis.isEmpty(), "no matching Martinis found");
+		assertTrue(martinis.contains(expected), "expected Martini not returned");
 	}
 
 	@Test
 	public void testGetCustomSPeL() {
+		String id = "Functionality_of_the_Reporting_Subsystem:A_Corner_Case:25";
+		Martini expected = this.getMartini(id);
+		checkNotNull(expected, "no Martini found matching ID [%s]", id);
+
 		String filter = "getTags('@Meta').containsArgument('Selenium')";
 		Collection<Martini> martinis = mixologist.getMartinis(filter);
-		checkState(!martinis.isEmpty(), "no matching Martinis found");
+		assertTrue(martinis.contains(expected), "expected Martini not returned");
 	}
 
 	@Test
 	public void testNegativeGetCustomSPeL() {
 		String filter = "getTags('@Meta').containsArgument('Bogus')";
 		Collection<Martini> martinis = mixologist.getMartinis(filter);
-		checkState(martinis.isEmpty(), "no matching Martinis should have been returned");
+		assertTrue(martinis.isEmpty(), "no matching Martinis should have been returned");
+	}
+
+	@Test
+	public void testGetByClassification() {
+		String id = "Functionality_of_the_Reporting_Subsystem:A_Corner_Case:25";
+		Martini expected = this.getMartini(id);
+		checkNotNull(expected, "no Martini found matching ID [%s]", id);
+
+		String filter = "isClassified('AdHoc')";
+		Collection<Martini> martinis = mixologist.getMartinis(filter);
+		assertTrue(martinis.contains(expected), "expected Martini not returned");
+	}
+
+	@Test
+	public void testGetByClassificationHierarchy() {
+		String id = "Functionality_of_the_Reporting_Subsystem:A_Corner_Case:25";
+		Martini expected = this.getMartini(id);
+
+		String filter = "isClassified('Core')";
+		Collection<Martini> martinis = mixologist.getMartinis(filter);
+		assertTrue(martinis.contains(expected), "expected Martini not returned");
 	}
 }

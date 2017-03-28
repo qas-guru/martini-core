@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package guru.qas.martini.gherkin;
+package guru.qas.martini.tag;
 
 import java.util.Objects;
 import java.util.regex.Matcher;
