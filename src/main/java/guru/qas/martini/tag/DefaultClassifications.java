@@ -35,6 +35,7 @@ import com.google.common.collect.Sets;
 @SuppressWarnings("WeakerAccess")
 public class DefaultClassifications implements Classifications, ApplicationContextAware, InitializingBean {
 
+	protected static final String TAG_NAME = "Classification";
 	protected final Multimap<String, String> ascendingHierarchy;
 	protected ApplicationContext applicationContext;
 
@@ -69,12 +70,17 @@ public class DefaultClassifications implements Classifications, ApplicationConte
 
 	@Override
 	public boolean isMatch(String classification, MartiniTag tag) {
-		String argument = tag.getArgument();
+		String name = tag.getName();
+		boolean evaluation = false;
 
-		boolean evaluation = classification.equals(argument);
-		if (!evaluation && null != argument) {
-			Set<String> ancestors = getAncestors(argument);
-			evaluation = ancestors.contains(classification);
+		if (TAG_NAME.equals(name)) {
+			String argument = tag.getArgument();
+			evaluation = classification.equals(argument);
+
+			if (!evaluation && null != argument) {
+				Set<String> ancestors = getAncestors(argument);
+				evaluation = ancestors.contains(classification);
+			}
 		}
 		return evaluation;
 	}

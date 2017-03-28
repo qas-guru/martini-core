@@ -48,8 +48,6 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 
 import guru.qas.martini.tag.Classifications;
-import guru.qas.martini.tag.DefaultMartiniFilter;
-import guru.qas.martini.tag.TagContainsArgumentResolver;
 import gherkin.ast.Location;
 import gherkin.ast.ScenarioDefinition;
 import gherkin.ast.Step;
@@ -60,6 +58,7 @@ import guru.qas.martini.gherkin.GherkinResourceLoader;
 import guru.qas.martini.gherkin.Mixology;
 import guru.qas.martini.gherkin.Recipe;
 import guru.qas.martini.step.StepImplementation;
+import guru.qas.martini.tag.TagResolver;
 
 import static com.google.common.base.Preconditions.*;
 
@@ -218,14 +217,13 @@ public class DefaultMixologist implements Mixologist, InitializingBean, Applicat
 		StandardEvaluationContext context = new StandardEvaluationContext();
 		List<MethodResolver> methodResolvers = context.getMethodResolvers();
 		ArrayList<MethodResolver> modifiedList = Lists.newArrayList(methodResolvers);
-		modifiedList.add(new TagContainsArgumentResolver());
+		modifiedList.add(new TagResolver(classifications));
 		context.setMethodResolvers(modifiedList);
 
 		ImmutableList<Martini> martinis = getMartinis();
 		List<Martini> matches = Lists.newArrayListWithCapacity(martinis.size());
 		for (Martini martini : martinis) {
-			DefaultMartiniFilter filter = new DefaultMartiniFilter(martini, classifications);
-			Boolean match = expression.getValue(context, filter, Boolean.class);
+			Boolean match = expression.getValue(context, martini, Boolean.class);
 			if (match) {
 				matches.add(martini);
 			}

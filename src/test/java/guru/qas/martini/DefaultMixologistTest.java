@@ -140,30 +140,19 @@ public class DefaultMixologistTest {
 	}
 
 	@Test
-	public void testGetComplexSPeL() {
-		String id = "Functionality_of_the_Reporting_Subsystem:A_Corner_Case:25";
-		Martini expected = this.getMartini(id);
-		checkNotNull(expected, "no Martini found matching ID [%s]", id);
-
-		String filter = "getTags('@Meta').?[getArgument()?.equals('Selenium')].size() > 0";
-		Collection<Martini> martinis = mixologist.getMartinis(filter);
-		assertTrue(martinis.contains(expected), "expected Martini not returned");
-	}
-
-	@Test
 	public void testGetCustomSPeL() {
 		String id = "Functionality_of_the_Reporting_Subsystem:A_Corner_Case:25";
-		Martini expected = this.getMartini(id);
+		Martini expected = getMartini(id);
 		checkNotNull(expected, "no Martini found matching ID [%s]", id);
 
-		String filter = "getTags('@Meta').containsArgument('Selenium')";
+		String filter = "isMeta('Selenium')";
 		Collection<Martini> martinis = mixologist.getMartinis(filter);
 		assertTrue(martinis.contains(expected), "expected Martini not returned");
 	}
 
 	@Test
 	public void testNegativeGetCustomSPeL() {
-		String filter = "getTags('@Meta').containsArgument('Bogus')";
+		String filter = "isMeta('Bogus')";
 		Collection<Martini> martinis = mixologist.getMartinis(filter);
 		assertTrue(martinis.isEmpty(), "no matching Martinis should have been returned");
 	}
@@ -174,7 +163,7 @@ public class DefaultMixologistTest {
 		Martini expected = this.getMartini(id);
 		checkNotNull(expected, "no Martini found matching ID [%s]", id);
 
-		String filter = "isClassified('AdHoc')";
+		String filter = "isCategory('AdHoc')";
 		Collection<Martini> martinis = mixologist.getMartinis(filter);
 		assertTrue(martinis.contains(expected), "expected Martini not returned");
 	}
@@ -184,7 +173,7 @@ public class DefaultMixologistTest {
 		String id = "Functionality_of_the_Reporting_Subsystem:A_Corner_Case:25";
 		Martini expected = this.getMartini(id);
 
-		String filter = "isClassified('Core')";
+		String filter = "isCategory('Core')";
 		Collection<Martini> martinis = mixologist.getMartinis(filter);
 		assertTrue(martinis.contains(expected), "expected Martini not returned");
 	}
