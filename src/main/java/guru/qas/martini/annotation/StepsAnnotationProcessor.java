@@ -49,6 +49,8 @@ class StepsAnnotationProcessor implements BeanPostProcessor, ApplicationContextA
 		callbacks = ImmutableList.<ReflectionUtils.MethodCallback>builder()
 			.add(new GivenCallback(configurable))
 			.add(new AndCallback(configurable))
+			.add(new WhenCallback(configurable))
+			.add(new ThenCallback(configurable))
 			.build();
 	}
 
