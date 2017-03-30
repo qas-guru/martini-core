@@ -28,6 +28,8 @@ import org.springframework.context.annotation.Lazy;
 import org.springframework.core.convert.ConversionService;
 import org.springframework.core.env.AbstractEnvironment;
 
+import guru.qas.martini.event.DefaultMartiniEventPublisher;
+import guru.qas.martini.event.MartiniEventPublisher;
 import guru.qas.martini.tag.Categories;
 import guru.qas.martini.tag.DefaultCategories;
 import guru.qas.martini.scope.ScenarioScope;
@@ -73,18 +75,29 @@ class MartiniConfiguration implements BeanFactoryAware {
 
 	@Bean
 	@Lazy
-	public static CustomScopeConfigurer customScopeConfigurer(ScenarioScope scope) {
+	public static CustomScopeConfigurer customScopeConfigurer(
+		ScenarioScope scope
+	) {
 		CustomScopeConfigurer configurer = new CustomScopeConfigurer();
 		configurer.addScope("scenario", scope);
 		return configurer;
 	}
 
 	@Bean
-	public Categories getClassifications(
-		@Value("${classifications:#{null}}") Class<? extends Categories> impl
+	public Categories getCategories(
+		@Value("${categories.implementation:#{null}}") Class<? extends Categories> impl
 	) {
 		return null == impl ?
 			beanFactory.createBean(DefaultCategories.class) :
+			beanFactory.createBean(impl);
+	}
+
+	@Bean
+	public MartiniEventPublisher getMartiniEventPublisher(
+		@Value("${martini.event.publisher.implementation:#{null}}") Class<? extends MartiniEventPublisher> impl
+	) {
+		return null == impl ?
+			beanFactory.createBean(DefaultMartiniEventPublisher.class) :
 			beanFactory.createBean(impl);
 	}
 }

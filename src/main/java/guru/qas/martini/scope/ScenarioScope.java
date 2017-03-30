@@ -23,6 +23,9 @@ import org.springframework.beans.factory.ObjectFactory;
 import org.springframework.beans.factory.config.Scope;
 import org.springframework.stereotype.Component;
 
+import guru.qas.martini.event.ScenarioIdentifier;
+import guru.qas.martini.event.SuiteIdentifier;
+
 @SuppressWarnings("WeakerAccess")
 @Component
 public class ScenarioScope implements Scope {
@@ -34,7 +37,7 @@ public class ScenarioScope implements Scope {
 		}
 	};
 
-	private static final InheritableThreadLocal<String> CONVO_REF = new InheritableThreadLocal<>();
+	private static final InheritableThreadLocal<ScenarioIdentifier> CONVO_REF = new InheritableThreadLocal<>();
 
 	@Override
 	public Object get(String name, ObjectFactory<?> objectFactory) {
@@ -58,13 +61,24 @@ public class ScenarioScope implements Scope {
 		return null;
 	}
 
-	public void setConversationId(String conversationId) {
-		CONVO_REF.set(conversationId);
+	public void setScenarioIdentifier(ScenarioIdentifier identifier) {
+		CONVO_REF.set(identifier);
 	}
 
 	@Override
 	public String getConversationId() {
-		return CONVO_REF.get();
+		ScenarioIdentifier identifier = CONVO_REF.get();
+		return getConversationId(identifier);
+	}
+
+	protected String getConversationId(ScenarioIdentifier scenarioIdentifier) {
+		SuiteIdentifier suiteIdentifier = scenarioIdentifier.getSuiteIdentifier();
+		String host = suiteIdentifier.getHostname();
+		String suite = suiteIdentifier.getSuiteName();
+		String threadGroup = suiteIdentifier.getThreadGroup();
+		String thread = scenarioIdentifier.getThreadName();
+		String recipeId = scenarioIdentifier.getRecipeId();
+		return String.format("%s.%s.%s.%s.%s", host, suite, threadGroup, thread, recipeId);
 	}
 
 	public void clear() {

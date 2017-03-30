@@ -16,9 +16,20 @@ limitations under the License.
 
 package guru.qas.martini.event;
 
-public class AfterStepEvent extends MartiniEvent<AfterStepPayload> {
+import java.io.Serializable;
 
-	public AfterStepEvent(Object source, AfterStepPayload payload) {
-		super(source, payload, AfterStepPayload.class);
+@SuppressWarnings("WeakerAccess")
+public class MartiniEventPayload implements Serializable {
+
+	private static final long serialVersionUID = 6809376378167000453L;
+
+	private final long timestamp;
+
+	public long getTimestamp() {
+		return timestamp;
+	}
+
+	public MartiniEventPayload(long timestamp) {
+		this.timestamp = timestamp;
 	}
 }

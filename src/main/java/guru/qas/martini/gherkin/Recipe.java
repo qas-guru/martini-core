@@ -16,6 +16,8 @@ limitations under the License.
 
 package guru.qas.martini.gherkin;
 
+import java.io.Serializable;
+
 import org.springframework.core.io.Resource;
 
 import gherkin.ast.Feature;
@@ -24,7 +26,9 @@ import gherkin.pickles.Pickle;
 import gherkin.pickles.PickleLocation;
 
 @SuppressWarnings("WeakerAccess")
-public class Recipe {
+public class Recipe implements Serializable {
+
+	private static final long serialVersionUID = 1388547503104118707L;
 
 	protected final Resource source;
 	protected final Feature feature;

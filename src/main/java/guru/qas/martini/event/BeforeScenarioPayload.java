@@ -16,9 +16,27 @@ limitations under the License.
 
 package guru.qas.martini.event;
 
-public class AfterStepEvent extends MartiniEvent<AfterStepPayload> {
+import guru.qas.martini.Martini;
 
-	public AfterStepEvent(Object source, AfterStepPayload payload) {
-		super(source, payload, AfterStepPayload.class);
+@SuppressWarnings("WeakerAccess")
+public class BeforeScenarioPayload extends MartiniEventPayload {
+
+	private static final long serialVersionUID = 2311230281092387428L;
+
+	protected final ScenarioIdentifier identifier;
+	protected final Martini martini;
+
+	public ScenarioIdentifier getScenarioIdentifier() {
+		return identifier;
+	}
+
+	public Martini getMartini() {
+		return martini;
+	}
+
+	public BeforeScenarioPayload(long timestamp, ScenarioIdentifier identifier, Martini martini) {
+		super(timestamp);
+		this.identifier = identifier;
+		this.martini = martini;
 	}
 }

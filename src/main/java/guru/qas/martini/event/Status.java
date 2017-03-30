@@ -16,9 +16,6 @@ limitations under the License.
 
 package guru.qas.martini.event;
 
-public class AfterStepEvent extends MartiniEvent<AfterStepPayload> {
-
-	public AfterStepEvent(Object source, AfterStepPayload payload) {
-		super(source, payload, AfterStepPayload.class);
-	}
+public enum Status {
+	PASSED, SKIPPED, FAILED
 }

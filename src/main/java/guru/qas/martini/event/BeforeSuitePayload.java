@@ -16,9 +16,19 @@ limitations under the License.
 
 package guru.qas.martini.event;
 
-public class AfterStepEvent extends MartiniEvent<AfterStepPayload> {
+@SuppressWarnings("WeakerAccess")
+public class BeforeSuitePayload extends MartiniEventPayload {
 
-	public AfterStepEvent(Object source, AfterStepPayload payload) {
-		super(source, payload, AfterStepPayload.class);
+	private static final long serialVersionUID = 4815505981404539677L;
+
+	protected final SuiteIdentifier suiteIdentifier;
+
+	public SuiteIdentifier getSuiteIdentifier() {
+		return suiteIdentifier;
+	}
+
+	public BeforeSuitePayload(long timestamp, SuiteIdentifier suiteIdentifier) {
+		super(timestamp);
+		this.suiteIdentifier = suiteIdentifier;
 	}
 }

@@ -16,12 +16,9 @@ limitations under the License.
 
 package guru.qas.martini.event;
 
-import gherkin.ast.Step;
-import guru.qas.martini.Martini;
+public class BeforeStepEvent extends MartiniEvent<BeforeStepPayload> {
 
-public interface BeforeStepEvent extends MartiniEvent {
-
-	Martini getMartini();
-
-	Step getStep();
+	public BeforeStepEvent(Object source, BeforeStepPayload payload) {
+		super(source, payload, BeforeStepPayload.class);
+	}
 }

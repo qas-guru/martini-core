@@ -16,8 +16,22 @@ limitations under the License.
 
 package guru.qas.martini.event;
 
-@SuppressWarnings("WeakerAccess")
-public interface MartiniEvent {
+import org.springframework.context.PayloadApplicationEvent;
+import org.springframework.core.ResolvableType;
 
-	long getTimestamp();
+@SuppressWarnings("WeakerAccess")
+public abstract class MartiniEvent<T extends MartiniEventPayload> extends PayloadApplicationEvent<T> {
+
+	protected final Class<T> implementation;
+
+	public MartiniEvent(Object source, T payload, Class<T> implementation) {
+
+		super(source, payload);
+		this.implementation = implementation;
+	}
+
+	@Override
+	public ResolvableType getResolvableType() {
+		return ResolvableType.forClass(implementation);
+	}
 }

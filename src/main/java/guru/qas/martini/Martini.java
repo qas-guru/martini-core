@@ -16,6 +16,7 @@ limitations under the License.
 
 package guru.qas.martini;
 
+import java.io.Serializable;
 import java.util.Collection;
 import java.util.Map;
 
@@ -24,7 +25,7 @@ import guru.qas.martini.tag.MartiniTag;
 import guru.qas.martini.gherkin.Recipe;
 import guru.qas.martini.step.StepImplementation;
 
-public interface Martini {
+public interface Martini extends Serializable {
 
 	String getId();
 

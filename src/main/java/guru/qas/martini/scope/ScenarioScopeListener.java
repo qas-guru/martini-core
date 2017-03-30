@@ -20,9 +20,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 
-import guru.qas.martini.Martini;
 import guru.qas.martini.event.AfterScenarioEvent;
 import guru.qas.martini.event.BeforeScenarioEvent;
+import guru.qas.martini.event.BeforeScenarioPayload;
+import guru.qas.martini.event.ScenarioIdentifier;
 
 @Component
 public class ScenarioScopeListener {
@@ -37,13 +38,9 @@ public class ScenarioScopeListener {
 	@EventListener
 	public void handle(BeforeScenarioEvent event) {
 		scope.clear();
-		Martini martini = event.getMartini();
-		Thread thread = Thread.currentThread();
-		ThreadGroup threadGroup = thread.getThreadGroup();
-		String groupName = threadGroup.getName();
-		String name = thread.getName();
-		String id = String.format("%s %s %s", groupName, name, martini);
-		scope.setConversationId(id);
+		BeforeScenarioPayload payload = event.getPayload();
+		ScenarioIdentifier identifier = payload.getScenarioIdentifier();
+		scope.setScenarioIdentifier(identifier);
 	}
 
 	@EventListener
