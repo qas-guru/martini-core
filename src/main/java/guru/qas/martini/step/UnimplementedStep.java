@@ -16,5 +16,17 @@ limitations under the License.
 
 package guru.qas.martini.step;
 
-public interface GivenStep extends StepImplementation {
+import gherkin.ast.Step;
+
+@SuppressWarnings("WeakerAccess")
+public class UnimplementedStep extends DefaultStep {
+
+	public UnimplementedStep(String keyword) {
+		super(keyword, null, null);
+	}
+
+	@Override
+	public boolean isMatch(Step step) {
+		return false;
+	}
 }

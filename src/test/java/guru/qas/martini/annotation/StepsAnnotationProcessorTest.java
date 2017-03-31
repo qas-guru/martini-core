@@ -36,7 +36,7 @@ import org.testng.annotations.Test;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 
-import guru.qas.martini.step.GivenStep;
+import guru.qas.martini.step.StepImplementation;
 import nonfixture.DuplicateGivenBeanA;
 import nonfixture.DuplicateGivenBeanB;
 import fixture.TestSteps;
@@ -55,11 +55,11 @@ public class StepsAnnotationProcessorTest {
 		Class<?> wrapped = AopUtils.getTargetClass(steps);
 		Method method = wrapped.getMethod("anotherStep", String.class);
 
-		Map<String, GivenStep> givenBeanIndex = context.getBeansOfType(GivenStep.class);
-		Collection<GivenStep> givens = givenBeanIndex.values();
+		Map<String, StepImplementation> givenBeanIndex = context.getBeansOfType(StepImplementation.class);
+		Collection<StepImplementation> givens = givenBeanIndex.values();
 
-		List<GivenStep> matches = Lists.newArrayList();
-		for (GivenStep given : givens) {
+		List<StepImplementation> matches = Lists.newArrayList();
+		for (StepImplementation given : givens) {
 			Method givenMethod = given.getMethod();
 			if (givenMethod.equals(method)) {
 				matches.add(given);
@@ -69,7 +69,7 @@ public class StepsAnnotationProcessorTest {
 		int count = matches.size();
 		assertEquals(count, 1, "wrong number of GivenStep objects registered for TestSteps.anotherStep()");
 
-		GivenStep match = matches.get(0);
+		StepImplementation match = matches.get(0);
 		Pattern pattern = match.getPattern();
 		Matcher matcher = pattern.matcher("another \"(.+)\" here");
 		assertTrue(matcher.find(), "expected Pattern to match Gherkin regular expression");
@@ -112,11 +112,11 @@ public class StepsAnnotationProcessorTest {
 		Class<?> wrapped = AopUtils.getTargetClass(steps);
 		Method method = wrapped.getMethod("doSomething");
 
-		Map<String, GivenStep> givenBeanIndex = context.getBeansOfType(GivenStep.class);
-		Collection<GivenStep> givens = givenBeanIndex.values();
+		Map<String, StepImplementation> givenBeanIndex = context.getBeansOfType(StepImplementation.class);
+		Collection<StepImplementation> givens = givenBeanIndex.values();
 
 		Set<String> matches = Sets.newHashSetWithExpectedSize(2);
-		for (GivenStep given : givens) {
+		for (StepImplementation given : givens) {
 			Method givenMethod = given.getMethod();
 			if (givenMethod.equals(method)) {
 				Pattern pattern = given.getPattern();

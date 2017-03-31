@@ -23,7 +23,7 @@ import java.util.regex.Pattern;
 import org.springframework.beans.factory.config.ConfigurableListableBeanFactory;
 import org.springframework.core.annotation.AnnotationUtils;
 
-import guru.qas.martini.step.DefaultWhenStep;
+import guru.qas.martini.step.DefaultStep;
 
 import static com.google.common.base.Preconditions.*;
 
@@ -51,7 +51,7 @@ public class WhenCallback extends AbstractAnnotationCallback {
 
 		String name = String.format("when%s", atomicInteger.getAndIncrement());
 
-		DefaultWhenStep step = new DefaultWhenStep(pattern, method);
+		DefaultStep step = new DefaultStep("When", pattern, method);
 		beanFactory.registerSingleton(name, step);
 	}
 

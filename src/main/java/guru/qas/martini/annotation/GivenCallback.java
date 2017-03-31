@@ -16,6 +16,7 @@ limitations under the License.
 
 package guru.qas.martini.annotation;
 
+import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.util.regex.Pattern;
@@ -23,7 +24,7 @@ import java.util.regex.Pattern;
 import org.springframework.beans.factory.config.ConfigurableListableBeanFactory;
 import org.springframework.core.annotation.AnnotationUtils;
 
-import guru.qas.martini.step.DefaultGivenStep;
+import guru.qas.martini.step.DefaultStep;
 
 import static com.google.common.base.Preconditions.*;
 
@@ -49,9 +50,11 @@ public class GivenCallback extends AbstractAnnotationCallback {
 		Pattern pattern = Pattern.compile(regex);
 		regularExpressions.add(regex);
 
-		String name = String.format("given%s", atomicInteger.getAndIncrement());
+		Class<? extends Annotation> annotationClass = annotation.annotationType();
+		String keyword = annotationClass.getSimpleName();
+		String name = String.format("%s%s", keyword.toLowerCase(), atomicInteger.getAndIncrement());
 
-		DefaultGivenStep step = new DefaultGivenStep(pattern, method);
+		DefaultStep step = new DefaultStep(keyword, pattern, method);
 		beanFactory.registerSingleton(name, step);
 	}
 

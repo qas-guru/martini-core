@@ -23,7 +23,7 @@ import java.util.regex.Pattern;
 import org.springframework.beans.factory.config.ConfigurableListableBeanFactory;
 import org.springframework.core.annotation.AnnotationUtils;
 
-import guru.qas.martini.step.DefaultAndStep;
+import guru.qas.martini.step.DefaultStep;
 
 import static com.google.common.base.Preconditions.*;
 
@@ -51,7 +51,8 @@ public class AndCallback extends AbstractAnnotationCallback {
 
 		String name = String.format("and%s", atomicInteger.getAndIncrement());
 
-		DefaultAndStep step = new DefaultAndStep(pattern, method);
+		String keyword = annotation.getClass().getSimpleName();
+		DefaultStep step = new DefaultStep(keyword, pattern, method);
 		beanFactory.registerSingleton(name, step);
 	}
 

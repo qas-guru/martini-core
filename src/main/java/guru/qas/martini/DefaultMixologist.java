@@ -45,7 +45,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 
 import guru.qas.martini.step.AmbiguousStepException;
-import guru.qas.martini.step.DefaultUnimplementedStep;
+import guru.qas.martini.step.UnimplementedStep;
 import guru.qas.martini.step.UnimplementedStepException;
 import guru.qas.martini.tag.Categories;
 import gherkin.ast.Location;
@@ -187,7 +187,7 @@ public class DefaultMixologist implements Mixologist, InitializingBean, Applicat
 			throw UnimplementedStepException.builder().build(step);
 		}
 		else {
-			match = DefaultUnimplementedStep.builder().build(step);
+			match = getUnimplemented(step);
 		}
 		return match;
 	}
@@ -221,5 +221,10 @@ public class DefaultMixologist implements Mixologist, InitializingBean, Applicat
 			}
 		}
 		return matches;
+	}
+
+	protected UnimplementedStep getUnimplemented(Step step) {
+		String keyword = step.getKeyword();
+		return new UnimplementedStep(null == keyword ? "" : keyword.trim());
 	}
 }

@@ -29,11 +29,13 @@ import org.testng.annotations.BeforeClass;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
+import com.google.common.base.Predicates;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 
 import fixture.ParameterizedTestSteps;
 import gherkin.ast.Step;
+import guru.qas.martini.step.UnimplementedStep;
 import guru.qas.martini.tag.MartiniTag;
 import guru.qas.martini.step.StepImplementation;
 
@@ -89,7 +91,10 @@ public class DefaultMixologistTest {
 
 		Map<Step, StepImplementation> stepIndex = martini.getStepIndex();
 		Collection<StepImplementation> implementations = stepIndex.values();
-		ImmutableList<StepImplementation> filtered = FluentIterable.from(implementations).filter(notNull()).toList();
+		ImmutableList<StepImplementation> filtered = FluentIterable.from(implementations)
+			.filter(notNull())
+			.filter(Predicates.not(Predicates.instanceOf(UnimplementedStep.class)))
+			.toList();
 		assertFalse(filtered.isEmpty(), "expected at least one implementation");
 		StepImplementation givenImplementation = filtered.get(0);
 
