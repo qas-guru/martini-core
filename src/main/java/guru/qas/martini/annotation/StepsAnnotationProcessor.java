@@ -47,10 +47,10 @@ class StepsAnnotationProcessor implements BeanPostProcessor, ApplicationContextA
 			"Martini requires the use of a ConfigurableListableBeanFactory");
 		ConfigurableListableBeanFactory configurable = ConfigurableListableBeanFactory.class.cast(beanFactory);
 		callbacks = ImmutableList.<ReflectionUtils.MethodCallback>builder()
-			.add(new GivenCallback(configurable))
-			.add(new AndCallback(configurable))
-			.add(new WhenCallback(configurable))
-			.add(new ThenCallback(configurable))
+			.add(new MartiniAnnotationCallback<>(Given.class, GivenContainer.class, configurable))
+			.add(new MartiniAnnotationCallback<>(And.class, AndContainer.class, configurable))
+			.add(new MartiniAnnotationCallback<>(When.class, WhenContainer.class, configurable))
+			.add(new MartiniAnnotationCallback<>(Then.class, ThenContainer.class, configurable))
 			.build();
 	}
 
