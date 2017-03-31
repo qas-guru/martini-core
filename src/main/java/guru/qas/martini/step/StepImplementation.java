@@ -23,12 +23,7 @@ import gherkin.ast.Step;
 
 public interface StepImplementation {
 
-	StepImplementation UNIMPLEMENTED = new StepImplementation() {
-	};
-
-	default String getKeyword() {
-		return "[unimplemented]";
-	}
+	String getKeyword();
 
 	default Pattern getPattern() {
 		throw new UnsupportedOperationException();

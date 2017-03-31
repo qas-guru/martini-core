@@ -16,7 +16,12 @@ limitations under the License.
 
 package guru.qas.martini;
 
-public class MartiniException extends Exception {
+@SuppressWarnings("WeakerAccess")
+public class MartiniException extends RuntimeException {
+
+	public MartiniException() {
+		super();
+	}
 
 	public MartiniException(String message) {
 		super(message);

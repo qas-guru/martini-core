@@ -150,8 +150,8 @@ public class DefaultMartini implements Martini {
 					MartiniTag tag = builder.build(pickleTag);
 					tags.add(tag);
 				}
-				catch (MartiniException e) {
-					throw new RuntimeException("unable to create Martini for scenario " + recipe.getId(), e);
+				catch (Exception e) {
+					throw new MartiniException("unable to create Martini for scenario " + recipe.getId(), e);
 				}
 			}
 			return ImmutableSet.copyOf(tags);

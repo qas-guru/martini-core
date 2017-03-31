@@ -17,8 +17,6 @@ limitations under the License.
 package guru.qas.martini;
 
 import java.io.IOException;
-import java.lang.annotation.Annotation;
-import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
@@ -42,11 +40,13 @@ import org.springframework.expression.MethodResolver;
 import org.springframework.expression.spel.standard.SpelExpressionParser;
 import org.springframework.expression.spel.support.StandardEvaluationContext;
 
-import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 
+import guru.qas.martini.step.AmbiguousStepException;
+import guru.qas.martini.step.DefaultUnimplementedStep;
+import guru.qas.martini.step.UnimplementedStepException;
 import guru.qas.martini.tag.Categories;
 import gherkin.ast.Location;
 import gherkin.ast.ScenarioDefinition;
@@ -174,30 +174,22 @@ public class DefaultMixologist implements Mixologist, InitializingBean, Applicat
 			}
 		}
 
+		StepImplementation match;
+
 		int count = matches.size();
-		if (count > 1) {
-			String message = getAmbiguousStepMessage(step, matches);
-			throw new IllegalStateException(message);
+		if (1 == count) {
+			match = matches.get(0);
 		}
-		checkState(!unimplementedStepsFatal || 1 == count, "no implementation found matching step %s", step);
-		return 0 == count ? StepImplementation.UNIMPLEMENTED : matches.get(0);
-	}
-
-	@SuppressWarnings("Guava")
-	protected String getAmbiguousStepMessage(gherkin.ast.Step step, Collection<StepImplementation> implementations) {
-		int count = implementations.size();
-
-		List<String> details = Lists.newArrayListWithExpectedSize(count);
-		for (StepImplementation implementation : implementations) {
-			Method method = implementation.getMethod();
-			Annotation[] annotations = method.getAnnotations();
-			String joinedAnnotations = Joiner.on("\n\t").join(annotations);
-			String detail = String.format("%s\nwith annotations\n\t%s", method, joinedAnnotations);
-			details.add(detail);
+		else if (count > 1) {
+			throw AmbiguousStepException.builder().setStep(step).setMatches(matches).build();
 		}
-		String summary = Joiner.on('\n').join(details);
-		String stepText = step.getText();
-		return String.format("ambiguous step; %s matches found for step: %s\n%s", count, stepText, summary);
+		else if (unimplementedStepsFatal) {
+			throw UnimplementedStepException.builder().build(step);
+		}
+		else {
+			match = DefaultUnimplementedStep.builder().build(step);
+		}
+		return match;
 	}
 
 	@Override
