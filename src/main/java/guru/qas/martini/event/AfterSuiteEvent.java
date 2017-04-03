@@ -16,9 +16,16 @@ limitations under the License.
 
 package guru.qas.martini.event;
 
+import org.springframework.core.ResolvableType;
+
 public class AfterSuiteEvent extends MartiniSuiteEvent {
 
 	public AfterSuiteEvent(Object source, MartiniSuiteIdentifier payload) {
 		super(source, payload);
+	}
+
+	@Override
+	public ResolvableType getResolvableType() {
+		return ResolvableType.forClass(AfterSuiteEvent.class);
 	}
 }

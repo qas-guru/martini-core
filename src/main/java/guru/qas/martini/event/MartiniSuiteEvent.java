@@ -17,6 +17,7 @@ limitations under the License.
 package guru.qas.martini.event;
 
 import org.springframework.context.PayloadApplicationEvent;
+import org.springframework.core.ResolvableType;
 
 @SuppressWarnings("WeakerAccess")
 public abstract class MartiniSuiteEvent extends PayloadApplicationEvent<MartiniSuiteIdentifier> {

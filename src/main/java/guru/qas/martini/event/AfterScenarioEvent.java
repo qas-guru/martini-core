@@ -16,11 +16,18 @@ limitations under the License.
 
 package guru.qas.martini.event;
 
+import org.springframework.core.ResolvableType;
+
 import guru.qas.martini.result.MartiniResult;
 
 public class AfterScenarioEvent extends MartiniScenarioEvent {
 
 	public AfterScenarioEvent(Object source, MartiniResult payload) {
 		super(source, payload);
+	}
+
+	@Override
+	public ResolvableType getResolvableType() {
+		return ResolvableType.forClass(AfterScenarioEvent.class);
 	}
 }

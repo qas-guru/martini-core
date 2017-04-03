@@ -22,6 +22,7 @@ import java.util.concurrent.TimeUnit;
 import org.apache.http.HttpEntity;
 
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 
 import gherkin.ast.Step;
@@ -54,9 +55,17 @@ public class DefaultStepResult implements StepResult {
 		return status;
 	}
 
+	public void setStatus(Status status) {
+		this.status = status;
+	}
+
 	@Override
 	public Exception getException() {
 		return exception;
+	}
+
+	public void setException(Exception exception) {
+		this.exception = exception;
 	}
 
 	@Override
@@ -64,9 +73,17 @@ public class DefaultStepResult implements StepResult {
 		return elapsedTime.getStartTimestamp();
 	}
 
+	public void setStartTimestamp(Long timestamp) {
+		elapsedTime.setStartTimestamp(timestamp);
+	}
+
 	@Override
 	public Long getEndTimestamp() {
 		return elapsedTime.getEndTimestamp();
+	}
+
+	public void setEndTimestamp(Long timestamp) {
+		elapsedTime.setEndTimestamp(timestamp);
 	}
 
 	public DefaultStepResult(Step step) {
@@ -76,15 +93,15 @@ public class DefaultStepResult implements StepResult {
 	}
 
 	public void add(HttpEntity entity) {
-		embedded.add(entity);
+		if (null != entity) {
+			embedded.add(entity);
+		}
 	}
 
-	public void setStartTimestamp(Long timestamp) {
-		elapsedTime.setStartTimestamp(timestamp);
-	}
-
-	public void setEndtimestamp(Long timestamp) {
-		elapsedTime.setEndTimestamp(timestamp);
+	public void addAll(Iterable<HttpEntity> entities) {
+		if (null != entities) {
+			Iterables.addAll(embedded, entities);
+		}
 	}
 
 	@Override

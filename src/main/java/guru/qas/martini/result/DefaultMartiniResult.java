@@ -90,6 +90,7 @@ public class DefaultMartiniResult implements MartiniResult {
 		this.statusRef = new AtomicReference<>();
 	}
 
+
 	public static Builder builder() {
 		return new Builder();
 	}
@@ -120,8 +121,22 @@ public class DefaultMartiniResult implements MartiniResult {
 			return this;
 		}
 
+		public Builder setThreadGroupName(String s) {
+			this.threadGroupName = normalize(s);
+			return this;
+		}
+
+		protected String normalize(String s) {
+			return null == s ? null : s.trim();
+		}
+
+		public Builder setThreadName(String s) {
+			this.threadName = normalize(s);
+			return this;
+		}
+
 		public DefaultMartiniResult build() {
-			checkState(null != suiteIdentifier, "null MartiniSuiteIdentifier");
+			checkState(null != suiteIdentifier, "null DefaultMartiniSuiteIdentifier");
 			checkState(null != martini, "null Martini");
 			checkState(null != threadGroupName && !threadGroupName.isEmpty(), "null or empty thread group name");
 			checkState(null != threadName && !threadName.isEmpty(), "null or empty thread name");

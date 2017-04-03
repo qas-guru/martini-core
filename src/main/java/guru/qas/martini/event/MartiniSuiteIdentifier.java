@@ -16,69 +16,15 @@ limitations under the License.
 
 package guru.qas.martini.event;
 
-import static com.google.common.base.Preconditions.checkState;
+import java.util.UUID;
 
-@SuppressWarnings("WeakerAccess")
-public class MartiniSuiteIdentifier {
+public interface MartiniSuiteIdentifier {
 
-	private final long timestamp;
-	private final String hostname;
-	private final String suiteName;
+	long getTimestamp();
 
-	public long getTimestamp() {
-		return timestamp;
-	}
+	String getHostname();
 
-	public String getHostname() {
-		return hostname;
-	}
+	String getSuiteName();
 
-	public String getSuiteName() {
-		return suiteName;
-	}
-
-	protected MartiniSuiteIdentifier(long timestamp, String hostname, String suiteName) {
-		this.timestamp = timestamp;
-		this.hostname = hostname;
-		this.suiteName = suiteName;
-	}
-
-	public static Builder builder() {
-		return new Builder();
-	}
-
-	@SuppressWarnings("WeakerAccess")
-	public static class Builder {
-		protected long timestamp;
-		protected String hostname;
-		protected String suiteName;
-
-		protected Builder() {
-		}
-
-		public Builder setTimetamp(long timestamp) {
-			this.timestamp = timestamp;
-			return this;
-		}
-
-		public Builder setHostname(String s) {
-			this.hostname = normalize(s);
-			return this;
-		}
-
-		protected String normalize(String s) {
-			return null == s ? null : s.trim();
-		}
-
-		protected Builder setSuiteName(String s) {
-			this.suiteName = normalize(s);
-			return this;
-		}
-
-		public MartiniSuiteIdentifier build() {
-			checkState(null != hostname && !hostname.isEmpty(), "null or empty hostname");
-			checkState(null != suiteName && !suiteName.isEmpty(), "null or empty suite name");
-			return new MartiniSuiteIdentifier(timestamp, hostname, suiteName);
-		}
-	}
+	UUID getId();
 }

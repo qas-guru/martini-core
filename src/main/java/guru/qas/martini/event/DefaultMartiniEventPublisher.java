@@ -33,6 +33,7 @@ public class DefaultMartiniEventPublisher implements MartiniEventPublisher {
 		this.publisher = publisher;
 	}
 
+
 	@Override
 	public void publish(MartiniScenarioEvent event) {
 		checkNotNull(event, "null MartiniScenarioEvent");

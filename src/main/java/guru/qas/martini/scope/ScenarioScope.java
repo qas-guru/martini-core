@@ -18,6 +18,7 @@ package guru.qas.martini.scope;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.UUID;
 
 import org.springframework.beans.factory.ObjectFactory;
 import org.springframework.beans.factory.config.Scope;
@@ -74,10 +75,11 @@ public class ScenarioScope implements Scope {
 		MartiniSuiteIdentifier suiteIdentifier = result.getMartiniSuiteIdentifier();
 		String host = suiteIdentifier.getHostname();
 		String suite = suiteIdentifier.getSuiteName();
+		UUID id = suiteIdentifier.getId();
 		String threadGroup = result.getThreadGroupName();
 		String thread = result.getThreadName();
 		String recipeId = result.getMartini().getRecipe().getId();
-		return String.format("%s.%s.%s.%s.%s", host, suite, threadGroup, thread, recipeId);
+		return String.format("%s.%s.%s.%s.%s.%s", host, suite, id, threadGroup, thread, recipeId);
 	}
 
 	public void clear() {
