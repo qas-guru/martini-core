@@ -36,8 +36,8 @@ import com.google.common.collect.ImmutableList;
 import fixture.ParameterizedTestSteps;
 import gherkin.ast.Step;
 import guru.qas.martini.step.UnimplementedStep;
-import guru.qas.martini.tag.MartiniTag;
 import guru.qas.martini.step.StepImplementation;
+import guru.qas.martini.tag.MartiniTag;
 
 import static com.google.common.base.Preconditions.*;
 import static com.google.common.base.Predicates.notNull;

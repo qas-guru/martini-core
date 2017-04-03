@@ -23,8 +23,8 @@ import org.springframework.beans.factory.ObjectFactory;
 import org.springframework.beans.factory.config.Scope;
 import org.springframework.stereotype.Component;
 
-import guru.qas.martini.event.ScenarioIdentifier;
-import guru.qas.martini.event.SuiteIdentifier;
+import guru.qas.martini.event.MartiniSuiteIdentifier;
+import guru.qas.martini.result.MartiniResult;
 
 @SuppressWarnings("WeakerAccess")
 @Component
@@ -37,7 +37,7 @@ public class ScenarioScope implements Scope {
 		}
 	};
 
-	private static final InheritableThreadLocal<ScenarioIdentifier> CONVO_REF = new InheritableThreadLocal<>();
+	private static final InheritableThreadLocal<MartiniResult> CONVO_REF = new InheritableThreadLocal<>();
 
 	@Override
 	public Object get(String name, ObjectFactory<?> objectFactory) {
@@ -53,7 +53,6 @@ public class ScenarioScope implements Scope {
 
 	@Override
 	public void registerDestructionCallback(String name, Runnable callback) {
-
 	}
 
 	@Override
@@ -61,23 +60,23 @@ public class ScenarioScope implements Scope {
 		return null;
 	}
 
-	public void setScenarioIdentifier(ScenarioIdentifier identifier) {
-		CONVO_REF.set(identifier);
+	public void setScenarioIdentifier(MartiniResult result) {
+		CONVO_REF.set(result);
 	}
 
 	@Override
 	public String getConversationId() {
-		ScenarioIdentifier identifier = CONVO_REF.get();
-		return getConversationId(identifier);
+		MartiniResult result = CONVO_REF.get();
+		return getConversationId(result);
 	}
 
-	protected String getConversationId(ScenarioIdentifier scenarioIdentifier) {
-		SuiteIdentifier suiteIdentifier = scenarioIdentifier.getSuiteIdentifier();
+	protected String getConversationId(MartiniResult result) {
+		MartiniSuiteIdentifier suiteIdentifier = result.getMartiniSuiteIdentifier();
 		String host = suiteIdentifier.getHostname();
 		String suite = suiteIdentifier.getSuiteName();
-		String threadGroup = suiteIdentifier.getThreadGroup();
-		String thread = scenarioIdentifier.getThreadName();
-		String recipeId = scenarioIdentifier.getRecipeId();
+		String threadGroup = result.getThreadGroupName();
+		String thread = result.getThreadName();
+		String recipeId = result.getMartini().getRecipe().getId();
 		return String.format("%s.%s.%s.%s.%s", host, suite, threadGroup, thread, recipeId);
 	}
 

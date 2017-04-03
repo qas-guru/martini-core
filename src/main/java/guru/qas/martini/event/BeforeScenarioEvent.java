@@ -16,11 +16,11 @@ limitations under the License.
 
 package guru.qas.martini.event;
 
-import javax.annotation.Nonnull;
+import guru.qas.martini.result.MartiniResult;
 
-public class BeforeScenarioEvent extends MartiniEvent<BeforeScenarioPayload> {
+public class BeforeScenarioEvent extends MartiniScenarioEvent {
 
-	public BeforeScenarioEvent(@Nonnull Object source, @Nonnull BeforeScenarioPayload payload) {
-		super(source, payload, BeforeScenarioPayload.class);
+	public BeforeScenarioEvent(Object source, MartiniResult payload) {
+		super(source, payload);
 	}
 }

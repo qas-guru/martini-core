@@ -16,8 +16,11 @@ limitations under the License.
 
 package guru.qas.martini.tag;
 
-public interface Category {
+import java.io.Serializable;
+
+public interface Category extends Serializable {
 
 	String getName();
+
 	Iterable<String> getParentNames();
 }

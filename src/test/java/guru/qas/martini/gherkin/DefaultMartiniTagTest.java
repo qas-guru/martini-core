@@ -20,16 +20,16 @@ import org.testng.annotations.Test;
 
 import gherkin.pickles.PickleTag;
 import guru.qas.martini.MartiniException;
-import guru.qas.martini.tag.MartiniTag;
+import guru.qas.martini.tag.DefaultMartiniTag;
 
 import static org.testng.Assert.*;
 
-public class MartiniTagTest {
+public class DefaultMartiniTagTest {
 
 	@Test
 	public void testSimpleSyntax() throws MartiniException {
 		PickleTag pickleTag = new PickleTag(null, "@Smoke ");
-		MartiniTag tag = MartiniTag.builder().build(pickleTag);
+		DefaultMartiniTag tag = DefaultMartiniTag.builder().build(pickleTag);
 		assertEquals("Smoke", tag.getName(), "wrong name returned");
 		assertNull(tag.getArgument(), "non-null argument returned");
 	}
@@ -37,7 +37,7 @@ public class MartiniTagTest {
 	@Test
 	public void testArgumentedSyntax() throws MartiniException {
 		PickleTag pickleTag = new PickleTag(null, "@Meta-Data(\"beta\")");
-		MartiniTag tag = MartiniTag.builder().build(pickleTag);
+		DefaultMartiniTag tag = DefaultMartiniTag.builder().build(pickleTag);
 		assertEquals("Meta-Data", tag.getName(), "wrong name returned");
 		assertEquals("beta", tag.getArgument(), "wrong argument returned");
 	}
@@ -54,9 +54,9 @@ public class MartiniTagTest {
 	 */
 	@Test(
 		expectedExceptions = {MartiniException.class},
-		expectedExceptionsMessageRegExp = "^unable to create MartiniTag$")
+		expectedExceptionsMessageRegExp = "^unable to create DefaultMartiniTag$")
 	public void testUntenableSyntax() throws MartiniException {
 		PickleTag pickleTag = new PickleTag(null, "two");
-		MartiniTag.builder().build(pickleTag);
+		DefaultMartiniTag.builder().build(pickleTag);
 	}
 }

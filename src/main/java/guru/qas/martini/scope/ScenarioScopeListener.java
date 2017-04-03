@@ -22,8 +22,7 @@ import org.springframework.stereotype.Component;
 
 import guru.qas.martini.event.AfterScenarioEvent;
 import guru.qas.martini.event.BeforeScenarioEvent;
-import guru.qas.martini.event.BeforeScenarioPayload;
-import guru.qas.martini.event.ScenarioIdentifier;
+import guru.qas.martini.result.MartiniResult;
 
 @Component
 public class ScenarioScopeListener {
@@ -38,9 +37,8 @@ public class ScenarioScopeListener {
 	@EventListener
 	public void handle(BeforeScenarioEvent event) {
 		scope.clear();
-		BeforeScenarioPayload payload = event.getPayload();
-		ScenarioIdentifier identifier = payload.getScenarioIdentifier();
-		scope.setScenarioIdentifier(identifier);
+		MartiniResult result = event.getPayload();
+		scope.setScenarioIdentifier(result);
 	}
 
 	@EventListener

@@ -16,9 +16,11 @@ limitations under the License.
 
 package guru.qas.martini.event;
 
-public class AfterScenarioEvent extends MartiniEvent<AfterScenarioPayload> {
+import guru.qas.martini.result.MartiniResult;
 
-	public AfterScenarioEvent(Object source, AfterScenarioPayload payload) {
-		super(source, payload, AfterScenarioPayload.class);
+public class AfterScenarioEvent extends MartiniScenarioEvent {
+
+	public AfterScenarioEvent(Object source, MartiniResult payload) {
+		super(source, payload);
 	}
 }

@@ -28,6 +28,7 @@ import static com.google.common.base.Preconditions.*;
 @SuppressWarnings("WeakerAccess")
 public class DefaultCategory implements Category {
 
+	private static final long serialVersionUID = -6716851037729217653L;
 	protected final String name;
 	protected final ImmutableList<String> parentNames;
 

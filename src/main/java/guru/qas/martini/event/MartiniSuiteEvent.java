@@ -16,27 +16,12 @@ limitations under the License.
 
 package guru.qas.martini.event;
 
-import guru.qas.martini.Martini;
+import org.springframework.context.PayloadApplicationEvent;
 
 @SuppressWarnings("WeakerAccess")
-public class BeforeScenarioPayload extends MartiniEventPayload {
+public abstract class MartiniSuiteEvent extends PayloadApplicationEvent<MartiniSuiteIdentifier> {
 
-	private static final long serialVersionUID = 2311230281092387428L;
-
-	protected final ScenarioIdentifier identifier;
-	protected final Martini martini;
-
-	public ScenarioIdentifier getScenarioIdentifier() {
-		return identifier;
-	}
-
-	public Martini getMartini() {
-		return martini;
-	}
-
-	public BeforeScenarioPayload(long timestamp, ScenarioIdentifier identifier, Martini martini) {
-		super(timestamp);
-		this.identifier = identifier;
-		this.martini = martini;
+	public MartiniSuiteEvent(Object source, MartiniSuiteIdentifier payload) {
+		super(source, payload);
 	}
 }

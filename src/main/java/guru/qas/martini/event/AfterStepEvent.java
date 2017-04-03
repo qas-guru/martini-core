@@ -16,9 +16,11 @@ limitations under the License.
 
 package guru.qas.martini.event;
 
-public class AfterStepEvent extends MartiniEvent<AfterStepPayload> {
+import guru.qas.martini.result.MartiniResult;
 
-	public AfterStepEvent(Object source, AfterStepPayload payload) {
-		super(source, payload, AfterStepPayload.class);
+public class AfterStepEvent extends MartiniScenarioEvent {
+
+	public AfterStepEvent(Object source, MartiniResult payload) {
+		super(source, payload);
 	}
 }

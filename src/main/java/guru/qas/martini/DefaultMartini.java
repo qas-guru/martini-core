@@ -32,9 +32,10 @@ import gherkin.ast.Step;
 import gherkin.pickles.Pickle;
 import gherkin.pickles.PickleLocation;
 import gherkin.pickles.PickleTag;
-import guru.qas.martini.tag.MartiniTag;
+import guru.qas.martini.tag.DefaultMartiniTag;
 import guru.qas.martini.gherkin.Recipe;
 import guru.qas.martini.step.StepImplementation;
+import guru.qas.martini.tag.MartiniTag;
 
 /**
  * Default implementation of a Martini.
@@ -64,7 +65,7 @@ public class DefaultMartini implements Martini {
 	protected DefaultMartini(
 		Recipe recipe,
 		ImmutableMap<Step, StepImplementation> stepIndex,
-		Iterable<MartiniTag> tags
+		Iterable<DefaultMartiniTag> tags
 	) {
 		this.recipe = recipe;
 		this.stepIndex = stepIndex;
@@ -134,20 +135,20 @@ public class DefaultMartini implements Martini {
 
 		protected DefaultMartini build() {
 			ImmutableMap<Step, StepImplementation> immutableIndex = ImmutableMap.copyOf(index);
-			ImmutableSet<MartiniTag> tags = getTags();
+			ImmutableSet<DefaultMartiniTag> tags = getTags();
 			return new DefaultMartini(recipe, immutableIndex, tags);
 		}
 
-		protected ImmutableSet<MartiniTag> getTags() {
+		protected ImmutableSet<DefaultMartiniTag> getTags() {
 			Pickle pickle = recipe.getPickle();
 			List<PickleTag> pickleTags = pickle.getTags();
 
 			int tagCount = pickleTags.size();
-			Set<MartiniTag> tags = Sets.newHashSetWithExpectedSize(tagCount);
-			MartiniTag.Builder builder = MartiniTag.builder();
+			Set<DefaultMartiniTag> tags = Sets.newHashSetWithExpectedSize(tagCount);
+			DefaultMartiniTag.Builder builder = DefaultMartiniTag.builder();
 			for (PickleTag pickleTag : pickleTags) {
 				try {
-					MartiniTag tag = builder.build(pickleTag);
+					DefaultMartiniTag tag = builder.build(pickleTag);
 					tags.add(tag);
 				}
 				catch (Exception e) {

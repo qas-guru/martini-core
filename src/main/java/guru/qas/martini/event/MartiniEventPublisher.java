@@ -18,5 +18,7 @@ package guru.qas.martini.event;
 
 public interface MartiniEventPublisher {
 
-	void publish(MartiniEvent event);
+	void publish(MartiniScenarioEvent event);
+
+	void publish(MartiniSuiteEvent event);
 }

@@ -14,24 +14,30 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package guru.qas.martini.event;
+package guru.qas.martini.result;
 
-import org.springframework.context.PayloadApplicationEvent;
-import org.springframework.core.ResolvableType;
+import java.io.Serializable;
+import java.util.List;
+import java.util.concurrent.TimeUnit;
 
-@SuppressWarnings("WeakerAccess")
-public abstract class MartiniEvent<T extends MartiniEventPayload> extends PayloadApplicationEvent<T> {
+import org.apache.http.HttpEntity;
 
-	protected final Class<T> implementation;
+import gherkin.ast.Step;
+import guru.qas.martini.event.Status;
 
-	public MartiniEvent(Object source, T payload, Class<T> implementation) {
+public interface StepResult extends Serializable {
 
-		super(source, payload);
-		this.implementation = implementation;
-	}
+	Step getStep();
 
-	@Override
-	public ResolvableType getResolvableType() {
-		return ResolvableType.forClass(implementation);
-	}
+	List<HttpEntity> getEmbedded();
+
+	Status getStatus();
+
+	Exception getException();
+
+	Long getStartTimestamp();
+
+	Long getEndTimestamp();
+
+	Long getExecutionTime(TimeUnit unit);
 }

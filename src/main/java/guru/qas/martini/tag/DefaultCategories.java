@@ -31,6 +31,10 @@ import com.google.common.collect.Iterables;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Sets;
 
+import guru.qas.martini.Martini;
+
+import static com.google.common.base.Preconditions.checkNotNull;
+
 @Configurable
 @SuppressWarnings("WeakerAccess")
 public class DefaultCategories implements Categories, ApplicationContextAware, InitializingBean {
@@ -70,10 +74,9 @@ public class DefaultCategories implements Categories, ApplicationContextAware, I
 
 	@Override
 	public boolean isMatch(String classification, MartiniTag tag) {
-		String name = tag.getName();
 		boolean evaluation = false;
 
-		if (TAG_NAME.equals(name)) {
+		if (isCategory(tag)) {
 			String argument = tag.getArgument();
 			evaluation = classification.equals(argument);
 
@@ -85,6 +88,11 @@ public class DefaultCategories implements Categories, ApplicationContextAware, I
 		return evaluation;
 	}
 
+	protected boolean isCategory(MartiniTag tag) {
+		String name = tag.getName();
+		return TAG_NAME.equals(name);
+	}
+
 	protected Set<String> getAncestors(String argument) {
 		Collection<String> parents = ascendingHierarchy.get(argument);
 		Set<String> ancestry = Sets.newHashSet();
@@ -93,5 +101,25 @@ public class DefaultCategories implements Categories, ApplicationContextAware, I
 			ancestry.addAll(getAncestors(parent));
 		}
 		return ancestry;
+	}
+
+	@Override
+	public Set<String> getCategorizations(Martini martini) {
+		checkNotNull(martini, "null Martini");
+		Collection<MartiniTag> tags = martini.getTags();
+
+		Set<String> categories = Sets.newHashSet();
+
+		for(MartiniTag tag : tags) {
+			if (isCategory(tag)) {
+				String argument = tag.getArgument();
+				if (null != argument & !argument.isEmpty()) {
+					Set<String> ancestors = getAncestors(argument);
+					categories.add(argument);
+					categories.addAll(ancestors);
+				}
+			}
+		}
+		return categories;
 	}
 }

@@ -21,9 +21,9 @@ import java.util.Collection;
 import java.util.Map;
 
 import gherkin.ast.Step;
-import guru.qas.martini.tag.MartiniTag;
 import guru.qas.martini.gherkin.Recipe;
 import guru.qas.martini.step.StepImplementation;
+import guru.qas.martini.tag.MartiniTag;
 
 public interface Martini extends Serializable {
 

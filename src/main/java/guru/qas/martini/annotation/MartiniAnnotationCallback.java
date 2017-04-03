@@ -99,7 +99,6 @@ public class MartiniAnnotationCallback<A extends Annotation, C extends Annotatio
 		}
 	}
 
-
 	protected void processAnnotationContainer(Method method) throws IllegalAccessException {
 		C container = AnnotationUtils.findAnnotation(method, annotationContainerClass);
 		if (null != container) {

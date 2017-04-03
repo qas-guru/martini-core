@@ -16,10 +16,9 @@ limitations under the License.
 
 package guru.qas.martini.event;
 
+public class BeforeSuiteEvent extends MartiniSuiteEvent {
 
-public class BeforeSuiteEvent extends MartiniEvent<BeforeSuitePayload> {
-
-	public BeforeSuiteEvent(Object source, BeforeSuitePayload payload) {
-		super(source, payload, BeforeSuitePayload.class);
+	public BeforeSuiteEvent(Object source, MartiniSuiteIdentifier payload) {
+		super(source, payload);
 	}
 }

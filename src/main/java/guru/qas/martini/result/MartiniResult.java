@@ -14,19 +14,36 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package guru.qas.martini.tag;
+package guru.qas.martini.result;
 
+import java.io.Serializable;
+import java.util.List;
 import java.util.Set;
+import java.util.concurrent.TimeUnit;
 
 import guru.qas.martini.Martini;
+import guru.qas.martini.event.MartiniSuiteIdentifier;
+import guru.qas.martini.event.Status;
 
-public interface Categories {
+public interface MartiniResult extends Serializable {
 
-	boolean isMatch(String classification, MartiniTag tag);
+	MartiniSuiteIdentifier getMartiniSuiteIdentifier();
 
-	/*
-	 * @param martini
-	 * @return names of immediate and all ancestor categories for given Martini
-	 */
-	Set<String> getCategorizations(Martini martini);
+	Martini getMartini();
+
+	String getThreadGroupName();
+
+	String getThreadName();
+
+	Status getStatus();
+
+	Long getStartTimestamp();
+
+	Long getEndTimestamp();
+
+	Long getExecutionTime(TimeUnit unit);
+
+	List<StepResult> getStepResults();
+
+	Set<String> getCategorizations();
 }

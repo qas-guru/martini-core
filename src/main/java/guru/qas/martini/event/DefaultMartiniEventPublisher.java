@@ -16,8 +16,6 @@ limitations under the License.
 
 package guru.qas.martini.event;
 
-import javax.annotation.Nonnull;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Configurable;
 import org.springframework.context.ApplicationEventPublisher;
@@ -36,8 +34,14 @@ public class DefaultMartiniEventPublisher implements MartiniEventPublisher {
 	}
 
 	@Override
-	public void publish(@Nonnull MartiniEvent event) {
-		checkNotNull(event, "null MartiniEvent");
+	public void publish(MartiniScenarioEvent event) {
+		checkNotNull(event, "null MartiniScenarioEvent");
+		publisher.publishEvent(event);
+	}
+
+	@Override
+	public void publish(MartiniSuiteEvent event) {
+		checkNotNull(event, "null MartiniSuiteEvent");
 		publisher.publishEvent(event);
 	}
 }
