@@ -17,12 +17,11 @@ limitations under the License.
 package guru.qas.martini.event;
 
 import org.springframework.context.PayloadApplicationEvent;
-import org.springframework.core.ResolvableType;
 
 @SuppressWarnings("WeakerAccess")
-public abstract class MartiniSuiteEvent extends PayloadApplicationEvent<MartiniSuiteIdentifier> {
+public abstract class MartiniSuiteEvent extends PayloadApplicationEvent<SuiteIdentifier> {
 
-	public MartiniSuiteEvent(Object source, MartiniSuiteIdentifier payload) {
+	public MartiniSuiteEvent(Object source, SuiteIdentifier payload) {
 		super(source, payload);
 	}
 }

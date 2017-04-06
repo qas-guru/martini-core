@@ -21,16 +21,21 @@ import java.util.UUID;
 import static com.google.common.base.Preconditions.checkState;
 
 @SuppressWarnings("WeakerAccess")
-public class DefaultMartiniSuiteIdentifier implements MartiniSuiteIdentifier {
+public class DefaultSuiteIdentifier implements SuiteIdentifier {
 
-	private final long timestamp;
-	private final String hostname;
-	private final String suiteName;
 	private final UUID id;
+	private final String name;
+	private final String hostname;
+	private final String hostAddress;
 
 	@Override
-	public long getTimestamp() {
-		return timestamp;
+	public UUID getId() {
+		return id;
+	}
+
+	@Override
+	public String getName() {
+		return name;
 	}
 
 	@Override
@@ -39,20 +44,15 @@ public class DefaultMartiniSuiteIdentifier implements MartiniSuiteIdentifier {
 	}
 
 	@Override
-	public String getSuiteName() {
-		return suiteName;
+	public String getHostAddress() {
+		return null;
 	}
 
-	@Override
-	public UUID getId() {
-		return id;
-	}
-
-	protected DefaultMartiniSuiteIdentifier(long timestamp, String hostname, String suiteName, UUID id) {
-		this.timestamp = timestamp;
-		this.hostname = hostname;
-		this.suiteName = suiteName;
+	protected DefaultSuiteIdentifier(UUID id, String name, String hostname, String hostAddress) {
 		this.id = id;
+		this.name = name;
+		this.hostname = hostname;
+		this.hostAddress = hostAddress;
 	}
 
 	public static Builder builder() {
@@ -61,31 +61,13 @@ public class DefaultMartiniSuiteIdentifier implements MartiniSuiteIdentifier {
 
 	@SuppressWarnings("WeakerAccess")
 	public static class Builder {
-		protected long timestamp;
-		protected String hostname;
-		protected String suiteName;
+
 		protected UUID id;
+		protected String name;
+		protected String hostname;
+		protected String hostAddress;
 
 		protected Builder() {
-		}
-
-		public Builder setTimetamp(long timestamp) {
-			this.timestamp = timestamp;
-			return this;
-		}
-
-		public Builder setHostname(String s) {
-			this.hostname = normalize(s);
-			return this;
-		}
-
-		protected String normalize(String s) {
-			return null == s ? null : s.trim();
-		}
-
-		public Builder setSuiteName(String s) {
-			this.suiteName = normalize(s);
-			return this;
 		}
 
 		public Builder setId(UUID id) {
@@ -93,11 +75,29 @@ public class DefaultMartiniSuiteIdentifier implements MartiniSuiteIdentifier {
 			return this;
 		}
 
-		public MartiniSuiteIdentifier build() {
-			checkState(null != hostname && !hostname.isEmpty(), "null or empty hostname");
-			checkState(null != suiteName && !suiteName.isEmpty(), "null or empty suite name");
+		public Builder setName(String s) {
+			this.name = normalize(s);
+			return this;
+		}
+
+		protected String normalize(String s) {
+			return null == s ? null : s.trim();
+		}
+
+		public Builder setHostname(String s) {
+			this.hostname = normalize(s);
+			return this;
+		}
+
+		public Builder setHostAddress(String s) {
+			this.hostAddress = normalize(s);
+			return this;
+		}
+
+		public SuiteIdentifier build() {
 			checkState(null != id, "null UUID");
-			return new DefaultMartiniSuiteIdentifier(timestamp, hostname, suiteName, id);
+			checkState(null != name && !name.isEmpty(), "null or empty suite name");
+			return new DefaultSuiteIdentifier(id, name, hostname, hostAddress);
 		}
 	}
 }

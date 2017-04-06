@@ -20,7 +20,7 @@ import org.springframework.core.ResolvableType;
 
 public class BeforeSuiteEvent extends MartiniSuiteEvent {
 
-	public BeforeSuiteEvent(Object source, MartiniSuiteIdentifier payload) {
+	public BeforeSuiteEvent(Object source, SuiteIdentifier payload) {
 		super(source, payload);
 	}
 

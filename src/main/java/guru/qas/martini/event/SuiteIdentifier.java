@@ -18,13 +18,13 @@ package guru.qas.martini.event;
 
 import java.util.UUID;
 
-public interface MartiniSuiteIdentifier {
+public interface SuiteIdentifier {
 
-	long getTimestamp();
+	UUID getId();
+
+	String getName();
 
 	String getHostname();
 
-	String getSuiteName();
-
-	UUID getId();
+	String getHostAddress();
 }

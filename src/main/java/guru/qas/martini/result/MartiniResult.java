@@ -22,12 +22,12 @@ import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
 import guru.qas.martini.Martini;
-import guru.qas.martini.event.MartiniSuiteIdentifier;
+import guru.qas.martini.event.SuiteIdentifier;
 import guru.qas.martini.event.Status;
 
 public interface MartiniResult extends Serializable {
 
-	MartiniSuiteIdentifier getMartiniSuiteIdentifier();
+	SuiteIdentifier getMartiniSuiteIdentifier();
 
 	Martini getMartini();
 

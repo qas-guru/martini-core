@@ -27,7 +27,7 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
 
 import guru.qas.martini.Martini;
-import guru.qas.martini.event.MartiniSuiteIdentifier;
+import guru.qas.martini.event.SuiteIdentifier;
 import guru.qas.martini.event.Status;
 
 import static com.google.common.base.Preconditions.*;
@@ -37,7 +37,7 @@ public class DefaultMartiniResult implements MartiniResult {
 
 	private static final long serialVersionUID = 5018046850140682254L;
 
-	protected final MartiniSuiteIdentifier suiteIdentifier;
+	protected final SuiteIdentifier suiteIdentifier;
 	protected final Martini martini;
 	protected final ImmutableSet<String> categorizations;
 	protected final String threadGroupName;
@@ -46,7 +46,7 @@ public class DefaultMartiniResult implements MartiniResult {
 	protected final transient AtomicReference<ElapsedTime> elapsedTimeRef;
 	protected final transient AtomicReference<Status> statusRef;
 
-	public MartiniSuiteIdentifier getMartiniSuiteIdentifier() {
+	public SuiteIdentifier getMartiniSuiteIdentifier() {
 		return suiteIdentifier;
 	}
 
@@ -75,7 +75,7 @@ public class DefaultMartiniResult implements MartiniResult {
 	}
 
 	protected DefaultMartiniResult(
-		MartiniSuiteIdentifier suiteIdentifier, Martini martini,
+		SuiteIdentifier suiteIdentifier, Martini martini,
 		Iterable<String> categorizations,
 		String threadGroupName,
 		String threadName
@@ -97,7 +97,7 @@ public class DefaultMartiniResult implements MartiniResult {
 
 	public static class Builder {
 
-		protected MartiniSuiteIdentifier suiteIdentifier;
+		protected SuiteIdentifier suiteIdentifier;
 		protected Martini martini;
 		protected ImmutableSet<String> categorizations;
 		protected String threadGroupName;
@@ -106,7 +106,7 @@ public class DefaultMartiniResult implements MartiniResult {
 		protected Builder() {
 		}
 
-		public Builder setMartiniSuiteIdentifier(MartiniSuiteIdentifier i) {
+		public Builder setMartiniSuiteIdentifier(SuiteIdentifier i) {
 			this.suiteIdentifier = i;
 			return this;
 		}
@@ -136,7 +136,7 @@ public class DefaultMartiniResult implements MartiniResult {
 		}
 
 		public DefaultMartiniResult build() {
-			checkState(null != suiteIdentifier, "null DefaultMartiniSuiteIdentifier");
+			checkState(null != suiteIdentifier, "null DefaultSuiteIdentifier");
 			checkState(null != martini, "null Martini");
 			checkState(null != threadGroupName && !threadGroupName.isEmpty(), "null or empty thread group name");
 			checkState(null != threadName && !threadName.isEmpty(), "null or empty thread name");

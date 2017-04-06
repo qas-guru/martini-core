@@ -24,7 +24,7 @@ import org.springframework.beans.factory.ObjectFactory;
 import org.springframework.beans.factory.config.Scope;
 import org.springframework.stereotype.Component;
 
-import guru.qas.martini.event.MartiniSuiteIdentifier;
+import guru.qas.martini.event.SuiteIdentifier;
 import guru.qas.martini.result.MartiniResult;
 
 @SuppressWarnings("WeakerAccess")
@@ -72,9 +72,9 @@ public class ScenarioScope implements Scope {
 	}
 
 	protected String getConversationId(MartiniResult result) {
-		MartiniSuiteIdentifier suiteIdentifier = result.getMartiniSuiteIdentifier();
+		SuiteIdentifier suiteIdentifier = result.getMartiniSuiteIdentifier();
 		String host = suiteIdentifier.getHostname();
-		String suite = suiteIdentifier.getSuiteName();
+		String suite = suiteIdentifier.getName();
 		UUID id = suiteIdentifier.getId();
 		String threadGroup = result.getThreadGroupName();
 		String thread = result.getThreadName();
