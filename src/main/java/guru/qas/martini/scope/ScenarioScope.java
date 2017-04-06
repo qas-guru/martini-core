@@ -72,7 +72,7 @@ public class ScenarioScope implements Scope {
 	}
 
 	protected String getConversationId(MartiniResult result) {
-		SuiteIdentifier suiteIdentifier = result.getMartiniSuiteIdentifier();
+		SuiteIdentifier suiteIdentifier = result.getSuiteIdentifier();
 		String host = suiteIdentifier.getHostname();
 		String suite = suiteIdentifier.getName();
 		UUID id = suiteIdentifier.getId();

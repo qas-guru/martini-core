@@ -19,7 +19,6 @@ package guru.qas.martini.result;
 import java.io.Serializable;
 import java.util.List;
 import java.util.Set;
-import java.util.concurrent.TimeUnit;
 
 import guru.qas.martini.Martini;
 import guru.qas.martini.event.SuiteIdentifier;
@@ -27,7 +26,7 @@ import guru.qas.martini.event.Status;
 
 public interface MartiniResult extends Serializable {
 
-	SuiteIdentifier getMartiniSuiteIdentifier();
+	SuiteIdentifier getSuiteIdentifier();
 
 	Martini getMartini();
 
@@ -41,7 +40,7 @@ public interface MartiniResult extends Serializable {
 
 	Long getEndTimestamp();
 
-	Long getExecutionTime(TimeUnit unit);
+	Long getExecutionTimeMs();
 
 	List<StepResult> getStepResults();
 
