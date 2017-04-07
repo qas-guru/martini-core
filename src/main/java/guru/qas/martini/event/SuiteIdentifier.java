@@ -16,15 +16,24 @@ limitations under the License.
 
 package guru.qas.martini.event;
 
-import java.util.UUID;
+import java.util.Collection;
+import java.util.Map;
 
 public interface SuiteIdentifier {
 
-	UUID getId();
+	String getId();
 
 	String getName();
+
+	Long getStartTimestamp();
 
 	String getHostname();
 
 	String getHostAddress();
+
+	String getUsername();
+
+	Collection<String> getProfiles();
+
+	Map<String, String> getEnvironmentVariables();
 }

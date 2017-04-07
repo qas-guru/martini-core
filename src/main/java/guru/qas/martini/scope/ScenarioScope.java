@@ -75,7 +75,7 @@ public class ScenarioScope implements Scope {
 		SuiteIdentifier suiteIdentifier = result.getSuiteIdentifier();
 		String host = suiteIdentifier.getHostname();
 		String suite = suiteIdentifier.getName();
-		UUID id = suiteIdentifier.getId();
+		String id = suiteIdentifier.getId();
 		String threadGroup = result.getThreadGroupName();
 		String thread = result.getThreadName();
 		String recipeId = result.getMartini().getRecipe().getId();

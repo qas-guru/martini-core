@@ -16,21 +16,33 @@ limitations under the License.
 
 package guru.qas.martini.event;
 
-import java.util.UUID;
+import java.util.Map;
+
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 
 import static com.google.common.base.Preconditions.checkState;
 
 @SuppressWarnings("WeakerAccess")
 public class DefaultSuiteIdentifier implements SuiteIdentifier {
 
-	private final UUID id;
+	private final String id;
+	private final Long startTimestamp;
+	private final ImmutableSet<String> profiles;
+	private final ImmutableMap<String, String> environmentVariables;
 	private final String name;
 	private final String hostname;
 	private final String hostAddress;
+	private final String username;
 
 	@Override
-	public UUID getId() {
+	public String getId() {
 		return id;
+	}
+
+	@Override
+	public Long getStartTimestamp() {
+		return startTimestamp;
 	}
 
 	@Override
@@ -48,11 +60,39 @@ public class DefaultSuiteIdentifier implements SuiteIdentifier {
 		return hostAddress;
 	}
 
-	protected DefaultSuiteIdentifier(UUID id, String name, String hostname, String hostAddress) {
+	@Override
+	public String getUsername() {
+		return username;
+	}
+
+	@Override
+	public ImmutableSet<String> getProfiles() {
+		return profiles;
+	}
+
+	@Override
+	public ImmutableMap<String, String> getEnvironmentVariables() {
+		return environmentVariables;
+	}
+
+	protected DefaultSuiteIdentifier(
+		String id,
+		Long startTimestamp,
+		String name,
+		String hostname,
+		String hostAddress,
+		String username,
+		ImmutableSet<String> profiles,
+		ImmutableMap<String, String> environmentVariables
+	) {
 		this.id = id;
+		this.startTimestamp = startTimestamp;
 		this.name = name;
 		this.hostname = hostname;
 		this.hostAddress = hostAddress;
+		this.username = username;
+		this.profiles = profiles;
+		this.environmentVariables = environmentVariables;
 	}
 
 	public static Builder builder() {
@@ -62,16 +102,25 @@ public class DefaultSuiteIdentifier implements SuiteIdentifier {
 	@SuppressWarnings("WeakerAccess")
 	public static class Builder {
 
-		protected UUID id;
+		protected String id;
+		protected Long startupTimestamp;
 		protected String name;
 		protected String hostname;
 		protected String hostAddress;
+		protected String username;
+		protected ImmutableSet<String> profiles;
+		protected ImmutableMap<String, String> environmentVariables;
 
 		protected Builder() {
 		}
 
-		public Builder setId(UUID id) {
+		public Builder setId(String id) {
 			this.id = id;
+			return this;
+		}
+
+		public Builder setStartupTimestamp(Long timestamp) {
+			this.startupTimestamp = timestamp;
 			return this;
 		}
 
@@ -94,10 +143,26 @@ public class DefaultSuiteIdentifier implements SuiteIdentifier {
 			return this;
 		}
 
+		public Builder setUsername(String s) {
+			this.username = s;
+			return this;
+		}
+
+		public Builder setProfiles(Iterable<String> profiles) {
+			this.profiles = null == profiles ? ImmutableSet.of() : ImmutableSet.copyOf(profiles);
+			return this;
+		}
+
+		public Builder setEnvironmentVariables(Map<String, String> variables) {
+			this.environmentVariables = null == variables ? ImmutableMap.of() : ImmutableMap.copyOf(variables);
+			return this;
+		}
+
 		public SuiteIdentifier build() {
 			checkState(null != id, "null UUID");
 			checkState(null != name && !name.isEmpty(), "null or empty suite name");
-			return new DefaultSuiteIdentifier(id, name, hostname, hostAddress);
+			return new DefaultSuiteIdentifier(
+				id, startupTimestamp, name, hostname, hostAddress, username, profiles, environmentVariables);
 		}
 	}
 }
