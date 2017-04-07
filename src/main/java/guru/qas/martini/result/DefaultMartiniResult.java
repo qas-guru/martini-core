@@ -33,8 +33,6 @@ import static com.google.common.base.Preconditions.*;
 @SuppressWarnings("WeakerAccess")
 public class DefaultMartiniResult implements MartiniResult {
 
-	private static final long serialVersionUID = 5018046850140682254L;
-
 	protected final SuiteIdentifier suiteIdentifier;
 	protected final Martini martini;
 	protected final ImmutableSet<String> categorizations;

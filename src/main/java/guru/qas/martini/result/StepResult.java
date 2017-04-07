@@ -16,7 +16,6 @@ limitations under the License.
 
 package guru.qas.martini.result;
 
-import java.io.Serializable;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
@@ -24,10 +23,13 @@ import org.apache.http.HttpEntity;
 
 import gherkin.ast.Step;
 import guru.qas.martini.event.Status;
+import guru.qas.martini.step.StepImplementation;
 
-public interface StepResult extends Serializable {
+public interface StepResult {
 
 	Step getStep();
+
+	StepImplementation getStepImplementation();
 
 	List<HttpEntity> getEmbedded();
 

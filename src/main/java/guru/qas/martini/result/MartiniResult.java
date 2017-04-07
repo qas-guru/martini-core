@@ -16,7 +16,6 @@ limitations under the License.
 
 package guru.qas.martini.result;
 
-import java.io.Serializable;
 import java.util.List;
 import java.util.Set;
 
@@ -24,7 +23,7 @@ import guru.qas.martini.Martini;
 import guru.qas.martini.event.SuiteIdentifier;
 import guru.qas.martini.event.Status;
 
-public interface MartiniResult extends Serializable {
+public interface MartiniResult {
 
 	SuiteIdentifier getSuiteIdentifier();
 

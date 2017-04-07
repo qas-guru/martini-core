@@ -22,20 +22,19 @@ import java.util.concurrent.TimeUnit;
 import org.apache.http.HttpEntity;
 
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 
 import gherkin.ast.Step;
 import guru.qas.martini.event.Status;
+import guru.qas.martini.step.StepImplementation;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
 @SuppressWarnings("WeakerAccess")
 public class DefaultStepResult implements StepResult {
 
-	private static final long serialVersionUID = -4054028161690659412L;
-
-	private final Step step; // TODO: this thing is not serializable
+	private final Step step;
+	private final StepImplementation implementation;
 	private final ElapsedTime elapsedTime;
 	private final List<HttpEntity> embedded;
 	private Status status;
@@ -44,6 +43,11 @@ public class DefaultStepResult implements StepResult {
 	@Override
 	public Step getStep() {
 		return step;
+	}
+
+	@Override
+	public StepImplementation getStepImplementation() {
+		return implementation;
 	}
 
 	public List<HttpEntity> getEmbedded() {
@@ -86,8 +90,9 @@ public class DefaultStepResult implements StepResult {
 		elapsedTime.setEndTimestamp(timestamp);
 	}
 
-	public DefaultStepResult(Step step) {
+	public DefaultStepResult(Step step, StepImplementation implementation) {
 		this.step = checkNotNull(step, "null Step");
+		this.implementation = implementation;
 		this.embedded = Lists.newArrayList();
 		this.elapsedTime = new ElapsedTime();
 	}
@@ -95,12 +100,6 @@ public class DefaultStepResult implements StepResult {
 	public void add(HttpEntity entity) {
 		if (null != entity) {
 			embedded.add(entity);
-		}
-	}
-
-	public void addAll(Iterable<HttpEntity> entities) {
-		if (null != entities) {
-			Iterables.addAll(embedded, entities);
 		}
 	}
 

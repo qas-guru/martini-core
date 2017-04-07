@@ -45,7 +45,7 @@ public class DefaultSuiteIdentifier implements SuiteIdentifier {
 
 	@Override
 	public String getHostAddress() {
-		return null;
+		return hostAddress;
 	}
 
 	protected DefaultSuiteIdentifier(UUID id, String name, String hostname, String hostAddress) {
