@@ -18,8 +18,10 @@ package guru.qas.martini.scope;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.UUID;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.DisposableBean;
 import org.springframework.beans.factory.ObjectFactory;
 import org.springframework.beans.factory.config.Scope;
 import org.springframework.stereotype.Component;
@@ -30,6 +32,8 @@ import guru.qas.martini.result.MartiniResult;
 @SuppressWarnings("WeakerAccess")
 @Component
 public class ScenarioScope implements Scope {
+
+	private static final Logger LOGGER = LoggerFactory.getLogger(ScenarioScope.class);
 
 	private static final InheritableThreadLocal<Map<String, Object>> SCOPE_REF = new InheritableThreadLocal<Map<String, Object>>() {
 		@Override
@@ -84,7 +88,21 @@ public class ScenarioScope implements Scope {
 
 	public void clear() {
 		Map<String, Object> scope = SCOPE_REF.get();
+		for (Object bean : scope.values()) {
+			if (DisposableBean.class.isInstance(bean)) {
+				dispose(DisposableBean.class.cast(bean));
+			}
+		}
 		scope.clear();
 		CONVO_REF.remove();
+	}
+
+	protected void dispose(DisposableBean bean) {
+		try {
+			bean.destroy();
+		}
+		catch (Exception e) {
+			LOGGER.warn("unable to call .destroy() on bean {}", bean, e);
+		}
 	}
 }
