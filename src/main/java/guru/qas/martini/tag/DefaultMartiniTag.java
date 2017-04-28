@@ -39,10 +39,6 @@ public class DefaultMartiniTag implements MartiniTag {
 		return argument;
 	}
 
-	protected DefaultMartiniTag(String name) {
-		this(name, null);
-	}
-
 	protected DefaultMartiniTag(String name, String argument) {
 		this.name = name;
 		this.argument = argument;
@@ -58,39 +54,48 @@ public class DefaultMartiniTag implements MartiniTag {
 		protected static final Pattern PATTERN_SIMPLE = Pattern.compile("^@(.+)$");
 		protected static final Pattern PATTERN_ARGUMENTED = Pattern.compile("^@(.+)\\(\"(.+)\"\\)$");
 
+		private String name;
+		private String argument;
+
 		protected Builder() {
 		}
 
-		public DefaultMartiniTag build(PickleTag pickleTag) throws MartiniException {
-			checkNotNull(pickleTag, "null PickleTag");
-			String value = pickleTag.getName().trim();
+		public Builder setName(String s) {
+			this.name = null == s ? null : s.trim();
+			return this;
+		}
+
+		public Builder setArgument(String s) {
+			this.argument = null == s ? null : s.trim();
+			return this;
+		}
+
+		public Builder setPickleTag(PickleTag tag) {
+			String value = tag.getName().trim();
+			Matcher matcher = PATTERN_ARGUMENTED.matcher(value);
+
 			try {
-				DefaultMartiniTag tag = getArgumented(value);
-				return null == tag ? getSimple(value) : tag;
+				if (matcher.find()) {
+					setName(matcher.group(1));
+					setArgument(matcher.group(2));
+				}
+				else {
+					matcher = PATTERN_SIMPLE.matcher(value);
+					checkState(matcher.find(), "illegal tag syntax: %s", value);
+					setName(matcher.group(1));
+					setArgument(null);
+				}
+				checkState(!matcher.find(), "illegal tag syntax: %s", value);
 			}
 			catch (Exception e) {
 				throw new MartiniException("unable to create DefaultMartiniTag", e);
 			}
+			return this;
 		}
 
-		protected DefaultMartiniTag getArgumented(String value) {
-			Matcher matcher = PATTERN_ARGUMENTED.matcher(value);
-
-			DefaultMartiniTag tag = null;
-			if (matcher.find()) {
-				String name = matcher.group(1);
-				String argument = matcher.group(2).trim();
-				tag = new DefaultMartiniTag(name, argument);
-				checkState(!matcher.find(), "illegal tag syntax: %s", value);
-			}
-			return tag;
-		}
-
-		protected DefaultMartiniTag getSimple(String value) {
-			Matcher matcher = PATTERN_SIMPLE.matcher(value);
-			checkState(matcher.find(), "illegal tag syntax: %s", value);
-			String name = matcher.group(1);
-			return new DefaultMartiniTag(name);
+		public DefaultMartiniTag build() {
+			checkState(null != name && !name.isEmpty(), "null or empty name");
+			return new DefaultMartiniTag(name, argument);
 		}
 	}
 

@@ -148,7 +148,7 @@ public class DefaultMartini implements Martini {
 			DefaultMartiniTag.Builder builder = DefaultMartiniTag.builder();
 			for (PickleTag pickleTag : pickleTags) {
 				try {
-					DefaultMartiniTag tag = builder.build(pickleTag);
+					DefaultMartiniTag tag = builder.setPickleTag(pickleTag).build();
 					tags.add(tag);
 				}
 				catch (Exception e) {

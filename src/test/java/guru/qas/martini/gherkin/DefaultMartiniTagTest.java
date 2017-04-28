@@ -29,7 +29,7 @@ public class DefaultMartiniTagTest {
 	@Test
 	public void testSimpleSyntax() throws MartiniException {
 		PickleTag pickleTag = new PickleTag(null, "@Smoke ");
-		DefaultMartiniTag tag = DefaultMartiniTag.builder().build(pickleTag);
+		DefaultMartiniTag tag = DefaultMartiniTag.builder().setPickleTag(pickleTag).build();
 		assertEquals("Smoke", tag.getName(), "wrong name returned");
 		assertNull(tag.getArgument(), "non-null argument returned");
 	}
@@ -37,7 +37,7 @@ public class DefaultMartiniTagTest {
 	@Test
 	public void testArgumentedSyntax() throws MartiniException {
 		PickleTag pickleTag = new PickleTag(null, "@Meta-Data(\"beta\")");
-		DefaultMartiniTag tag = DefaultMartiniTag.builder().build(pickleTag);
+		DefaultMartiniTag tag = DefaultMartiniTag.builder().setPickleTag(pickleTag).build();
 		assertEquals("Meta-Data", tag.getName(), "wrong name returned");
 		assertEquals("beta", tag.getArgument(), "wrong argument returned");
 	}
@@ -57,6 +57,6 @@ public class DefaultMartiniTagTest {
 		expectedExceptionsMessageRegExp = "^unable to create DefaultMartiniTag$")
 	public void testUntenableSyntax() throws MartiniException {
 		PickleTag pickleTag = new PickleTag(null, "two");
-		DefaultMartiniTag.builder().build(pickleTag);
+		DefaultMartiniTag.builder().setPickleTag(pickleTag).build();
 	}
 }
