@@ -41,9 +41,11 @@ import org.springframework.expression.spel.standard.SpelExpressionParser;
 import org.springframework.expression.spel.support.StandardEvaluationContext;
 
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 
+import gherkin.ast.Background;
 import guru.qas.martini.step.AmbiguousStepException;
 import guru.qas.martini.step.UnimplementedStep;
 import guru.qas.martini.step.UnimplementedStepException;
@@ -126,10 +128,11 @@ public class DefaultMixologist implements Mixologist, InitializingBean, Applicat
 				for (Recipe recipe : recipes) {
 					DefaultMartini.Builder martiniBuilder = DefaultMartini.builder().setRecipe(recipe);
 					Pickle pickle = recipe.getPickle();
+					Background background = recipe.getBackground();
 					ScenarioDefinition scenarioDefinition = recipe.getScenarioDefinition();
 					List<PickleStep> steps = pickle.getSteps();
 					for (PickleStep step : steps) {
-						Step gherkinStep = getGherkinStep(scenarioDefinition, step);
+						Step gherkinStep = getGherkinStep(background, scenarioDefinition, step);
 						StepImplementation implementation = getImplementation(gherkinStep, implementations);
 						martiniBuilder.add(gherkinStep, implementation);
 					}
@@ -143,8 +146,10 @@ public class DefaultMixologist implements Mixologist, InitializingBean, Applicat
 		}
 	}
 
-	private Step getGherkinStep(ScenarioDefinition definition, PickleStep step) {
-		List<Step> steps = definition.getSteps();
+	private Step getGherkinStep(Background background, ScenarioDefinition definition, PickleStep step) {
+		List<Step> backgroundSteps = null == background ? ImmutableList.of() : background.getSteps();
+		List<Step> definitionSteps = definition.getSteps();
+		Iterable<Step> steps = Iterables.concat(backgroundSteps, definitionSteps);
 		List<PickleLocation> locations = step.getLocations();
 		Set<Integer> lines = Sets.newHashSetWithExpectedSize(locations.size());
 		for (PickleLocation location : locations) {
@@ -159,6 +164,8 @@ public class DefaultMixologist implements Mixologist, InitializingBean, Applicat
 			int line = location.getLine();
 			gherkinStep = lines.contains(line) ? candidate : null;
 		}
+
+
 		checkState(null != gherkinStep, "unable to locate Step %s in ScenarioDefinition %s", step, definition);
 		return gherkinStep;
 	}

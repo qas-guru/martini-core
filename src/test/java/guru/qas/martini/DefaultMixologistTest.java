@@ -182,4 +182,14 @@ public class DefaultMixologistTest {
 		Collection<Martini> martinis = mixologist.getMartinis(filter);
 		assertTrue(martinis.contains(expected), "expected Martini not returned");
 	}
+
+	@Test
+	public void testBackground() {
+		String id = "Fairytales:Sleeping_Beauty:22";
+		Martini martini = this.getMartini(id);
+		checkState(null != martini, "unable to retrieve Martini by ID %s", id);
+
+		Map<Step, StepImplementation> index = martini.getStepIndex();
+		checkState(4 == index.size(), "wrong number of steps returned, expected 4 but found %s", index.size());
+	}
 }

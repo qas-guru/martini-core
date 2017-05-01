@@ -17,13 +17,18 @@ limitations under the License.
 package guru.qas.martini.gherkin;
 
 import java.io.Serializable;
+import java.util.List;
+import java.util.stream.Collectors;
 
 import org.springframework.core.io.Resource;
 
+import gherkin.ast.Background;
 import gherkin.ast.Feature;
 import gherkin.ast.ScenarioDefinition;
 import gherkin.pickles.Pickle;
 import gherkin.pickles.PickleLocation;
+
+import static com.google.common.base.Preconditions.*;
 
 @SuppressWarnings("WeakerAccess")
 public class Recipe implements Serializable {
@@ -61,13 +66,19 @@ public class Recipe implements Serializable {
 		Feature feature,
 		Pickle pickle,
 		PickleLocation location,
-		ScenarioDefinition definition
-	) {
+		ScenarioDefinition definition) {
 		this.source = source;
 		this.feature = feature;
 		this.pickle = pickle;
 		this.location = location;
 		this.definition = definition;
+	}
+
+	public Background getBackground() {
+		List<ScenarioDefinition> children = feature.getChildren();
+		List<Background> backgrounds = children.stream().filter(Background.class::isInstance).map(Background.class::cast).collect(Collectors.toList());
+		checkState(backgrounds.isEmpty() || 1 == backgrounds.size(), "more than one Background identified");
+		return backgrounds.isEmpty() ? null : backgrounds.get(0);
 	}
 
 	public String getId() {
