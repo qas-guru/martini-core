@@ -6,7 +6,7 @@
 
 	<groupId>guru.qas</groupId>
 	<artifactId>martini-core</artifactId>
-	<version>1.1.0</version>
+	<version>1.0.2</version>
 	<packaging>jar</packaging>
 
 	<name>${project.groupId}:${project.artifactId}</name>
@@ -28,7 +28,7 @@
 	<developers>
 		<developer>
 			<name>Penny Rohr Curich</name>
-			<email>pcuric@gmail.com</email>
+			<email>pcurich@gmail.com</email>
 			<organization>Quality Assurance Gurus</organization>
 			<organizationUrl>http://www.qas.guru</organizationUrl>
 		</developer>

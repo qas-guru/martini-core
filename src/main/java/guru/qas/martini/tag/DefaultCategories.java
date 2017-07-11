@@ -97,8 +97,10 @@ public class DefaultCategories implements Categories, ApplicationContextAware, I
 		Collection<String> parents = ascendingHierarchy.get(argument);
 		Set<String> ancestry = Sets.newHashSet();
 		for (String parent : parents) {
-			ancestry.add(parent);
-			ancestry.addAll(getAncestors(parent));
+			if (null != parent) {
+				ancestry.add(parent);
+				ancestry.addAll(getAncestors(parent));
+			}
 		}
 		return ancestry;
 	}
@@ -110,10 +112,10 @@ public class DefaultCategories implements Categories, ApplicationContextAware, I
 
 		Set<String> categories = Sets.newHashSet();
 
-		for(MartiniTag tag : tags) {
+		for (MartiniTag tag : tags) {
 			if (isCategory(tag)) {
 				String argument = tag.getArgument();
-				if (null != argument & !argument.isEmpty()) {
+				if (null != argument && !argument.isEmpty()) {
 					Set<String> ancestors = getAncestors(argument);
 					categories.add(argument);
 					categories.addAll(ancestors);
