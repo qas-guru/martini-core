@@ -25,10 +25,6 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Scope;
 import org.springframework.context.annotation.ScopedProxyMode;
 
-/*
-@Scope(value="prototype", proxyMode=ScopedProxyMode.TARGET_CLASS)
-
- */
 @Qualifier
 @Scope(value = "scenario", proxyMode = ScopedProxyMode.TARGET_CLASS)
 @Target({ElementType.TYPE, ElementType.METHOD})

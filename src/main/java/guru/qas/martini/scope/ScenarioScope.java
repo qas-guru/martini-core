@@ -17,6 +17,8 @@ limitations under the License.
 package guru.qas.martini.scope;
 
 import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 
 import org.slf4j.Logger;
@@ -26,8 +28,12 @@ import org.springframework.beans.factory.ObjectFactory;
 import org.springframework.beans.factory.config.Scope;
 import org.springframework.stereotype.Component;
 
+import com.google.common.collect.Lists;
+
 import guru.qas.martini.event.SuiteIdentifier;
 import guru.qas.martini.result.MartiniResult;
+
+import static com.google.common.base.Preconditions.*;
 
 @SuppressWarnings("WeakerAccess")
 @Component
@@ -41,6 +47,14 @@ public class ScenarioScope implements Scope {
 			return new HashMap<>();
 		}
 	};
+
+	private static final InheritableThreadLocal<LinkedHashMap<String, Runnable>> DESTRUCTION_CALLBACKS =
+		new InheritableThreadLocal<LinkedHashMap<String, Runnable>>() {
+			@Override
+			protected LinkedHashMap<String, Runnable> initialValue() {
+				return new LinkedHashMap<>();
+			}
+		};
 
 	private static final InheritableThreadLocal<MartiniResult> CONVO_REF = new InheritableThreadLocal<>();
 
@@ -58,6 +72,11 @@ public class ScenarioScope implements Scope {
 
 	@Override
 	public void registerDestructionCallback(String name, Runnable callback) {
+		String trimmed = checkNotNull(name, "null String").trim();
+		checkArgument(!trimmed.isEmpty(), "empty String");
+		checkNotNull(callback, "null Runnable");
+		HashMap<String, Runnable> callbacks = DESTRUCTION_CALLBACKS.get();
+		callbacks.put(name, callback);
 	}
 
 	@Override
@@ -87,22 +106,47 @@ public class ScenarioScope implements Scope {
 	}
 
 	public void clear() {
-		Map<String, Object> scope = SCOPE_REF.get();
-		for (Object bean : scope.values()) {
-			if (DisposableBean.class.isInstance(bean)) {
-				dispose(DisposableBean.class.cast(bean));
-			}
-		}
-		scope.clear();
+		runDestructionCallbacks();
+		disposeBeans();
 		CONVO_REF.remove();
 	}
 
-	protected void dispose(DisposableBean bean) {
+	private void runDestructionCallbacks() {
+		LinkedHashMap<String, Runnable> index = DESTRUCTION_CALLBACKS.get();
+		List<String> names = Lists.reverse(Lists.newArrayList(index.keySet()));
+		for (String name : names) {
+			Runnable callback = index.remove(name);
+			run(name, callback);
+		}
+	}
+
+	private static void run(String name, Runnable callback) {
 		try {
-			bean.destroy();
+			callback.run();
 		}
 		catch (Exception e) {
-			LOGGER.warn("unable to call .destroy() on bean {}", bean, e);
+			LOGGER.warn("unable to complete destruction callback for bean {}", name, e);
+		}
+	}
+
+	private void disposeBeans() {
+		Map<String, Object> index = SCOPE_REF.get();
+		for (Map.Entry<String, Object> mapEntry : index.entrySet()) {
+			String name = mapEntry.getKey();
+			Object bean = mapEntry.getValue();
+			dispose(name, bean);
+		}
+	}
+
+	private static void dispose(String name, Object bean) {
+		if (DisposableBean.class.isInstance(bean)) {
+			DisposableBean disposable = DisposableBean.class.cast(bean);
+			try {
+				disposable.destroy();
+			}
+			catch (Exception e) {
+				LOGGER.warn("unable to dispose of bean {}", name, bean);
+			}
 		}
 	}
 }
