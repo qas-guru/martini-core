@@ -81,7 +81,7 @@ public class ScenarioScope implements Scope {
 
 	@Override
 	public Object resolveContextualObject(String key) {
-		return null;
+		return "martiniResult".equals(key) ? CONVO_REF.get() : null;
 	}
 
 	public void setScenarioIdentifier(MartiniResult result) {
