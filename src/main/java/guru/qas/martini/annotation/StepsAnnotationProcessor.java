@@ -77,7 +77,7 @@ class StepsAnnotationProcessor implements BeanPostProcessor, ApplicationContextA
 	}
 
 	private boolean isSpring(Class c) {
-		String name = c.getCanonicalName();
+		String name = c.getName();
 		return name.startsWith("org.spring");
 	}
 
