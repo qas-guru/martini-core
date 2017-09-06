@@ -17,6 +17,7 @@ limitations under the License.
 package guru.qas.martini;
 
 import java.io.Serializable;
+import java.lang.annotation.Annotation;
 import java.util.Collection;
 import java.util.Map;
 
@@ -52,4 +53,6 @@ public interface Martini extends Serializable {
 	 * @return line stored in Pickle's PickleLocation
 	 */
 	int getScenarioLine();
+
+	boolean isAnyStepAnnotated(Class<? extends Annotation> implementation);
 }

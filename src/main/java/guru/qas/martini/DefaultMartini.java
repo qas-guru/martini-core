@@ -16,6 +16,9 @@ limitations under the License.
 
 package guru.qas.martini;
 
+import java.lang.annotation.Annotation;
+import java.lang.reflect.Method;
+import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -36,6 +39,8 @@ import guru.qas.martini.tag.DefaultMartiniTag;
 import guru.qas.martini.gherkin.Recipe;
 import guru.qas.martini.step.StepImplementation;
 import guru.qas.martini.tag.MartiniTag;
+
+import static com.google.common.base.Preconditions.checkNotNull;
 
 /**
  * Default implementation of a Martini.
@@ -93,6 +98,22 @@ public class DefaultMartini implements Martini {
 	public int getScenarioLine() {
 		PickleLocation location = getRecipe().getLocation();
 		return location.getLine();
+	}
+
+	@Override
+	public boolean isAnyStepAnnotated(Class<? extends Annotation> annotationClass) {
+		checkNotNull(annotationClass, "null Class");
+		Map<Step, StepImplementation> index = getStepIndex();
+
+		boolean evaluation = false;
+		Iterator<Map.Entry<Step, StepImplementation>> i = index.entrySet().iterator();
+		while (!evaluation && i.hasNext()) {
+			Map.Entry<Step, StepImplementation> mapEntry = i.next();
+			StepImplementation implementation = mapEntry.getValue();
+			Method method = implementation.getMethod();
+			evaluation = null != method && method.isAnnotationPresent(annotationClass);
+		}
+		return evaluation;
 	}
 
 	@Override
