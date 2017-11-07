@@ -41,13 +41,16 @@ import guru.qas.martini.event.AfterScenarioEvent;
 import guru.qas.martini.event.AfterSuiteEvent;
 import guru.qas.martini.event.SuiteIdentifier;
 import guru.qas.martini.result.MartiniResult;
+import guru.qas.martini.result.StepResult;
+import guru.qas.martini.step.StepImplementation;
 
 @SuppressWarnings({"WeakerAccess", "unused"})
 @Component
 @Lazy
 public class JsonSuiteMarshaller implements InitializingBean, DisposableBean {
 
-	private static final Logger LOGGER = LoggerFactory.getLogger(JsonSuiteMarshaller.class);
+	protected static final Logger LOGGER = LoggerFactory.getLogger(JsonSuiteMarshaller.class);
+	protected static final byte[] NEWLINE = "\n".getBytes();
 
 	protected final WritableResource resource;
 	protected final Monitor monitor;
@@ -55,6 +58,8 @@ public class JsonSuiteMarshaller implements InitializingBean, DisposableBean {
 	protected MartiniResultSerializer martiniResultSerializer;
 	protected SuiteIdentifierSerializer suiteIdentifierSerializer;
 	protected FeatureSerializer featureSerializer;
+	protected StepResultSerializer stepResultSerializer;
+	protected StepImplementationSerializer stepImplementationSerializer;
 	protected HostSerializer hostSerializer;
 	protected OutputStream outputStream;
 	protected JsonWriter jsonWriter;
@@ -80,6 +85,16 @@ public class JsonSuiteMarshaller implements InitializingBean, DisposableBean {
 		this.featureSerializer = s;
 	}
 
+	@Autowired
+	protected void setStepResultSerializer(StepResultSerializer s) {
+		this.stepResultSerializer = s;
+	}
+
+	@Autowired
+	protected void setStepImplementationSerializer(StepImplementationSerializer s) {
+		this.stepImplementationSerializer = s;
+	}
+
 	public JsonSuiteMarshaller(WritableResource resource) {
 		this.resource = resource;
 		this.monitor = new Monitor();
@@ -100,7 +115,6 @@ public class JsonSuiteMarshaller implements InitializingBean, DisposableBean {
 		return new GsonBuilder()
 			.setPrettyPrinting()
 			.setLenient()
-			.generateNonExecutableJson()
 			.serializeNulls();
 	}
 
@@ -109,7 +123,10 @@ public class JsonSuiteMarshaller implements InitializingBean, DisposableBean {
 		builder.registerTypeAdapter(SuiteIdentifier.class, suiteIdentifierSerializer);
 		builder.registerTypeAdapter(NetworkInterface.class, hostSerializer);
 		builder.registerTypeAdapter(Feature.class, featureSerializer);
+		builder.registerTypeAdapter(StepResult.class, stepResultSerializer);
+		builder.registerTypeAdapter(StepImplementation.class, stepImplementationSerializer);
 	}
+
 
 	@EventListener
 	public void handleAfterScenarioEvent(AfterScenarioEvent event) {
@@ -118,6 +135,7 @@ public class JsonSuiteMarshaller implements InitializingBean, DisposableBean {
 		try {
 			gson.toJson(result, MartiniResult.class, jsonWriter);
 			jsonWriter.flush();
+			outputStream.write("\n".getBytes());
 		}
 		catch (Exception e) {
 			LOGGER.warn("unable to serialize MartiniResult {}", result, e);

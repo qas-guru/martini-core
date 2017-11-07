@@ -27,6 +27,7 @@ import org.springframework.beans.factory.annotation.Configurable;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonSerializationContext;
+import com.google.gson.reflect.TypeToken;
 
 import gherkin.ast.Feature;
 import guru.qas.martini.Martini;
@@ -34,6 +35,7 @@ import guru.qas.martini.event.Status;
 import guru.qas.martini.event.SuiteIdentifier;
 import guru.qas.martini.gherkin.Recipe;
 import guru.qas.martini.result.MartiniResult;
+import guru.qas.martini.result.StepResult;
 import guru.qas.martini.tag.Categories;
 import guru.qas.martini.tag.MartiniTag;
 
@@ -88,7 +90,7 @@ public class DefaultMartiniResultSerializer implements MartiniResultSerializer {
 			setTags(martini);
 
 			setStatus();
-			// Steps, etc.
+			setSteps();
 
 			return serialized;
 		}
@@ -155,6 +157,14 @@ public class DefaultMartiniResultSerializer implements MartiniResultSerializer {
 		protected void setStatus() {
 			Status status = result.getStatus();
 			serialized.addProperty("status", status.name());
+		}
+
+		protected void setSteps() {
+			List<StepResult> stepResults = result.getStepResults();
+			Type type = TypeToken.getArray(StepResult.class).getType();
+			StepResult[] stepResultArray = stepResults.toArray(new StepResult[stepResults.size()]);
+			JsonElement serializedSteps = context.serialize(stepResultArray, type);
+			serialized.add("steps", serializedSteps);
 		}
 	}
 }

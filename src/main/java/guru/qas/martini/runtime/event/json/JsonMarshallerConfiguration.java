@@ -76,4 +76,22 @@ public class JsonMarshallerConfiguration implements BeanFactoryAware {
 			beanFactory.createBean(DefaultFeatureSerializer.class) :
 			beanFactory.createBean(impl);
 	}
+
+	@Bean
+	StepResultSerializer getStepResultSerializer(
+		@Value("${json.step.result.serializer.impl:#{null}}") Class<? extends StepResultSerializer> impl
+	) {
+		return null == impl ?
+			beanFactory.createBean(DefaultStepResultSerializer.class) :
+			beanFactory.createBean(impl);
+	}
+
+	@Bean
+	StepImplementationSerializer getStepImplementationSerializer(
+		@Value("${json.step.implementation.serializer.impl:#{null}}") Class<? extends StepImplementationSerializer> impl
+	) {
+		return null == impl ?
+			beanFactory.createBean(DefaultStepImplementationSerializer.class) :
+			beanFactory.createBean(impl);
+	}
 }
