@@ -17,6 +17,7 @@ limitations under the License.
 package guru.qas.martini.tag;
 
 import java.util.Collection;
+import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Set;
 
@@ -29,7 +30,6 @@ import org.springframework.context.ApplicationContextAware;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Multimap;
-import com.google.common.collect.Sets;
 
 import guru.qas.martini.Martini;
 
@@ -95,7 +95,7 @@ public class DefaultCategories implements Categories, ApplicationContextAware, I
 
 	protected Set<String> getAncestors(String argument) {
 		Collection<String> parents = ascendingHierarchy.get(argument);
-		Set<String> ancestry = Sets.newHashSet();
+		Set<String> ancestry = new LinkedHashSet<>();
 		for (String parent : parents) {
 			if (null != parent) {
 				ancestry.add(parent);
@@ -110,7 +110,7 @@ public class DefaultCategories implements Categories, ApplicationContextAware, I
 		checkNotNull(martini, "null Martini");
 		Collection<MartiniTag> tags = martini.getTags();
 
-		Set<String> categories = Sets.newHashSet();
+		Set<String> categories = new LinkedHashSet<>();
 
 		for (MartiniTag tag : tags) {
 			if (isCategory(tag)) {

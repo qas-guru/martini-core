@@ -30,6 +30,7 @@ import com.google.gson.JsonSerializationContext;
 import com.google.gson.reflect.TypeToken;
 
 import gherkin.ast.Feature;
+import gherkin.ast.ScenarioDefinition;
 import guru.qas.martini.Martini;
 import guru.qas.martini.event.Status;
 import guru.qas.martini.event.SuiteIdentifier;
@@ -86,6 +87,7 @@ public class DefaultMartiniResultSerializer implements MartiniResultSerializer {
 			setId(martini);
 			setLine(martini);
 			setName(martini);
+			setDescription(martini);
 			setCategories(martini);
 			setTags(martini);
 
@@ -140,6 +142,13 @@ public class DefaultMartiniResultSerializer implements MartiniResultSerializer {
 		protected void setName(Martini martini) {
 			String name = martini.getScenarioName();
 			serialized.addProperty("name", name);
+		}
+
+		protected void setDescription(Martini martini) {
+			Recipe recipe = martini.getRecipe();
+			ScenarioDefinition definition = recipe.getScenarioDefinition();
+			String description = definition.getDescription();
+			serialized.addProperty("description", null == description ? null : description.trim());
 		}
 
 		protected void setCategories(Martini martini) {
