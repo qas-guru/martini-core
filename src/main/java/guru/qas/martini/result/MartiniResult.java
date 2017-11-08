@@ -18,12 +18,15 @@ package guru.qas.martini.result;
 
 import java.util.List;
 import java.util.Set;
+import java.util.UUID;
 
 import guru.qas.martini.Martini;
 import guru.qas.martini.event.SuiteIdentifier;
 import guru.qas.martini.event.Status;
 
 public interface MartiniResult {
+
+	UUID getId();
 
 	SuiteIdentifier getSuiteIdentifier();
 

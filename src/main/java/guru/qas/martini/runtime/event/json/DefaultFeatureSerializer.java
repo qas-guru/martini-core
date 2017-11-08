@@ -17,7 +17,7 @@ limitations under the License.
 package guru.qas.martini.runtime.event.json;
 
 import java.lang.reflect.Type;
-import java.net.URL;
+import java.util.UUID;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -27,68 +27,65 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonSerializationContext;
 
-import gherkin.ast.Feature;
-import guru.qas.martini.gherkin.Recipe;
+import guru.qas.martini.gherkin.FeatureWrapper;
 
-@SuppressWarnings("unused")
+@SuppressWarnings({"unused", "WeakerAccess"})
 public class DefaultFeatureSerializer implements FeatureSerializer {
 
+	protected static final String KEY = "feature";
 	private static final Logger LOGGER = LoggerFactory.getLogger(DefaultFeatureSerializer.class);
 
 	@Override
-	public JsonElement serialize(Recipe recipe, Type type, JsonSerializationContext context) {
-		return new Builder(recipe).build();
+	public JsonElement serialize(FeatureWrapper feature, Type type, JsonSerializationContext context) {
+		JsonElement content = new Builder(feature).build();
+		return serialize(content);
+	}
+
+	protected JsonObject serialize(JsonElement content) {
+		JsonObject serialized = new JsonObject();
+		serialized.add(KEY, content);
+		return serialized;
 	}
 
 	@SuppressWarnings("WeakerAccess")
 	protected class Builder {
 
 		protected final JsonObject serialized;
-		protected final Recipe recipe;
+		protected final FeatureWrapper feature;
 
-		protected Builder(Recipe recipe) {
+		protected Builder(FeatureWrapper feature) {
 			this.serialized = new JsonObject();
-			this.recipe = recipe;
+			this.feature = feature;
 		}
 
 		protected JsonElement build() {
-			Feature feature = recipe.getFeature();
-			setName(feature);
-			setDescription(feature);
+			setId();
+			setName();
+			setDescription();
 			setLocation();
 			return serialized;
 		}
 
-		protected void setName(Feature feature) {
+		protected void setId() {
+			UUID id = feature.getId();
+			String serializedId = id.toString();
+			serialized.addProperty("id", serializedId);
+		}
+
+		protected void setName() {
 			String name = feature.getName();
 			serialized.addProperty("name", name);
 		}
 
-		protected void setDescription(Feature feature) {
+		protected void setDescription() {
 			String description = feature.getDescription();
 			serialized.addProperty("description", description);
 		}
 
 		protected void setLocation() {
-			URL location = getURL();
-			String path = null == location ? null : location.getPath();
-			serialized.addProperty("location", path);
-		}
-
-		protected URL getURL() {
-			Resource resource = recipe.getSource();
-			return getURL(resource);
-		}
-
-		protected URL getURL(Resource resource) {
-			URL url = null;
-			try {
-				url = null == resource ? null : resource.getURL();
-			}
-			catch (Exception e) {
-				LOGGER.warn("unable to parse URL from resource {}", resource);
-			}
-			return url;
+			Resource resource = feature.getResource();
+			String serializedResource = null == resource ? null : resource.toString();
+			serialized.addProperty("location", serializedResource);
 		}
 	}
 }

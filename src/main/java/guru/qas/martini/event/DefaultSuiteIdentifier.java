@@ -17,16 +17,17 @@ limitations under the License.
 package guru.qas.martini.event;
 
 import java.util.Map;
+import java.util.UUID;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 
 import static com.google.common.base.Preconditions.checkState;
 
-@SuppressWarnings("WeakerAccess")
+@SuppressWarnings({"WeakerAccess", "unused"})
 public class DefaultSuiteIdentifier implements SuiteIdentifier {
 
-	private final String id;
+	private final UUID id;
 	private final Long startTimestamp;
 	private final ImmutableSet<String> profiles;
 	private final ImmutableMap<String, String> environmentVariables;
@@ -36,7 +37,7 @@ public class DefaultSuiteIdentifier implements SuiteIdentifier {
 	private final String username;
 
 	@Override
-	public String getId() {
+	public UUID getId() {
 		return id;
 	}
 
@@ -76,7 +77,7 @@ public class DefaultSuiteIdentifier implements SuiteIdentifier {
 	}
 
 	protected DefaultSuiteIdentifier(
-		String id,
+		UUID id,
 		Long startTimestamp,
 		String name,
 		String hostname,
@@ -102,7 +103,6 @@ public class DefaultSuiteIdentifier implements SuiteIdentifier {
 	@SuppressWarnings("WeakerAccess")
 	public static class Builder {
 
-		protected String id;
 		protected Long startupTimestamp;
 		protected String name;
 		protected String hostname;
@@ -112,11 +112,6 @@ public class DefaultSuiteIdentifier implements SuiteIdentifier {
 		protected ImmutableMap<String, String> environmentVariables;
 
 		protected Builder() {
-		}
-
-		public Builder setId(String id) {
-			this.id = id;
-			return this;
 		}
 
 		public Builder setStartupTimestamp(Long timestamp) {
@@ -159,8 +154,8 @@ public class DefaultSuiteIdentifier implements SuiteIdentifier {
 		}
 
 		public SuiteIdentifier build() {
-			checkState(null != id, "null UUID");
 			checkState(null != name && !name.isEmpty(), "null or empty suite name");
+			UUID id = UUID.randomUUID();
 			return new DefaultSuiteIdentifier(
 				id, startupTimestamp, name, hostname, hostAddress, username, profiles, environmentVariables);
 		}

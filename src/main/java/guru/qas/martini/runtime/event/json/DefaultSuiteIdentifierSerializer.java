@@ -20,8 +20,7 @@ import java.lang.reflect.Type;
 import java.net.NetworkInterface;
 import java.util.Collection;
 import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
+import java.util.UUID;
 
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
@@ -32,22 +31,17 @@ import guru.qas.martini.event.SuiteIdentifier;
 @SuppressWarnings("WeakerAccess")
 public class DefaultSuiteIdentifierSerializer implements SuiteIdentifierSerializer {
 
-	protected final ConcurrentMap<String, JsonObject> cache;
-
-	public DefaultSuiteIdentifierSerializer() {
-		this.cache = new ConcurrentHashMap<>();
-	}
+	protected final static String PROPERTY = "suite";
 
 	@Override
 	public JsonElement serialize(SuiteIdentifier identifier, Type type, JsonSerializationContext context) {
-		String id = identifier.getId();
-		JsonObject serialized = cache.get(id);
+		JsonElement contents = new Builder(identifier, context).build();
+		return serialize(contents);
+	}
 
-		if (null == serialized) {
-			serialized = new Builder(identifier, context).build();
-			serialized = null == cache.putIfAbsent(id, serialized) ? serialized : cache.get(id);
-		}
-
+	protected JsonElement serialize(JsonElement contents) {
+		JsonObject serialized = new JsonObject();
+		serialized.add(PROPERTY, contents);
 		return serialized;
 	}
 
@@ -74,8 +68,9 @@ public class DefaultSuiteIdentifierSerializer implements SuiteIdentifierSerializ
 		}
 
 		protected void setId() {
-			String id = identifier.getId();
-			serialized.addProperty("id", id);
+			UUID id = identifier.getId();
+			String serializedId = id.toString();
+			serialized.addProperty("id", serializedId);
 		}
 
 		protected void setTimestamp() {

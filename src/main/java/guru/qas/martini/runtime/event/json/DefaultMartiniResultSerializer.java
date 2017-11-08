@@ -20,20 +20,24 @@ import java.lang.reflect.Type;
 import java.util.Collection;
 import java.util.List;
 import java.util.Set;
+import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Configurable;
+import org.springframework.core.io.Resource;
 
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonSerializationContext;
 import com.google.gson.reflect.TypeToken;
 
-import gherkin.ast.Feature;
 import gherkin.ast.ScenarioDefinition;
 import guru.qas.martini.Martini;
 import guru.qas.martini.event.Status;
 import guru.qas.martini.event.SuiteIdentifier;
+import guru.qas.martini.gherkin.FeatureWrapper;
 import guru.qas.martini.gherkin.Recipe;
 import guru.qas.martini.result.MartiniResult;
 import guru.qas.martini.result.StepResult;
@@ -46,17 +50,23 @@ public class DefaultMartiniResultSerializer implements MartiniResultSerializer {
 
 	protected final static String PROPERTY = "martini";
 
-	private final Categories categories;
+	protected final Categories categories;
+	protected final ConcurrentMap<Resource, UUID> serializedFeatures;
 
 	@Autowired
 	public DefaultMartiniResultSerializer(Categories categories) {
 		this.categories = categories;
+		this.serializedFeatures = new ConcurrentHashMap<>();
 	}
 
 	@Override
 	public JsonElement serialize(MartiniResult result, Type type, JsonSerializationContext context) {
-		JsonObject serialized = new JsonObject();
 		JsonElement contents = new Builder(result, context).build();
+		return serialize(contents);
+	}
+
+	public JsonElement serialize(JsonElement contents) {
+		JsonObject serialized = new JsonObject();
 		serialized.add(PROPERTY, contents);
 		return serialized;
 	}
@@ -99,14 +109,25 @@ public class DefaultMartiniResultSerializer implements MartiniResultSerializer {
 
 		protected void setSuite() {
 			SuiteIdentifier identifier = result.getSuiteIdentifier();
-			JsonElement serializedSuite = context.serialize(identifier, SuiteIdentifier.class);
-			serialized.add("suite", serializedSuite);
+			UUID id = identifier.getId();
+			setSuite(id);
+		}
+
+		protected void setSuite(UUID id) {
+			String serializedSuite = id.toString();
+			serialized.addProperty("suite", serializedSuite);
 		}
 
 		protected void setFeature(Martini martini) {
 			Recipe recipe = martini.getRecipe();
-			JsonElement serializedFeature = context.serialize(recipe, Feature.class);
-			serialized.add("feature", serializedFeature);
+			FeatureWrapper feature = recipe.getFeatureWrapper();
+			setFeature(feature);
+		}
+
+		protected void setFeature(FeatureWrapper feature) {
+			UUID featureId = feature.getId();
+			String serializedFeatureId = featureId.toString();
+			serialized.addProperty("feature", serializedFeatureId);
 		}
 
 		protected void setStartTimestamp() {
@@ -147,6 +168,10 @@ public class DefaultMartiniResultSerializer implements MartiniResultSerializer {
 		protected void setDescription(Martini martini) {
 			Recipe recipe = martini.getRecipe();
 			ScenarioDefinition definition = recipe.getScenarioDefinition();
+			setDescription(definition);
+		}
+
+		protected void setDescription(ScenarioDefinition definition) {
 			String description = definition.getDescription();
 			serialized.addProperty("description", null == description ? null : description.trim());
 		}
@@ -170,9 +195,13 @@ public class DefaultMartiniResultSerializer implements MartiniResultSerializer {
 
 		protected void setSteps() {
 			List<StepResult> stepResults = result.getStepResults();
-			Type type = TypeToken.getArray(StepResult.class).getType();
 			StepResult[] stepResultArray = stepResults.toArray(new StepResult[stepResults.size()]);
-			JsonElement serializedSteps = context.serialize(stepResultArray, type);
+			setSteps(stepResultArray);
+		}
+
+		protected void setSteps(StepResult[] array) {
+			Type type = TypeToken.getArray(StepResult.class).getType();
+			JsonElement serializedSteps = context.serialize(array, type);
 			serialized.add("steps", serializedSteps);
 		}
 	}

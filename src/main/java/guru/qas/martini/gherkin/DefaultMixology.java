@@ -76,11 +76,12 @@ public class DefaultMixology implements Mixology {
 
 	protected List<Recipe> getRecipes(Resource source, GherkinDocument document) throws IOException {
 		Feature feature = document.getFeature();
+		FeatureWrapper featureWrapper = new FeatureWrapper(feature, source);
 		List<Pickle> pickles = compiler.compile(document);
-		return getRecipes(source, feature, pickles);
+		return getRecipes(featureWrapper, pickles);
 	}
 
-	protected List<Recipe> getRecipes(Resource source, Feature feature, Collection<Pickle> pickles) {
+	protected List<Recipe> getRecipes(FeatureWrapper feature, Collection<Pickle> pickles) {
 		int pickleCount = pickles.size();
 		ArrayList<Recipe> recipes = Lists.newArrayListWithExpectedSize(pickleCount);
 		Set<Integer> pickleLines = Sets.newHashSetWithExpectedSize(pickleCount);
@@ -97,7 +98,7 @@ public class DefaultMixology implements Mixology {
 					Map<Range<Integer>, ScenarioDefinition> asMap = subRangeMap.asMapOfRanges();
 					checkState(1 == asMap.size(), "no single range found encompassing PickleLocation %s", location);
 					ScenarioDefinition definition = Iterables.getOnlyElement(asMap.values());
-					Recipe recipe = new Recipe(source, feature, pickle, location, definition);
+					Recipe recipe = new Recipe(feature, pickle, location, definition);
 					recipes.add(recipe);
 				}
 			}
@@ -105,7 +106,7 @@ public class DefaultMixology implements Mixology {
 		return recipes;
 	}
 
-	protected RangeMap<Integer, ScenarioDefinition> getRangeMap(Feature feature) {
+	protected RangeMap<Integer, ScenarioDefinition> getRangeMap(FeatureWrapper feature) {
 		List<ScenarioDefinition> children = Lists.newArrayList(feature.getChildren());
 
 		ImmutableRangeMap.Builder<Integer, ScenarioDefinition> builder = ImmutableRangeMap.builder();

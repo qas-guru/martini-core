@@ -20,10 +20,7 @@ import java.io.Serializable;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import org.springframework.core.io.Resource;
-
 import gherkin.ast.Background;
-import gherkin.ast.Feature;
 import gherkin.ast.ScenarioDefinition;
 import gherkin.pickles.Pickle;
 import gherkin.pickles.PickleLocation;
@@ -35,18 +32,14 @@ public class Recipe implements Serializable {
 
 	private static final long serialVersionUID = 1388547503104118707L;
 
-	protected final Resource source;
-	protected final Feature feature;
+	protected final FeatureWrapper featureWrapper;
 	protected final Pickle pickle;
 	protected final PickleLocation location;
 	protected final ScenarioDefinition definition;
 
-	public Resource getSource() {
-		return source;
-	}
 
-	public Feature getFeature() {
-		return feature;
+	public FeatureWrapper getFeatureWrapper() {
+		return featureWrapper;
 	}
 
 	public Pickle getPickle() {
@@ -62,27 +55,26 @@ public class Recipe implements Serializable {
 	}
 
 	protected Recipe(
-		Resource source,
-		Feature feature,
+		FeatureWrapper featureWrapper,
 		Pickle pickle,
 		PickleLocation location,
-		ScenarioDefinition definition) {
-		this.source = source;
-		this.feature = feature;
+		ScenarioDefinition definition
+	) {
+		this.featureWrapper = featureWrapper;
 		this.pickle = pickle;
 		this.location = location;
 		this.definition = definition;
 	}
 
 	public Background getBackground() {
-		List<ScenarioDefinition> children = feature.getChildren();
+		List<ScenarioDefinition> children = featureWrapper.getChildren();
 		List<Background> backgrounds = children.stream().filter(Background.class::isInstance).map(Background.class::cast).collect(Collectors.toList());
 		checkState(backgrounds.isEmpty() || 1 == backgrounds.size(), "more than one Background identified");
 		return backgrounds.isEmpty() ? null : backgrounds.get(0);
 	}
 
 	public String getId() {
-		String featureName = getFeature().getName();
+		String featureName = getFeatureWrapper().getName();
 		String scenarioName = getPickle().getName();
 		int line = getLocation().getLine();
 		String formatted = String.format("%s:%s:%s", featureName, scenarioName, line);

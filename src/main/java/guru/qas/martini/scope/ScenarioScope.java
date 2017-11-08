@@ -20,6 +20,7 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -98,11 +99,11 @@ public class ScenarioScope implements Scope {
 		SuiteIdentifier suiteIdentifier = result.getSuiteIdentifier();
 		String host = suiteIdentifier.getHostname();
 		String suite = suiteIdentifier.getName();
-		String id = suiteIdentifier.getId();
 		String threadGroup = result.getThreadGroupName();
 		String thread = result.getThreadName();
 		String recipeId = result.getMartini().getRecipe().getId();
-		return String.format("%s.%s.%s.%s.%s.%s", host, suite, id, threadGroup, thread, recipeId);
+		UUID resultId = result.getId();
+		return String.format("%s.%s.%s.%s.%s.%s", host, suite, threadGroup, thread, recipeId, resultId);
 	}
 
 	public void clear() {

@@ -29,12 +29,12 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 
-import gherkin.ast.Feature;
 import gherkin.ast.ScenarioDefinition;
 import gherkin.ast.Step;
 import gherkin.pickles.Pickle;
 import gherkin.pickles.PickleLocation;
 import gherkin.pickles.PickleTag;
+import guru.qas.martini.gherkin.FeatureWrapper;
 import guru.qas.martini.tag.DefaultMartiniTag;
 import guru.qas.martini.gherkin.Recipe;
 import guru.qas.martini.step.StepImplementation;
@@ -84,7 +84,7 @@ public class DefaultMartini implements Martini {
 
 	@Override
 	public String getFeatureName() {
-		Feature feature = getRecipe().getFeature();
+		FeatureWrapper feature = getRecipe().getFeatureWrapper();
 		return feature.getName();
 	}
 

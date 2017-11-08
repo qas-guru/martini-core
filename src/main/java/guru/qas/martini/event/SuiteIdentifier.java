@@ -18,10 +18,11 @@ package guru.qas.martini.event;
 
 import java.util.Collection;
 import java.util.Map;
+import java.util.UUID;
 
 public interface SuiteIdentifier {
 
-	String getId();
+	UUID getId();
 
 	String getName();
 

@@ -18,7 +18,7 @@ package guru.qas.martini.runtime.event.json;
 
 import com.google.gson.JsonSerializer;
 
-import guru.qas.martini.gherkin.Recipe;
+import guru.qas.martini.gherkin.FeatureWrapper;
 
-public interface FeatureSerializer extends JsonSerializer<Recipe> {
+public interface FeatureSerializer extends JsonSerializer<FeatureWrapper> {
 }

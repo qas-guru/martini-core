@@ -20,6 +20,7 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.net.NetworkInterface;
+import java.util.HashSet;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -36,10 +37,13 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.stream.JsonWriter;
 
-import gherkin.ast.Feature;
+import guru.qas.martini.Martini;
 import guru.qas.martini.event.AfterScenarioEvent;
 import guru.qas.martini.event.AfterSuiteEvent;
+import guru.qas.martini.event.BeforeSuiteEvent;
 import guru.qas.martini.event.SuiteIdentifier;
+import guru.qas.martini.gherkin.FeatureWrapper;
+import guru.qas.martini.gherkin.Recipe;
 import guru.qas.martini.result.MartiniResult;
 import guru.qas.martini.result.StepResult;
 import guru.qas.martini.step.StepImplementation;
@@ -64,6 +68,8 @@ public class JsonSuiteMarshaller implements InitializingBean, DisposableBean {
 	protected OutputStream outputStream;
 	protected JsonWriter jsonWriter;
 	protected Gson gson;
+
+	protected HashSet<FeatureWrapper> serializedFeatures;
 
 	@Autowired
 	protected void setMartiniResultSerializer(MartiniResultSerializer s) {
@@ -98,10 +104,13 @@ public class JsonSuiteMarshaller implements InitializingBean, DisposableBean {
 	public JsonSuiteMarshaller(WritableResource resource) {
 		this.resource = resource;
 		this.monitor = new Monitor();
+		serializedFeatures = new HashSet<>();
 	}
 
 	@Override
 	public void afterPropertiesSet() throws Exception {
+		serializedFeatures.clear();
+
 		GsonBuilder builder = getGsonBuilder();
 		registerTypeAdapters(builder);
 		gson = builder.create();
@@ -122,23 +131,74 @@ public class JsonSuiteMarshaller implements InitializingBean, DisposableBean {
 		builder.registerTypeAdapter(MartiniResult.class, martiniResultSerializer);
 		builder.registerTypeAdapter(SuiteIdentifier.class, suiteIdentifierSerializer);
 		builder.registerTypeAdapter(NetworkInterface.class, hostSerializer);
-		builder.registerTypeAdapter(Feature.class, featureSerializer);
+		builder.registerTypeAdapter(FeatureWrapper.class, featureSerializer);
 		builder.registerTypeAdapter(StepResult.class, stepResultSerializer);
 		builder.registerTypeAdapter(StepImplementation.class, stepImplementationSerializer);
 	}
 
+	@EventListener
+	public void handleBeforeSuiteEvent(BeforeSuiteEvent event) {
+		SuiteIdentifier identifier = event.getPayload();
+		monitor.enter();
+		try {
+			serialize(identifier);
+		}
+		finally {
+			monitor.leave();
+		}
+	}
+
+	protected void serialize(SuiteIdentifier identifier) {
+		try {
+			gson.toJson(identifier, SuiteIdentifier.class, jsonWriter);
+			jsonWriter.flush();
+			outputStream.write(NEWLINE);
+		}
+		catch (Exception e) {
+			LOGGER.warn("unable to serialize SuiteIdentifier {}", identifier, e);
+		}
+	}
 
 	@EventListener
 	public void handleAfterScenarioEvent(AfterScenarioEvent event) {
 		MartiniResult result = event.getPayload();
+		try {
+			serializeFeature(result);
+			serialize(result);
+		}
+		catch (Exception e) {
+			LOGGER.warn("unable to serialize MartiniResult {}", result, e);
+		}
+	}
+
+	protected void serializeFeature(MartiniResult result) throws IOException {
+		Martini martini = result.getMartini();
+		Recipe recipe = martini.getRecipe();
+		FeatureWrapper feature = recipe.getFeatureWrapper();
+		serialize(feature);
+	}
+
+	protected void serialize(FeatureWrapper feature) throws IOException {
+		monitor.enter();
+		try {
+			if (!serializedFeatures.contains(feature)) {
+				gson.toJson(feature, FeatureWrapper.class, jsonWriter);
+				jsonWriter.flush();
+				serializedFeatures.add(feature);
+				outputStream.write(NEWLINE);
+			}
+		}
+		finally {
+			monitor.leave();
+		}
+	}
+
+	protected void serialize(MartiniResult result) throws IOException {
 		monitor.enter();
 		try {
 			gson.toJson(result, MartiniResult.class, jsonWriter);
 			jsonWriter.flush();
-			outputStream.write("\n".getBytes());
-		}
-		catch (Exception e) {
-			LOGGER.warn("unable to serialize MartiniResult {}", result, e);
+			outputStream.write(NEWLINE);
 		}
 		finally {
 			monitor.leave();
@@ -147,6 +207,7 @@ public class JsonSuiteMarshaller implements InitializingBean, DisposableBean {
 
 	@EventListener
 	public void handleAfterSuiteEvent(AfterSuiteEvent ignored) {
+		monitor.enter();
 		try {
 			jsonWriter.flush();
 			jsonWriter.close();
@@ -154,6 +215,9 @@ public class JsonSuiteMarshaller implements InitializingBean, DisposableBean {
 		}
 		catch (IOException e) {
 			LOGGER.error("unable to close json", e);
+		}
+		finally {
+			monitor.leave();
 		}
 	}
 

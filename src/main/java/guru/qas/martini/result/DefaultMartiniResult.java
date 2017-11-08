@@ -19,8 +19,7 @@ package guru.qas.martini.result;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
-
-import org.springframework.context.ApplicationContext;
+import java.util.UUID;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -32,9 +31,10 @@ import guru.qas.martini.event.Status;
 
 import static com.google.common.base.Preconditions.*;
 
-@SuppressWarnings("WeakerAccess")
+@SuppressWarnings({"WeakerAccess", "unused"})
 public class DefaultMartiniResult implements MartiniResult {
 
+	protected final UUID id;
 	protected final SuiteIdentifier suiteIdentifier;
 	protected final Martini martini;
 	protected final ImmutableSet<String> categorizations;
@@ -46,6 +46,12 @@ public class DefaultMartiniResult implements MartiniResult {
 	protected Long endTimestamp;
 	protected Long executionTimeMs;
 
+	@Override
+	public UUID getId() {
+		return id;
+	}
+
+	@Override
 	public SuiteIdentifier getSuiteIdentifier() {
 		return suiteIdentifier;
 	}
@@ -101,11 +107,14 @@ public class DefaultMartiniResult implements MartiniResult {
 	}
 
 	protected DefaultMartiniResult(
-		SuiteIdentifier suiteIdentifier, Martini martini,
+		UUID id,
+		SuiteIdentifier suiteIdentifier,
+		Martini martini,
 		Iterable<String> categorizations,
 		String threadGroupName,
 		String threadName
 	) {
+		this.id = id;
 		this.suiteIdentifier = suiteIdentifier;
 		this.martini = martini;
 		this.categorizations = ImmutableSet.copyOf(categorizations);
@@ -163,7 +172,8 @@ public class DefaultMartiniResult implements MartiniResult {
 			checkState(null != martini, "null Martini");
 			checkState(null != threadGroupName && !threadGroupName.isEmpty(), "null or empty thread group name");
 			checkState(null != threadName && !threadName.isEmpty(), "null or empty thread name");
-			return new DefaultMartiniResult(suiteIdentifier, martini, categorizations, threadGroupName, threadName);
+			UUID id = UUID.randomUUID();
+			return new DefaultMartiniResult(id, suiteIdentifier, martini, categorizations, threadGroupName, threadName);
 		}
 	}
 
