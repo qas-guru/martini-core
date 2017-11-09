@@ -29,14 +29,14 @@ import guru.qas.martini.event.MartiniEventPublisher;
 import guru.qas.martini.event.SuiteIdentifier;
 import guru.qas.martini.result.MartiniResult;
 
-@SuppressWarnings("WeakerAccess")
+@SuppressWarnings({"WeakerAccess", "unused"})
 @Configurable
 public class DefaultEventManager implements EventManager {
 
-	protected final MartiniEventPublisher publisher;
+	protected MartiniEventPublisher publisher;
 
 	@Autowired
-	DefaultEventManager(MartiniEventPublisher publisher) {
+	protected void setMartiniEventPublisher(MartiniEventPublisher publisher) {
 		this.publisher = publisher;
 	}
 

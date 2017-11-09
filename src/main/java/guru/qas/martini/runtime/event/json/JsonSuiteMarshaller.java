@@ -27,10 +27,9 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.DisposableBean;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.Lazy;
+import org.springframework.beans.factory.annotation.Configurable;
 import org.springframework.context.event.EventListener;
 import org.springframework.core.io.WritableResource;
-import org.springframework.stereotype.Component;
 
 import com.google.common.util.concurrent.Monitor;
 import com.google.gson.Gson;
@@ -49,8 +48,7 @@ import guru.qas.martini.result.StepResult;
 import guru.qas.martini.step.StepImplementation;
 
 @SuppressWarnings({"WeakerAccess", "unused"})
-@Component
-@Lazy
+@Configurable
 public class JsonSuiteMarshaller implements InitializingBean, DisposableBean {
 
 	protected static final Logger LOGGER = LoggerFactory.getLogger(JsonSuiteMarshaller.class);
@@ -118,6 +116,8 @@ public class JsonSuiteMarshaller implements InitializingBean, DisposableBean {
 		outputStream = resource.getOutputStream();
 		OutputStreamWriter writer = new OutputStreamWriter(outputStream);
 		jsonWriter = gson.newJsonWriter(writer);
+
+		LOGGER.info("writing JSON to {}", resource);
 	}
 
 	protected GsonBuilder getGsonBuilder() {

@@ -16,28 +16,22 @@ limitations under the License.
 
 package guru.qas.martini.gherkin;
 
-import org.springframework.beans.BeansException;
-import org.springframework.beans.factory.BeanFactory;
-import org.springframework.beans.factory.BeanFactoryAware;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.beans.factory.config.AutowireCapableBeanFactory;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Lazy;
 
-import static com.google.common.base.Preconditions.checkState;
-
 @Configuration
 @Lazy
-class GherkinConfiguration implements BeanFactoryAware {
+class GherkinConfiguration {
 
 	private AutowireCapableBeanFactory beanFactory;
 
-	@Override
-	public void setBeanFactory(BeanFactory beanFactory) throws BeansException {
-		checkState(AutowireCapableBeanFactory.class.isInstance(beanFactory),
-			"BeanFactory must be of type AutowireCapableBeanFactory but found %s", beanFactory.getClass());
-		this.beanFactory = AutowireCapableBeanFactory.class.cast(beanFactory);
+	@Autowired
+	GherkinConfiguration(AutowireCapableBeanFactory beanFactory) {
+		this.beanFactory = beanFactory;
 	}
 
 	@Bean
