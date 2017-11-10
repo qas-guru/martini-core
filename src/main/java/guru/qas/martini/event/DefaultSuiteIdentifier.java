@@ -16,16 +16,24 @@ limitations under the License.
 
 package guru.qas.martini.event;
 
+import java.net.InetAddress;
+import java.net.UnknownHostException;
+
 import java.util.Map;
 import java.util.UUID;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.context.ApplicationContext;
+import org.springframework.core.env.Environment;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 
-import static com.google.common.base.Preconditions.checkState;
-
 @SuppressWarnings({"WeakerAccess", "unused"})
 public class DefaultSuiteIdentifier implements SuiteIdentifier {
+
+	private static final Logger LOGGER = LoggerFactory.getLogger(DefaultSuiteIdentifier.class);
 
 	private final UUID id;
 	private final Long startTimestamp;
@@ -100,64 +108,41 @@ public class DefaultSuiteIdentifier implements SuiteIdentifier {
 		return new Builder();
 	}
 
-	@SuppressWarnings("WeakerAccess")
-	public static class Builder {
+	public static final class Builder {
 
-		protected Long startupTimestamp;
+		protected static final String UNKNOWN = "unknown";
+		protected String hostname = UNKNOWN;
+		protected String address = UNKNOWN;
+		protected Map<String, String> environmentVariables = System.getenv();
 		protected String name;
-		protected String hostname;
-		protected String hostAddress;
-		protected String username;
-		protected ImmutableSet<String> profiles;
-		protected ImmutableMap<String, String> environmentVariables;
+		protected long startupTimestamp;
 
 		protected Builder() {
 		}
 
-		public Builder setStartupTimestamp(Long timestamp) {
-			this.startupTimestamp = timestamp;
-			return this;
+		public DefaultSuiteIdentifier build(ApplicationContext context) {
+			setHostInformation();
+			Environment environment = context.getEnvironment();
+			return new DefaultSuiteIdentifier(UUID.randomUUID(),
+				context.getStartupDate(),
+				context.getDisplayName(),
+				hostname,
+				address,
+				System.getProperty("user.name"),
+				ImmutableSet.copyOf(environment.getActiveProfiles()),
+				ImmutableMap.copyOf(System.getenv()));
 		}
 
-		public Builder setName(String s) {
-			this.name = normalize(s);
-			return this;
+		protected void setHostInformation() {
+			try {
+				InetAddress localHost = InetAddress.getLocalHost();
+				hostname = localHost.getHostName();
+				address = localHost.getHostAddress();
+			}
+			catch (UnknownHostException e) {
+				LOGGER.warn("unable to ascertain hostname and address");
+			}
 		}
 
-		protected String normalize(String s) {
-			return null == s ? null : s.trim();
-		}
-
-		public Builder setHostname(String s) {
-			this.hostname = normalize(s);
-			return this;
-		}
-
-		public Builder setHostAddress(String s) {
-			this.hostAddress = normalize(s);
-			return this;
-		}
-
-		public Builder setUsername(String s) {
-			this.username = s;
-			return this;
-		}
-
-		public Builder setProfiles(Iterable<String> profiles) {
-			this.profiles = null == profiles ? ImmutableSet.of() : ImmutableSet.copyOf(profiles);
-			return this;
-		}
-
-		public Builder setEnvironmentVariables(Map<String, String> variables) {
-			this.environmentVariables = null == variables ? ImmutableMap.of() : ImmutableMap.copyOf(variables);
-			return this;
-		}
-
-		public SuiteIdentifier build() {
-			checkState(null != name && !name.isEmpty(), "null or empty suite name");
-			UUID id = UUID.randomUUID();
-			return new DefaultSuiteIdentifier(
-				id, startupTimestamp, name, hostname, hostAddress, username, profiles, environmentVariables);
-		}
 	}
 }
