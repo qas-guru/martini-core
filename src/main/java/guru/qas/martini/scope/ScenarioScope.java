@@ -40,16 +40,14 @@ import static com.google.common.base.Preconditions.*;
 @Component
 public class ScenarioScope implements Scope {
 
-	private static final Logger LOGGER = LoggerFactory.getLogger(ScenarioScope.class);
-
-	private static final InheritableThreadLocal<Map<String, Object>> SCOPE_REF = new InheritableThreadLocal<Map<String, Object>>() {
+	protected static final InheritableThreadLocal<Map<String, Object>> SCOPE_REF = new InheritableThreadLocal<Map<String, Object>>() {
 		@Override
 		protected Map<String, Object> initialValue() {
 			return new HashMap<>();
 		}
 	};
 
-	private static final InheritableThreadLocal<LinkedHashMap<String, Runnable>> DESTRUCTION_CALLBACKS =
+	protected static final InheritableThreadLocal<LinkedHashMap<String, Runnable>> DESTRUCTION_CALLBACKS =
 		new InheritableThreadLocal<LinkedHashMap<String, Runnable>>() {
 			@Override
 			protected LinkedHashMap<String, Runnable> initialValue() {
@@ -57,7 +55,13 @@ public class ScenarioScope implements Scope {
 			}
 		};
 
-	private static final InheritableThreadLocal<MartiniResult> CONVO_REF = new InheritableThreadLocal<>();
+	protected static final InheritableThreadLocal<MartiniResult> CONVO_REF = new InheritableThreadLocal<>();
+
+	protected final Logger logger;
+
+	ScenarioScope() {
+		logger = LoggerFactory.getLogger(this.getClass());
+	}
 
 	@Override
 	public Object get(String name, ObjectFactory<?> objectFactory) {
@@ -109,11 +113,12 @@ public class ScenarioScope implements Scope {
 	public void clear() {
 		runDestructionCallbacks();
 		disposeBeans();
-		CONVO_REF.remove();
+		closeConversation();
 	}
 
-	private void runDestructionCallbacks() {
+	protected void runDestructionCallbacks() {
 		LinkedHashMap<String, Runnable> index = DESTRUCTION_CALLBACKS.get();
+		DESTRUCTION_CALLBACKS.remove();
 		List<String> names = Lists.reverse(Lists.newArrayList(index.keySet()));
 		for (String name : names) {
 			Runnable callback = index.remove(name);
@@ -121,17 +126,18 @@ public class ScenarioScope implements Scope {
 		}
 	}
 
-	private static void run(String name, Runnable callback) {
+	protected void run(String name, Runnable callback) {
 		try {
 			callback.run();
 		}
 		catch (Exception e) {
-			LOGGER.warn("unable to complete destruction callback for bean {}", name, e);
+			logger.warn("unable to complete destruction callback for bean {}", name, e);
 		}
 	}
 
-	private void disposeBeans() {
+	protected void disposeBeans() {
 		Map<String, Object> index = SCOPE_REF.get();
+		SCOPE_REF.remove();
 		for (Map.Entry<String, Object> mapEntry : index.entrySet()) {
 			String name = mapEntry.getKey();
 			Object bean = mapEntry.getValue();
@@ -139,15 +145,19 @@ public class ScenarioScope implements Scope {
 		}
 	}
 
-	private static void dispose(String name, Object bean) {
+	protected void dispose(String name, Object bean) {
 		if (DisposableBean.class.isInstance(bean)) {
 			DisposableBean disposable = DisposableBean.class.cast(bean);
 			try {
 				disposable.destroy();
 			}
 			catch (Exception e) {
-				LOGGER.warn("unable to dispose of bean {}", name, bean);
+				logger.warn("unable to dispose of bean {}", name, bean);
 			}
 		}
+	}
+
+	protected void closeConversation() {
+		CONVO_REF.remove();
 	}
 }
