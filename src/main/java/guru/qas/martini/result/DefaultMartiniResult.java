@@ -17,9 +17,11 @@ limitations under the License.
 package guru.qas.martini.result;
 
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
+import java.util.concurrent.TimeUnit;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -44,7 +46,7 @@ public class DefaultMartiniResult implements MartiniResult {
 
 	protected Long startTimestamp;
 	protected Long endTimestamp;
-	protected Long executionTimeMs;
+
 
 	@Override
 	public UUID getId() {
@@ -99,11 +101,22 @@ public class DefaultMartiniResult implements MartiniResult {
 	}
 
 	public Long getExecutionTimeMs() {
-		return executionTimeMs;
+		Long executionTime = null;
+		for (StepResult stepResult : stepResults) {
+			Long elapsed = stepResult.getExecutionTime(TimeUnit.MILLISECONDS);
+			executionTime = null == executionTime ? elapsed : null == elapsed ? executionTime : executionTime + elapsed;
+		}
+		return executionTime;
 	}
 
-	public void setExecutionTimeMs(Long executionTimeMs) {
-		this.executionTimeMs = executionTimeMs;
+	@Override
+	public Exception getException() {
+		Exception e = null;
+		for (Iterator<StepResult> i = stepResults.iterator(); null == e && i.hasNext(); ) {
+			StepResult stepResult = i.next();
+			e = stepResult.getException();
+		}
+		return e;
 	}
 
 	protected DefaultMartiniResult(

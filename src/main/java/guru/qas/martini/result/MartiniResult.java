@@ -47,4 +47,6 @@ public interface MartiniResult {
 	List<StepResult> getStepResults();
 
 	Set<String> getCategorizations();
+
+	Exception getException();
 }
