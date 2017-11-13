@@ -21,12 +21,9 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Configurable;
-import org.springframework.core.io.Resource;
 
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
@@ -51,12 +48,10 @@ public class DefaultMartiniResultSerializer implements MartiniResultSerializer {
 	protected final static String PROPERTY = "martini";
 
 	protected final Categories categories;
-	protected final ConcurrentMap<Resource, UUID> serializedFeatures;
 
 	@Autowired
 	public DefaultMartiniResultSerializer(Categories categories) {
 		this.categories = categories;
-		this.serializedFeatures = new ConcurrentHashMap<>();
 	}
 
 	@Override
