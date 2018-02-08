@@ -19,22 +19,23 @@ package guru.qas.martini.gherkin;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Configurable;
 import org.springframework.core.io.Resource;
 
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableRangeMap;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Ordering;
 import com.google.common.collect.Range;
 import com.google.common.collect.RangeMap;
-import com.google.common.collect.Sets;
 
 import gherkin.Parser;
 import gherkin.TokenMatcher;
@@ -82,28 +83,29 @@ public class DefaultMixology implements Mixology {
 	}
 
 	protected List<Recipe> getRecipes(FeatureWrapper feature, Collection<Pickle> pickles) {
-		int pickleCount = pickles.size();
-		ArrayList<Recipe> recipes = Lists.newArrayListWithExpectedSize(pickleCount);
-		Set<Integer> pickleLines = Sets.newHashSetWithExpectedSize(pickleCount);
+		Map<Integer, Recipe> recipeIndex = new LinkedHashMap<>();
 
 		RangeMap<Integer, ScenarioDefinition> rangeMap = getRangeMap(feature);
 		for (Pickle pickle : pickles) {
 			List<PickleLocation> locations = pickle.getLocations();
-			for (PickleLocation location : locations) {
-				int line = location.getLine();
-				if (!pickleLines.contains(line)) {
-					pickleLines.add(line);
-					Range<Integer> range = Range.singleton(line);
-					RangeMap<Integer, ScenarioDefinition> subRangeMap = rangeMap.subRangeMap(range);
-					Map<Range<Integer>, ScenarioDefinition> asMap = subRangeMap.asMapOfRanges();
-					checkState(1 == asMap.size(), "no single range found encompassing PickleLocation %s", location);
-					ScenarioDefinition definition = Iterables.getOnlyElement(asMap.values());
-					Recipe recipe = new Recipe(feature, pickle, location, definition);
-					recipes.add(recipe);
-				}
-			}
+			Map<Integer, PickleLocation> locationIndex = new HashMap<>();
+			locations.forEach(l -> {
+				int line = l.getLine();
+				locationIndex.put(line, l);
+			});
+
+			Integer line = Ordering.natural().max(locationIndex.keySet());
+			recipeIndex.computeIfAbsent(line, l -> {
+				PickleLocation location = locationIndex.get(l);
+				Range<Integer> range = Range.singleton(line);
+				RangeMap<Integer, ScenarioDefinition> subRangeMap = rangeMap.subRangeMap(range);
+				Map<Range<Integer>, ScenarioDefinition> asMap = subRangeMap.asMapOfRanges();
+				checkState(1 == asMap.size(), "no single range found encompassing PickleLocation %s", location);
+				ScenarioDefinition definition = Iterables.getOnlyElement(asMap.values());
+				return new Recipe(feature, pickle, location, definition);
+			});
 		}
-		return recipes;
+		return ImmutableList.copyOf(recipeIndex.values());
 	}
 
 	protected RangeMap<Integer, ScenarioDefinition> getRangeMap(FeatureWrapper feature) {
