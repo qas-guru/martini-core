@@ -16,10 +16,13 @@ limitations under the License.
 
 package guru.qas.martini.tag;
 
+import java.net.URI;
 import java.util.List;
 
 import javax.annotation.Nonnull;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.context.ApplicationContext;
 import org.springframework.core.io.Resource;
 import org.springframework.expression.AccessException;
@@ -37,6 +40,8 @@ import static com.google.common.base.Preconditions.*;
 
 @SuppressWarnings("WeakerAccess")
 public class ResourceExecutor implements MethodExecutor {
+
+	private static final Logger LOGGER = LoggerFactory.getLogger(ResourceExecutor.class);
 
 	protected final ApplicationContext applicationContext;
 
@@ -57,16 +62,32 @@ public class ResourceExecutor implements MethodExecutor {
 	}
 
 	public TypedValue execute(Martini martini, String locationPattern) {
-		Resource resource = getResource(martini);
-		List<Resource> resources = getResources(locationPattern);
-		boolean evaluation = resources.contains(resource);
+		URI martiniURI = getResource(martini);
+		boolean evaluation = false;
+		if (null != martiniURI) {
+			List<Resource> resources = getResources(locationPattern);
+			evaluation = resources.stream().map(ResourceExecutor::getURI).anyMatch(martiniURI::equals);
+		}
+
 		return new TypedValue(evaluation);
 	}
 
-	private static Resource getResource(Martini martini) {
+	private static URI getResource(Martini martini) {
 		Recipe recipe = martini.getRecipe();
 		FeatureWrapper featureWrapper = recipe.getFeatureWrapper();
-		return featureWrapper.getResource();
+		Resource resource = featureWrapper.getResource();
+		return getURI(resource);
+	}
+
+	private static URI getURI(Resource resource) {
+		URI uri = null;
+		try {
+			uri = resource.getURI();
+		}
+		catch (Exception e) {
+			LOGGER.warn("unable to obtain URI from resource {}", resource, e);
+		}
+		return uri;
 	}
 
 	private List<Resource> getResources(String locationPattern) {
