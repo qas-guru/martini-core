@@ -25,6 +25,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicReference;
 
+import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
 import org.springframework.beans.BeansException;
@@ -95,7 +96,7 @@ public class DefaultMixologist implements Mixologist, InitializingBean, Applicat
 	}
 
 	@Override
-	public void setApplicationContext(ApplicationContext context) throws BeansException {
+	public void setApplicationContext(@Nonnull ApplicationContext context) throws BeansException {
 		this.context = context;
 	}
 
@@ -206,7 +207,7 @@ public class DefaultMixologist implements Mixologist, InitializingBean, Applicat
 		Collection<Martini> martinis = null;
 		if (!trimmed.isEmpty()) {
 			SpelExpressionParser parser = new SpelExpressionParser();
-			Expression expression = parser.parseExpression(spelFilter);
+			Expression expression = parser.parseExpression(trimmed);
 			martinis = getMartinis(expression);
 		}
 		return null == martinis ? getMartinis() : martinis;
@@ -216,7 +217,7 @@ public class DefaultMixologist implements Mixologist, InitializingBean, Applicat
 		StandardEvaluationContext context = new StandardEvaluationContext();
 		List<MethodResolver> methodResolvers = context.getMethodResolvers();
 		ArrayList<MethodResolver> modifiedList = Lists.newArrayList(methodResolvers);
-		modifiedList.add(new TagResolver(categories));
+		modifiedList.add(new TagResolver(this.context, categories));
 		context.setMethodResolvers(modifiedList);
 
 		ImmutableList<Martini> martinis = getMartinis();

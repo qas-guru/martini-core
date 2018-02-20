@@ -20,6 +20,9 @@ import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import javax.annotation.Nonnull;
+
+import org.springframework.context.ApplicationContext;
 import org.springframework.core.convert.TypeDescriptor;
 import org.springframework.expression.AccessException;
 import org.springframework.expression.EvaluationContext;
@@ -32,20 +35,21 @@ import guru.qas.martini.Martini;
 public class TagResolver implements MethodResolver {
 
 	protected static final Pattern PATTERN = Pattern.compile("^is(\\S+)$");
-	protected static final String METHOD_CATEGORY = "Category";
 
+	protected final ApplicationContext applicationContext;
 	protected final Categories categories;
 
-	public TagResolver(Categories categories) {
+	public TagResolver(ApplicationContext applicationContext, Categories categories) {
+		this.applicationContext = applicationContext;
 		this.categories = categories;
 	}
 
 	@Override
 	public MethodExecutor resolve(
-		EvaluationContext context,
-		Object targetObject,
-		String name,
-		List<TypeDescriptor> argumentTypes
+		@Nonnull EvaluationContext context,
+		@Nonnull Object targetObject,
+		@Nonnull String name,
+		@Nonnull List<TypeDescriptor> argumentTypes
 	) throws AccessException {
 		return Martini.class.isInstance(targetObject) ? resolve(name, argumentTypes) : null;
 	}
@@ -65,7 +69,24 @@ public class TagResolver implements MethodResolver {
 
 	protected MethodExecutor resolve(String name) {
 		Matcher matcher = PATTERN.matcher(name);
-		String tagName = matcher.find() ? matcher.group(1) : null;
-		return METHOD_CATEGORY.equals(tagName) ? new CategoryExecutor(categories) : new TagExecutor(tagName);
+		return matcher.find() ? resolve(matcher) : null;
+	}
+
+	protected MethodExecutor resolve(Matcher matcher) {
+		String group = matcher.group(1);
+
+		MethodExecutor executor;
+		switch (group) {
+			case "Category":
+				executor = new CategoryExecutor(categories);
+				break;
+			case "Resource":
+				executor = new ResourceExecutor(applicationContext);
+				break;
+			default:
+				executor = new TagExecutor(group);
+				break;
+		}
+		return executor;
 	}
 }
