@@ -1,5 +1,5 @@
 /*
-Copyright 2017 Penny Rohr Curich
+Copyright 2017-2018 Penny Rohr Curich
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -21,6 +21,8 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+
+import javax.annotation.Nonnull;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -64,19 +66,32 @@ public class ScenarioScope implements Scope {
 	}
 
 	@Override
-	public Object get(String name, ObjectFactory<?> objectFactory) {
+	@Nonnull
+	public Object get(@Nonnull String name, @Nonnull ObjectFactory<?> objectFactory) {
 		Map<String, Object> scope = SCOPE_REF.get();
-		return scope.computeIfAbsent(name, k -> objectFactory.getObject());
+
+		// Do NOT use computeIfAbsent(); will create a ConcurrentModificationException under
+		// complex CGLib configurations.
+
+		Object o;
+		if (scope.containsKey(name)) {
+			o = scope.get(name);
+		}
+		else {
+			o = objectFactory.getObject();
+			scope.put(name, o);
+		}
+		return o;
 	}
 
 	@Override
-	public Object remove(String name) {
+	public Object remove(@Nonnull String name) {
 		Map<String, Object> scope = SCOPE_REF.get();
 		return scope.remove(name);
 	}
 
 	@Override
-	public void registerDestructionCallback(String name, Runnable callback) {
+	public void registerDestructionCallback(@Nonnull String name, @Nonnull Runnable callback) {
 		String trimmed = checkNotNull(name, "null String").trim();
 		checkArgument(!trimmed.isEmpty(), "empty String");
 		checkNotNull(callback, "null Runnable");
@@ -85,7 +100,7 @@ public class ScenarioScope implements Scope {
 	}
 
 	@Override
-	public Object resolveContextualObject(String key) {
+	public Object resolveContextualObject(@Nonnull String key) {
 		return "martiniResult".equals(key) ? CONVO_REF.get() : null;
 	}
 

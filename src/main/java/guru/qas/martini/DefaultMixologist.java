@@ -1,5 +1,5 @@
 /*
-Copyright 2017 Penny Rohr Curich
+Copyright 2017-2018 Penny Rohr Curich
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -24,6 +24,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.stream.Collectors;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -134,7 +135,7 @@ public class DefaultMixologist implements Mixologist, InitializingBean, Applicat
 					List<PickleStep> steps = pickle.getSteps();
 					for (PickleStep step : steps) {
 						Step gherkinStep = getGherkinStep(background, scenarioDefinition, step);
-						StepImplementation implementation = getImplementation(gherkinStep, implementations);
+						StepImplementation implementation = getImplementation(recipe, gherkinStep, implementations);
 						martiniBuilder.add(gherkinStep, implementation);
 					}
 					Martini martini = martiniBuilder.build();
@@ -166,21 +167,17 @@ public class DefaultMixologist implements Mixologist, InitializingBean, Applicat
 			gherkinStep = lines.contains(line) ? candidate : null;
 		}
 
-
 		checkState(null != gherkinStep, "unable to locate Step %s in ScenarioDefinition %s", step, definition);
 		return gherkinStep;
 	}
 
 	protected StepImplementation getImplementation(
-		gherkin.ast.Step step, Collection<StepImplementation> implementations
+		Recipe recipe,
+		gherkin.ast.Step step,
+		Collection<StepImplementation> implementations
 	) {
-
-		List<StepImplementation> matches = Lists.newArrayList();
-		for (StepImplementation implementation : implementations) {
-			if (implementation.isMatch(step)) {
-				matches.add(implementation);
-			}
-		}
+		List<StepImplementation> matches = implementations.stream()
+			.filter(i -> i.isMatch(step)).collect(Collectors.toList());
 
 		StepImplementation match;
 
@@ -192,7 +189,7 @@ public class DefaultMixologist implements Mixologist, InitializingBean, Applicat
 			throw AmbiguousStepException.builder().setStep(step).setMatches(matches).build();
 		}
 		else if (unimplementedStepsFatal) {
-			throw UnimplementedStepException.builder().build(step);
+			throw UnimplementedStepException.builder().setRecipe(recipe).setStep(step).build();
 		}
 		else {
 			match = getUnimplemented(step);
