@@ -221,7 +221,7 @@ public class DefaultMixologist implements Mixologist, InitializingBean, Applicat
 		List<Martini> matches = Lists.newArrayListWithCapacity(martinis.size());
 		for (Martini martini : martinis) {
 			Boolean match = expression.getValue(context, martini, Boolean.class);
-			if (match) {
+			if (null != match && match) {
 				matches.add(martini);
 			}
 		}
