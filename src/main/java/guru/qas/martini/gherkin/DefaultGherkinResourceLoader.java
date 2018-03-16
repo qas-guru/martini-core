@@ -1,5 +1,5 @@
 /*
-Copyright 2017 Penny Rohr Curich
+Copyright 2017-2018 Penny Rohr Curich
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -17,13 +17,20 @@ limitations under the License.
 package guru.qas.martini.gherkin;
 
 import java.io.IOException;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Configurable;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.ResourceLoader;
 import org.springframework.core.io.support.PathMatchingResourcePatternResolver;
 import org.springframework.core.io.support.ResourcePatternResolver;
+
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Lists;
 
 /**
  * Default implementation of a GherkinResourceLoader.
@@ -32,18 +39,33 @@ import org.springframework.core.io.support.ResourcePatternResolver;
 @Configurable
 public class DefaultGherkinResourceLoader implements GherkinResourceLoader {
 
-	protected static final String RESOURCE_PATTERN = "classpath*:**/*.feature";
+	protected static final String DEFAULT_PATTERN = "classpath*:**/*.feature";
 
 	protected final ResourceLoader loader;
+	protected final List<String> patterns;
 
 	@Autowired
-	protected DefaultGherkinResourceLoader(ResourceLoader loader) {
+	protected DefaultGherkinResourceLoader(
+		ResourceLoader loader,
+		@Value("${martini.feature.resources:#{null}}") String[] patterns
+	) {
 		this.loader = loader;
+		this.patterns = null == patterns ? ImmutableList.of(DEFAULT_PATTERN) : ImmutableList.copyOf(patterns);
 	}
 
 	@Override
-	public Resource[] getFeatureResources() throws IOException {
+	public Resource[] getFeatureResources() {
 		ResourcePatternResolver resolver = new PathMatchingResourcePatternResolver(loader);
-		return resolver.getResources(RESOURCE_PATTERN);
+		Set<Resource> resources = new HashSet<>();
+		patterns.forEach(p -> {
+			try {
+				Resource[] resourceArray = resolver.getResources(p);
+				resources.addAll(Lists.newArrayList(resourceArray));
+			}
+			catch (IOException e) {
+				throw new RuntimeException("unable to load Resource for pattern " + p, e);
+			}
+		});
+		return resources.toArray(new Resource[resources.size()]);
 	}
 }

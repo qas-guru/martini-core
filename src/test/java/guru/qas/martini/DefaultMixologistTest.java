@@ -1,5 +1,5 @@
 /*
-Copyright 2017 Penny Rohr Curich
+Copyright 2017-2018 Penny Rohr Curich
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -16,7 +16,6 @@ limitations under the License.
 
 package guru.qas.martini;
 
-import java.io.IOException;
 import java.lang.reflect.Method;
 import java.util.Collection;
 import java.util.Iterator;
@@ -65,7 +64,7 @@ public class DefaultMixologistTest {
 	}
 
 	@Test
-	public void testGetMartinis() throws IOException {
+	public void testGetMartinis() {
 		String id = "Functionality_of_the_Reporting_Subsystem:A_Corner_Case:25";
 		Martini match = getMartini(id);
 		checkState(null != match, "no Martini found matching ID [%s]", id);

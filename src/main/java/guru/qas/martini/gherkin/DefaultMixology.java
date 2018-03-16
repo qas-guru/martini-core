@@ -1,5 +1,5 @@
 /*
-Copyright 2017 Penny Rohr Curich
+Copyright 2017-2018 Penny Rohr Curich
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -75,7 +75,7 @@ public class DefaultMixology implements Mixology {
 		}
 	}
 
-	protected List<Recipe> getRecipes(Resource source, GherkinDocument document) throws IOException {
+	protected List<Recipe> getRecipes(Resource source, GherkinDocument document) {
 		Feature feature = document.getFeature();
 		FeatureWrapper featureWrapper = new FeatureWrapper(feature, source);
 		List<Pickle> pickles = compiler.compile(document);
