@@ -18,6 +18,7 @@ package guru.qas.martini.result;
 
 import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
@@ -25,6 +26,7 @@ import java.util.concurrent.TimeUnit;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 
 import guru.qas.martini.Martini;
@@ -46,7 +48,6 @@ public class DefaultMartiniResult implements MartiniResult {
 
 	protected Long startTimestamp;
 	protected Long endTimestamp;
-
 
 	@Override
 	public UUID getId() {
@@ -144,11 +145,12 @@ public class DefaultMartiniResult implements MartiniResult {
 
 		protected SuiteIdentifier suiteIdentifier;
 		protected Martini martini;
-		protected ImmutableSet<String> categorizations;
+		protected Set<String> categorizations;
 		protected String threadGroupName;
 		protected String threadName;
 
 		protected Builder() {
+			categorizations = new LinkedHashSet<>();
 		}
 
 		public Builder setMartiniSuiteIdentifier(SuiteIdentifier i) {
@@ -161,8 +163,14 @@ public class DefaultMartiniResult implements MartiniResult {
 			return this;
 		}
 
-		public Builder setCategorizations(Iterable<String> categorizations) {
-			this.categorizations = null == categorizations ? ImmutableSet.of() : ImmutableSet.copyOf(categorizations);
+		public Builder setCategorizations(Iterable<String> i) {
+			categorizations.clear();
+			if (null != i) {
+				Lists.newArrayList(i).stream()
+					.map(s -> null == s ? "" : s.trim())
+					.filter(s -> !s.isEmpty())
+					.forEach(s -> categorizations.add(s));
+			}
 			return this;
 		}
 

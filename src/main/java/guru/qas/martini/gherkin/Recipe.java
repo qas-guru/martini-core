@@ -1,5 +1,5 @@
 /*
-Copyright 2017 Penny Rohr Curich
+Copyright 2017-2018 Penny Rohr Curich
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -16,68 +16,22 @@ limitations under the License.
 
 package guru.qas.martini.gherkin;
 
-import java.io.Serializable;
-import java.util.List;
-import java.util.stream.Collectors;
-
 import gherkin.ast.Background;
 import gherkin.ast.ScenarioDefinition;
 import gherkin.pickles.Pickle;
 import gherkin.pickles.PickleLocation;
 
-import static com.google.common.base.Preconditions.*;
+public interface Recipe {
 
-@SuppressWarnings("WeakerAccess")
-public class Recipe implements Serializable {
+	FeatureWrapper getFeatureWrapper();
 
-	private static final long serialVersionUID = 1388547503104118707L;
+	Pickle getPickle();
 
-	protected final FeatureWrapper featureWrapper;
-	protected final Pickle pickle;
-	protected final PickleLocation location;
-	protected final ScenarioDefinition definition;
+	PickleLocation getLocation();
 
+	ScenarioDefinition getScenarioDefinition();
 
-	public FeatureWrapper getFeatureWrapper() {
-		return featureWrapper;
-	}
+	Background getBackground();
 
-	public Pickle getPickle() {
-		return pickle;
-	}
-
-	public PickleLocation getLocation() {
-		return location;
-	}
-
-	public ScenarioDefinition getScenarioDefinition() {
-		return definition;
-	}
-
-	protected Recipe(
-		FeatureWrapper featureWrapper,
-		Pickle pickle,
-		PickleLocation location,
-		ScenarioDefinition definition
-	) {
-		this.featureWrapper = featureWrapper;
-		this.pickle = pickle;
-		this.location = location;
-		this.definition = definition;
-	}
-
-	public Background getBackground() {
-		List<ScenarioDefinition> children = featureWrapper.getChildren();
-		List<Background> backgrounds = children.stream().filter(Background.class::isInstance).map(Background.class::cast).collect(Collectors.toList());
-		checkState(backgrounds.isEmpty() || 1 == backgrounds.size(), "more than one Background identified");
-		return backgrounds.isEmpty() ? null : backgrounds.get(0);
-	}
-
-	public String getId() {
-		String featureName = getFeatureWrapper().getName();
-		String scenarioName = getPickle().getName();
-		int line = getLocation().getLine();
-		String formatted = String.format("%s:%s:%s", featureName, scenarioName, line);
-		return formatted.replaceAll("\\s+", "_");
-	}
+	String getId();
 }

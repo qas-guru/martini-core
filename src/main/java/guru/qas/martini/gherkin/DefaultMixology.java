@@ -102,7 +102,7 @@ public class DefaultMixology implements Mixology {
 				Map<Range<Integer>, ScenarioDefinition> asMap = subRangeMap.asMapOfRanges();
 				checkState(1 == asMap.size(), "no single range found encompassing PickleLocation %s", location);
 				ScenarioDefinition definition = Iterables.getOnlyElement(asMap.values());
-				return new Recipe(feature, pickle, location, definition);
+				return new DefaultRecipe(feature, pickle, location, definition);
 			});
 		}
 		return ImmutableList.copyOf(recipeIndex.values());

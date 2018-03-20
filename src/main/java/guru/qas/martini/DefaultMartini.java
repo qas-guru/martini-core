@@ -1,5 +1,5 @@
 /*
-Copyright 2017 Penny Rohr Curich
+Copyright 2017-2018 Penny Rohr Curich
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -23,6 +23,8 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+
+import javax.annotation.Nonnull;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -67,14 +69,14 @@ public class DefaultMartini implements Martini {
 		return tags;
 	}
 
-	protected DefaultMartini(
-		Recipe recipe,
-		ImmutableMap<Step, StepImplementation> stepIndex,
-		Iterable<DefaultMartiniTag> tags
+	public DefaultMartini(
+		@Nonnull Recipe recipe,
+		@Nonnull Map<Step, StepImplementation> stepIndex,
+		@Nonnull Iterable<MartiniTag> tags
 	) {
-		this.recipe = recipe;
-		this.stepIndex = stepIndex;
-		this.tags = ImmutableSet.copyOf(tags);
+		this.recipe = checkNotNull(recipe, "null Recipe");
+		this.stepIndex = ImmutableMap.copyOf(checkNotNull(stepIndex, "null Map"));
+		this.tags = ImmutableSet.copyOf(checkNotNull(tags, "null Iterable"));
 	}
 
 	@Override
@@ -156,11 +158,11 @@ public class DefaultMartini implements Martini {
 
 		protected DefaultMartini build() {
 			ImmutableMap<Step, StepImplementation> immutableIndex = ImmutableMap.copyOf(index);
-			ImmutableSet<DefaultMartiniTag> tags = getTags();
+			ImmutableSet<MartiniTag> tags = getTags();
 			return new DefaultMartini(recipe, immutableIndex, tags);
 		}
 
-		protected ImmutableSet<DefaultMartiniTag> getTags() {
+		protected ImmutableSet<MartiniTag> getTags() {
 			Pickle pickle = recipe.getPickle();
 			List<PickleTag> pickleTags = pickle.getTags();
 
