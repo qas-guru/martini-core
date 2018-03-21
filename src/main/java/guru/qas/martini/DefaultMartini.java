@@ -21,13 +21,13 @@ import java.lang.reflect.Method;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
-import java.util.ResourceBundle;
 import java.util.Set;
 import java.util.stream.Collectors;
 
 import javax.annotation.Nonnull;
+
+import org.springframework.context.MessageSource;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -39,6 +39,7 @@ import gherkin.pickles.Pickle;
 import gherkin.pickles.PickleLocation;
 import gherkin.pickles.PickleTag;
 import guru.qas.martini.gherkin.FeatureWrapper;
+import guru.qas.martini.i18n.MessageSources;
 import guru.qas.martini.tag.DefaultMartiniTag;
 import guru.qas.martini.gherkin.Recipe;
 import guru.qas.martini.step.StepImplementation;
@@ -170,38 +171,26 @@ public class DefaultMartini implements Martini {
 			Pickle pickle = recipe.getPickle();
 			List<PickleTag> pickleTags = pickle.getTags();
 
-			Locale locale = getLocale(pickle);
 			List<DefaultMartiniTag> tags = pickleTags.stream()
-				.map(t -> getDefaultMartiniTag(locale, t))
+				.map(this::getDefaultMartiniTag)
 				.collect(Collectors.toList());
 			return ImmutableSet.copyOf(tags);
 		}
 
-		protected Locale getLocale(Pickle pickle) {
-			String language = pickle.getLanguage();
-			return new Locale(language);
-		}
-
-		protected DefaultMartiniTag getDefaultMartiniTag(Locale locale, PickleTag tag) {
+		protected DefaultMartiniTag getDefaultMartiniTag(PickleTag tag) {
 			try {
 				DefaultMartiniTag.Builder builder = DefaultMartiniTag.builder();
-				return builder.setPickleTag(tag).build(locale);
+				return builder.setPickleTag(tag).build();
 			}
 			catch (Exception e) {
-				ResourceBundle messageBundle = getResourceBundle(locale);
+				MessageSource messageSource = MessageSources.getMessageSource(DefaultMartini.class);
 				throw new MartiniException.Builder()
 					.setCause(e)
-					.setResourceBundle(messageBundle)
+					.setMessageSource(messageSource)
 					.setKey(MESSAGE_KEY)
 					.setArguments(recipe.getId())
 					.build();
 			}
-		}
-
-		protected ResourceBundle getResourceBundle(Locale locale) {
-			String baseName = DefaultMartini.class.getName();
-			ClassLoader loader = DefaultMartini.class.getClassLoader();
-			return ResourceBundle.getBundle(baseName, locale, loader);
 		}
 	}
 }

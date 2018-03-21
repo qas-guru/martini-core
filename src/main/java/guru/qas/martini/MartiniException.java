@@ -16,16 +16,16 @@ limitations under the License.
 
 package guru.qas.martini;
 
-import java.text.MessageFormat;
 import java.util.Locale;
-import java.util.ResourceBundle;
+
+import org.springframework.context.MessageSource;
 
 import static com.google.common.base.Preconditions.checkState;
 
 /**
  * {@inheritDoc}
  */
-@SuppressWarnings("WeakerAccess")
+@SuppressWarnings({"WeakerAccess", "DeprecatedIsStillUsed"})
 public class MartiniException extends RuntimeException {
 
 	/**
@@ -62,17 +62,23 @@ public class MartiniException extends RuntimeException {
 	@SuppressWarnings("unused")
 	public static class Builder {
 
-		protected ResourceBundle messageBundle;
+		protected MessageSource messageSource;
 		protected Locale locale;
 		protected String key;
 		protected Object[] arguments;
 		protected Exception cause;
 
 		public Builder() {
+			locale = Locale.getDefault();
 		}
 
-		public Builder setResourceBundle(ResourceBundle b) {
-			this.messageBundle = b;
+		public Builder setMessageSource(MessageSource s) {
+			this.messageSource = s;
+			return this;
+		}
+
+		public Builder setLocale(Locale l) {
+			this.locale = null == l ? Locale.getDefault() : l;
 			return this;
 		}
 
@@ -93,17 +99,14 @@ public class MartiniException extends RuntimeException {
 
 		@SuppressWarnings("deprecation")
 		public MartiniException build() {
-			checkState(null != messageBundle, "ResourceBundle not set");
-			checkState(null != key, "String key not set");
 			String message = getMessage();
 			return null == cause ? new MartiniException(message) : new MartiniException(message, cause);
 		}
 
 		protected String getMessage() {
-			String template = messageBundle.getString(key);
-			Locale locale = messageBundle.getLocale();
-			MessageFormat formatter = new MessageFormat(template, locale);
-			return formatter.format(arguments);
+			checkState(null != messageSource, "MessageSource not set");
+			checkState(null != key, "String key not set");
+			return messageSource.getMessage(key, arguments, key, locale);
 		}
 	}
 }

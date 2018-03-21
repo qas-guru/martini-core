@@ -16,15 +16,16 @@ limitations under the License.
 
 package guru.qas.martini.tag;
 
-import java.util.Locale;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.ResourceBundle;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.springframework.context.MessageSource;
+
 import gherkin.pickles.PickleTag;
 import guru.qas.martini.MartiniException;
+import guru.qas.martini.i18n.MessageSources;
 
 import static com.google.common.base.Preconditions.*;
 
@@ -59,29 +60,39 @@ public class DefaultMartiniTag implements MartiniTag {
 		protected static final Pattern PATTERN_SIMPLE = Pattern.compile("^@(.+)$");
 		protected static final Pattern PATTERN_ARGUMENTED = Pattern.compile("^@(.+)\\(\"(.+)\"\\)$");
 
-		protected PickleTag tag;
+		protected PickleTag pickleTag;
 
 		protected Builder() {
 		}
 
 		public Builder setPickleTag(PickleTag t) {
-			this.tag = t;
+			this.pickleTag = t;
 			return this;
 		}
 
-		public DefaultMartiniTag build(Locale locale) {
-			checkNotNull(locale, "null Locale");
-			checkState(null != tag, "PickleTag not set");
+		public DefaultMartiniTag build() {
+			checkState(null != pickleTag, "PickleTag not set");
 
 			DefaultMartiniTag tag = getArgumented().orElseGet(this::getSimple);
 			if (null == tag) {
-				throw getSyntaxException(locale);
+				MessageSource messageSource = MessageSources.getMessageSource(DefaultMartiniTag.class);
+				String input = getInput();
+				throw new MartiniException.Builder()
+					.setMessageSource(messageSource)
+					.setKey(KEY_ILLEGAL_SYNTAX)
+					.setArguments(input)
+					.build();
 			}
 			return tag;
 		}
 
+		protected String getInput() {
+			String name = pickleTag.getName();
+			return name.trim();
+		}
+
 		protected Optional<DefaultMartiniTag> getArgumented() {
-			String input = tag.getName().trim();
+			String input = getInput();
 			Matcher matcher = PATTERN_ARGUMENTED.matcher(input);
 			DefaultMartiniTag tag = null;
 			if (matcher.find()) {
@@ -93,7 +104,7 @@ public class DefaultMartiniTag implements MartiniTag {
 		}
 
 		protected DefaultMartiniTag getSimple() {
-			String input = tag.getName().trim();
+			String input = getInput();
 			Matcher matcher = PATTERN_SIMPLE.matcher(input);
 			DefaultMartiniTag tag = null;
 			if (matcher.find()) {
@@ -102,23 +113,6 @@ public class DefaultMartiniTag implements MartiniTag {
 			}
 			return tag;
 
-		}
-
-		protected MartiniException getSyntaxException(Locale locale) {
-			ResourceBundle messageBundle = getMessageBundle(locale);
-			String input = tag.getName().trim();
-			throw new MartiniException.Builder()
-				.setResourceBundle(messageBundle)
-				.setKey(KEY_ILLEGAL_SYNTAX)
-				.setArguments(input)
-				.build();
-		}
-
-		protected ResourceBundle getMessageBundle(Locale locale) {
-			Class<DefaultMartiniTag> implementation = DefaultMartiniTag.class;
-			String baseName = implementation.getName();
-			ClassLoader loader = implementation.getClassLoader();
-			return ResourceBundle.getBundle(baseName, locale, loader);
 		}
 	}
 

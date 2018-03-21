@@ -19,8 +19,6 @@ package guru.qas.martini.annotation;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
-import java.util.Locale;
-import java.util.ResourceBundle;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.regex.Pattern;
@@ -28,12 +26,14 @@ import java.util.regex.Pattern;
 import javax.annotation.Nonnull;
 
 import org.springframework.beans.factory.config.ConfigurableListableBeanFactory;
+import org.springframework.context.MessageSource;
 import org.springframework.core.annotation.AnnotationUtils;
 import org.springframework.util.ReflectionUtils;
 
 import com.google.common.collect.Sets;
 
 import guru.qas.martini.MartiniException;
+import guru.qas.martini.i18n.MessageSources;
 import guru.qas.martini.step.DefaultStep;
 
 import static com.google.common.base.Preconditions.*;
@@ -104,21 +104,13 @@ public class MartiniAnnotationCallback<A extends Annotation, C extends Annotatio
 	}
 
 	protected MartiniException getMartiniException(Annotation annotation, Exception cause) {
-		ResourceBundle messageBundle = getMessageBundle();
+		MessageSource messageSource = MessageSources.getMessageSource(MartiniAnnotationCallback.class);
 		throw new MartiniException.Builder()
 			.setCause(cause)
-			.setResourceBundle(messageBundle)
+			.setMessageSource(messageSource)
 			.setKey(KEY_ERROR_MESSAGE)
 			.setArguments(annotation)
 			.build();
-	}
-
-	protected ResourceBundle getMessageBundle() {
-		Class<? extends MartiniAnnotationCallback> implementation = getClass();
-		String baseName = implementation.getName();
-		Locale locale = beanFactory.getBean(Locale.class);
-		ClassLoader loader = implementation.getClassLoader();
-		return ResourceBundle.getBundle(baseName, locale, loader);
 	}
 
 	protected void processAnnotationContainer(Method method) {

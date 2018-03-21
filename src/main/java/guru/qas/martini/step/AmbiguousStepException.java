@@ -20,18 +20,19 @@ import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Locale;
 import java.util.Objects;
-import java.util.ResourceBundle;
 import java.util.stream.Collectors;
+
+import org.springframework.context.MessageSource;
 
 import com.google.common.base.Joiner;
 import com.google.common.collect.Lists;
 
 import gherkin.ast.Step;
-import gherkin.pickles.Pickle;
+import guru.qas.martini.DefaultMartini;
 import guru.qas.martini.MartiniException;
 import guru.qas.martini.gherkin.Recipe;
+import guru.qas.martini.i18n.MessageSources;
 
 import static com.google.common.base.Preconditions.checkState;
 
@@ -88,25 +89,15 @@ public class AmbiguousStepException extends MartiniException {
 			checkState(null != step, "Step not set");
 			checkState(!matches.isEmpty(), "Iterable<StepImplementation> not set");
 
-			ResourceBundle messageBundle = getMessageBundle();
-			super.setResourceBundle(messageBundle);
+			MessageSource messageSource = MessageSources.getMessageSource(DefaultMartini.class);
+			super.setMessageSource(messageSource);
 
 			Object[] arguments = getArguments();
 
 			super.setKey(KEY);
 			super.setArguments(arguments);
-			String message = getMessage();
+			String message = super.getMessage();
 			return new AmbiguousStepException(message);
-		}
-
-		protected ResourceBundle getMessageBundle() {
-			Pickle pickle = recipe.getPickle();
-			String language = pickle.getLanguage();
-			Locale locale = new Locale(language);
-
-			String baseName = AmbiguousStepException.class.getName();
-			ClassLoader loader = AmbiguousStepException.class.getClassLoader();
-			return ResourceBundle.getBundle(baseName, locale, loader);
 		}
 
 		protected Object[] getArguments() {

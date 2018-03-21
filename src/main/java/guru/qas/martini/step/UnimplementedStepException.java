@@ -16,17 +16,15 @@ limitations under the License.
 
 package guru.qas.martini.step;
 
-import java.util.Locale;
-import java.util.ResourceBundle;
-
+import org.springframework.context.MessageSource;
 import org.springframework.core.io.Resource;
 
 import gherkin.ast.Location;
 import gherkin.ast.Step;
-import gherkin.pickles.Pickle;
 import guru.qas.martini.MartiniException;
 import guru.qas.martini.gherkin.FeatureWrapper;
 import guru.qas.martini.gherkin.Recipe;
+import guru.qas.martini.i18n.MessageSources;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
@@ -71,8 +69,8 @@ public class UnimplementedStepException extends MartiniException {
 			checkNotNull(recipe, "null Recipe");
 			checkNotNull(step, "null Step");
 
-			ResourceBundle messageBundle = getMessageBundle();
-			super.setResourceBundle(messageBundle);
+			MessageSource messageSource = MessageSources.getMessageSource(UnimplementedStepException.class);
+			super.setMessageSource(messageSource);
 
 			super.setKey(KEY);
 
@@ -81,16 +79,6 @@ public class UnimplementedStepException extends MartiniException {
 
 			String message = getMessage();
 			return new UnimplementedStepException(message);
-		}
-
-		protected ResourceBundle getMessageBundle() {
-			Pickle pickle = recipe.getPickle();
-			String language = pickle.getLanguage();
-			Locale locale = new Locale(language);
-
-			String baseName = UnimplementedStepException.class.getName();
-			ClassLoader loader = UnimplementedStepException.class.getClassLoader();
-			return ResourceBundle.getBundle(baseName, locale, loader);
 		}
 
 		protected Object[] getArguments() {
