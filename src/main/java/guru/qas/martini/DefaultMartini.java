@@ -21,15 +21,17 @@ import java.lang.reflect.Method;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
+import java.util.ResourceBundle;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import javax.annotation.Nonnull;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Maps;
-import com.google.common.collect.Sets;
 
 import gherkin.ast.ScenarioDefinition;
 import gherkin.ast.Step;
@@ -139,6 +141,8 @@ public class DefaultMartini implements Martini {
 
 	protected static class Builder {
 
+		protected static final String MESSAGE_KEY = "martini.creation.exception";
+
 		private Recipe recipe;
 		private LinkedHashMap<Step, StepImplementation> index;
 
@@ -166,19 +170,38 @@ public class DefaultMartini implements Martini {
 			Pickle pickle = recipe.getPickle();
 			List<PickleTag> pickleTags = pickle.getTags();
 
-			int tagCount = pickleTags.size();
-			Set<DefaultMartiniTag> tags = Sets.newHashSetWithExpectedSize(tagCount);
-			DefaultMartiniTag.Builder builder = DefaultMartiniTag.builder();
-			for (PickleTag pickleTag : pickleTags) {
-				try {
-					DefaultMartiniTag tag = builder.setPickleTag(pickleTag).build();
-					tags.add(tag);
-				}
-				catch (Exception e) {
-					throw new MartiniException("unable to create Martini for scenario " + recipe.getId(), e);
-				}
-			}
+			Locale locale = getLocale(pickle);
+			List<DefaultMartiniTag> tags = pickleTags.stream()
+				.map(t -> getDefaultMartiniTag(locale, t))
+				.collect(Collectors.toList());
 			return ImmutableSet.copyOf(tags);
+		}
+
+		protected Locale getLocale(Pickle pickle) {
+			String language = pickle.getLanguage();
+			return new Locale(language);
+		}
+
+		protected DefaultMartiniTag getDefaultMartiniTag(Locale locale, PickleTag tag) {
+			try {
+				DefaultMartiniTag.Builder builder = DefaultMartiniTag.builder();
+				return builder.setPickleTag(tag).build(locale);
+			}
+			catch (Exception e) {
+				ResourceBundle messageBundle = getResourceBundle(locale);
+				throw new MartiniException.Builder()
+					.setCause(e)
+					.setResourceBundle(messageBundle)
+					.setKey(MESSAGE_KEY)
+					.setArguments(recipe.getId())
+					.build();
+			}
+		}
+
+		protected ResourceBundle getResourceBundle(Locale locale) {
+			String baseName = DefaultMartini.class.getName();
+			ClassLoader loader = DefaultMartini.class.getClassLoader();
+			return ResourceBundle.getBundle(baseName, locale, loader);
 		}
 	}
 }

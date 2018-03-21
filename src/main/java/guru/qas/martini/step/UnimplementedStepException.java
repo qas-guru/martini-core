@@ -1,5 +1,5 @@
 /*
-Copyright 2018 Penny Rohr Curich
+Copyright 2017-2018 Penny Rohr Curich
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -19,42 +19,40 @@ package guru.qas.martini.step;
 import java.util.Locale;
 import java.util.ResourceBundle;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.core.io.Resource;
 
 import gherkin.ast.Location;
 import gherkin.ast.Step;
+import gherkin.pickles.Pickle;
 import guru.qas.martini.MartiniException;
 import guru.qas.martini.gherkin.FeatureWrapper;
 import guru.qas.martini.gherkin.Recipe;
 
 import static com.google.common.base.Preconditions.checkNotNull;
-import static java.util.ResourceBundle.getBundle;
 
 @SuppressWarnings("WeakerAccess")
 public class UnimplementedStepException extends MartiniException {
 
-	private static final Logger LOGGER = LoggerFactory.getLogger(UnimplementedStepException.class);
-	private static final String RESOURCE_BUNDLE_KEY = "martini.unimplemented.step";
-
+	/**
+	 * {@inheritDoc}
+	 * <p>
+	 * deprecated, use {@link guru.qas.martini.step.UnimplementedStepException.Builder new guru.qas.martini.step.UnimplementedStepException.Builder()}
+	 */
+	@SuppressWarnings("DeprecatedIsStillUsed")
+	@Deprecated
 	protected UnimplementedStepException(String message) {
 		super(message);
 	}
 
-	public static Builder builder() {
-		return new Builder();
-	}
+	public static class Builder extends MartiniException.Builder {
 
-	public static class Builder {
-
-		protected static final String DEFAULT_TEMPLATE = "unimplemented step: %s line %s: @%s %s";
-		protected static final String BASENAME = "guru.qas.martini.il8n.martini-il8n";
+		protected static final String KEY = "martini.unimplemented.step";
 
 		private Recipe recipe;
 		private Step step;
 
-		protected Builder() {
+		public Builder() {
+			super();
 		}
 
 		public Builder setRecipe(Recipe r) {
@@ -67,65 +65,59 @@ public class UnimplementedStepException extends MartiniException {
 			return this;
 		}
 
+		@SuppressWarnings("deprecation")
+		@Override
 		public UnimplementedStepException build() {
 			checkNotNull(recipe, "null Recipe");
 			checkNotNull(step, "null Step");
+
+			ResourceBundle messageBundle = getMessageBundle();
+			super.setResourceBundle(messageBundle);
+
+			super.setKey(KEY);
+
+			Object[] arguments = getArguments();
+			super.setArguments(arguments);
 
 			String message = getMessage();
 			return new UnimplementedStepException(message);
 		}
 
-		private String getMessage() {
+		protected ResourceBundle getMessageBundle() {
+			Pickle pickle = recipe.getPickle();
+			String language = pickle.getLanguage();
+			Locale locale = new Locale(language);
+
+			String baseName = UnimplementedStepException.class.getName();
+			ClassLoader loader = UnimplementedStepException.class.getClassLoader();
+			return ResourceBundle.getBundle(baseName, locale, loader);
+		}
+
+		protected Object[] getArguments() {
 			String description = getDescription();
 			int line = getLine();
 			String keyword = getKeyword();
 			String text = getText();
-
-			String message;
-			try {
-				String template = getTemplate();
-				message = String.format(template, description, line, keyword, text);
-			}
-			catch (Exception e) {
-				message = String.format(DEFAULT_TEMPLATE, description, line, keyword, text);
-			}
-			return message;
+			return new Object[]{description, line, keyword, text};
 		}
 
-		protected String getTemplate() {
-			String template = DEFAULT_TEMPLATE;
-
-			try {
-				String language = recipe.getPickle().getLanguage();
-				Locale locale = new Locale(language);
-				ResourceBundle bundle = getBundle(BASENAME, locale);
-				template = bundle.getString(RESOURCE_BUNDLE_KEY);
-			}
-			catch (Exception e) {
-				LOGGER.warn(
-					"unable to retrieve value of key {} from ResourceBundle basename {} for locale {}",
-					RESOURCE_BUNDLE_KEY, BASENAME, e);
-			}
-			return template;
-		}
-
-		private String getDescription() {
+		protected String getDescription() {
 			FeatureWrapper featureWrapper = recipe.getFeatureWrapper();
 			Resource resource = featureWrapper.getResource();
 			return resource.getDescription();
 		}
 
-		private int getLine() {
+		protected int getLine() {
 			Location location = step.getLocation();
 			return location.getLine();
 		}
 
-		private String getKeyword() {
+		protected String getKeyword() {
 			String keyword = step.getKeyword();
 			return keyword.trim();
 		}
 
-		private String getText() {
+		protected String getText() {
 			String text = step.getText();
 			return text.trim();
 		}

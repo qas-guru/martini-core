@@ -1,5 +1,5 @@
 /*
-Copyright 2017 Penny Rohr Curich
+Copyright 2017-2018 Penny Rohr Curich
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -15,6 +15,8 @@ limitations under the License.
 */
 
 package guru.qas.martini.annotation;
+
+import javax.annotation.Nonnull;
 
 import org.springframework.aop.support.AopUtils;
 import org.springframework.beans.BeansException;
@@ -40,7 +42,7 @@ class StepsAnnotationProcessor implements BeanPostProcessor, ApplicationContextA
 	private ImmutableList<ReflectionUtils.MethodCallback> callbacks;
 
 	@Override
-	public void setApplicationContext(ApplicationContext context) throws BeansException {
+	public void setApplicationContext(@Nonnull ApplicationContext context) throws BeansException {
 		this.context = context;
 		AutowireCapableBeanFactory beanFactory = context.getAutowireCapableBeanFactory();
 		checkState(ConfigurableListableBeanFactory.class.isInstance(beanFactory),
@@ -55,12 +57,12 @@ class StepsAnnotationProcessor implements BeanPostProcessor, ApplicationContextA
 	}
 
 	@Override
-	public Object postProcessBeforeInitialization(Object bean, String beanName) throws BeansException {
+	public Object postProcessBeforeInitialization(@Nonnull Object bean, String beanName) throws BeansException {
 		return bean;
 	}
 
 	@Override
-	public Object postProcessAfterInitialization(Object bean, String beanName) throws BeansException {
+	public Object postProcessAfterInitialization(@Nonnull Object bean, String beanName) throws BeansException {
 		try {
 			Class<?> wrapped = AopUtils.getTargetClass(bean);
 			if (!isSpring(wrapped)) {

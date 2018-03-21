@@ -1,5 +1,5 @@
 /*
-Copyright 2017 Penny Rohr Curich
+Copyright 2017-2018 Penny Rohr Curich
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -19,9 +19,13 @@ package guru.qas.martini.annotation;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
+import java.util.Locale;
+import java.util.ResourceBundle;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.regex.Pattern;
+
+import javax.annotation.Nonnull;
 
 import org.springframework.beans.factory.config.ConfigurableListableBeanFactory;
 import org.springframework.core.annotation.AnnotationUtils;
@@ -38,6 +42,7 @@ import static com.google.common.base.Preconditions.*;
 public class MartiniAnnotationCallback<A extends Annotation, C extends Annotation> implements ReflectionUtils.MethodCallback {
 
 	protected static final String REGEX_PATTERN_METHOD = "value";
+	protected static final String KEY_ERROR_MESSAGE = "martini.annotation.exception";
 
 	protected final Class<A> annotationClass;
 	protected final Class<C> annotationContainerClass;
@@ -58,20 +63,20 @@ public class MartiniAnnotationCallback<A extends Annotation, C extends Annotatio
 	}
 
 	@Override
-	public void doWith(Method method) throws IllegalArgumentException, IllegalAccessException {
+	public void doWith(@Nonnull Method method) throws IllegalArgumentException {
 		checkNotNull(method, "null Method");
 		processAnnotation(method);
 		processAnnotationContainer(method);
 	}
 
-	protected void processAnnotation(Method method) throws IllegalAccessException {
+	protected void processAnnotation(Method method) {
 		A annotation = AnnotationUtils.findAnnotation(method, annotationClass);
 		if (null != annotation) {
 			process(method, annotation);
 		}
 	}
 
-	protected void process(Method method, A annotation) throws IllegalAccessException {
+	protected void process(Method method, A annotation) {
 		checkState(Modifier.isPublic(method.getModifiers()), "Method is not public: %s", method);
 
 		String regex = getValue(annotation).trim();
@@ -94,12 +99,29 @@ public class MartiniAnnotationCallback<A extends Annotation, C extends Annotatio
 			return String.class.cast(value);
 		}
 		catch (Exception e) {
-			String message = String.format("unable to obtain value from annotation %s", annotation);
-			throw new MartiniException(message, e);
+			throw getMartiniException(annotation, e);
 		}
 	}
 
-	protected void processAnnotationContainer(Method method) throws IllegalAccessException {
+	protected MartiniException getMartiniException(Annotation annotation, Exception cause) {
+		ResourceBundle messageBundle = getMessageBundle();
+		throw new MartiniException.Builder()
+			.setCause(cause)
+			.setResourceBundle(messageBundle)
+			.setKey(KEY_ERROR_MESSAGE)
+			.setArguments(annotation)
+			.build();
+	}
+
+	protected ResourceBundle getMessageBundle() {
+		Class<? extends MartiniAnnotationCallback> implementation = getClass();
+		String baseName = implementation.getName();
+		Locale locale = beanFactory.getBean(Locale.class);
+		ClassLoader loader = implementation.getClassLoader();
+		return ResourceBundle.getBundle(baseName, locale, loader);
+	}
+
+	protected void processAnnotationContainer(Method method) {
 		C container = AnnotationUtils.findAnnotation(method, annotationContainerClass);
 		if (null != container) {
 			A[] annotations = getValues(container);
@@ -109,16 +131,15 @@ public class MartiniAnnotationCallback<A extends Annotation, C extends Annotatio
 		}
 	}
 
+	@SuppressWarnings("unchecked")
 	protected A[] getValues(C annotation) {
 		try {
 			Method valueMethod = annotationContainerClass.getMethod(REGEX_PATTERN_METHOD);
 			Object value = valueMethod.invoke(annotation);
-			//noinspection unchecked
 			return (A[]) value;
 		}
 		catch (Exception e) {
-			String message = String.format("unable to obtain value from annotation %s", annotation);
-			throw new MartiniException(message, e);
+			throw getMartiniException(annotation, e);
 		}
 	}
 }

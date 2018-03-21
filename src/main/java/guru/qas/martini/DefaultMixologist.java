@@ -186,10 +186,10 @@ public class DefaultMixologist implements Mixologist, InitializingBean, Applicat
 			match = matches.get(0);
 		}
 		else if (count > 1) {
-			throw AmbiguousStepException.builder().setStep(step).setMatches(matches).build();
+			throw new AmbiguousStepException.Builder().setStep(step).setMatches(matches).build();
 		}
 		else if (unimplementedStepsFatal) {
-			throw UnimplementedStepException.builder().setRecipe(recipe).setStep(step).build();
+			throw new UnimplementedStepException.Builder().setRecipe(recipe).setStep(step).build();
 		}
 		else {
 			match = getUnimplemented(step);

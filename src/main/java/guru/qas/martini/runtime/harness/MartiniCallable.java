@@ -154,7 +154,7 @@ public class MartiniCallable implements Callable<MartiniResult> {
 			Method method = implementation.getMethod();
 			if (null == method) {
 				Recipe recipe = martini.getRecipe();
-				throw UnimplementedStepException.builder().setRecipe(recipe).setStep(step).build();
+				throw new UnimplementedStepException.Builder().setRecipe(recipe).setStep(step).build();
 			}
 
 			Object bean = getBean(method);

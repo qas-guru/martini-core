@@ -1,5 +1,5 @@
 /*
-Copyright 2017 Penny Rohr Curich
+Copyright 2017-2018 Penny Rohr Curich
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -16,7 +16,10 @@ limitations under the License.
 
 package guru.qas.martini.tag;
 
+import java.util.Locale;
 import java.util.Objects;
+import java.util.Optional;
+import java.util.ResourceBundle;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -48,54 +51,74 @@ public class DefaultMartiniTag implements MartiniTag {
 		return new Builder();
 	}
 
-	@SuppressWarnings("WeakerAccess")
+	@SuppressWarnings({"WeakerAccess", "UnusedReturnValue"})
 	public static class Builder {
+
+		protected static final String KEY_ILLEGAL_SYNTAX = "martini.illegal.tag.syntax";
 
 		protected static final Pattern PATTERN_SIMPLE = Pattern.compile("^@(.+)$");
 		protected static final Pattern PATTERN_ARGUMENTED = Pattern.compile("^@(.+)\\(\"(.+)\"\\)$");
 
-		private String name;
-		private String argument;
+		protected PickleTag tag;
 
 		protected Builder() {
 		}
 
-		public Builder setName(String s) {
-			this.name = null == s ? null : s.trim();
+		public Builder setPickleTag(PickleTag t) {
+			this.tag = t;
 			return this;
 		}
 
-		public Builder setArgument(String s) {
-			this.argument = null == s ? null : s.trim();
-			return this;
-		}
+		public DefaultMartiniTag build(Locale locale) {
+			checkNotNull(locale, "null Locale");
+			checkState(null != tag, "PickleTag not set");
 
-		public Builder setPickleTag(PickleTag tag) {
-			String value = tag.getName().trim();
-			Matcher matcher = PATTERN_ARGUMENTED.matcher(value);
-
-			try {
-				if (matcher.find()) {
-					setName(matcher.group(1));
-					setArgument(matcher.group(2));
-				}
-				else {
-					matcher = PATTERN_SIMPLE.matcher(value);
-					checkState(matcher.find(), "illegal tag syntax: %s", value);
-					setName(matcher.group(1));
-					setArgument(null);
-				}
-				checkState(!matcher.find(), "illegal tag syntax: %s", value);
+			DefaultMartiniTag tag = getArgumented().orElseGet(this::getSimple);
+			if (null == tag) {
+				throw getSyntaxException(locale);
 			}
-			catch (Exception e) {
-				throw new MartiniException("unable to create DefaultMartiniTag", e);
-			}
-			return this;
+			return tag;
 		}
 
-		public DefaultMartiniTag build() {
-			checkState(null != name && !name.isEmpty(), "null or empty name");
-			return new DefaultMartiniTag(name, argument);
+		protected Optional<DefaultMartiniTag> getArgumented() {
+			String input = tag.getName().trim();
+			Matcher matcher = PATTERN_ARGUMENTED.matcher(input);
+			DefaultMartiniTag tag = null;
+			if (matcher.find()) {
+				String name = matcher.group(1);
+				String argument = matcher.group(2);
+				tag = new DefaultMartiniTag(name, argument);
+			}
+			return Optional.ofNullable(tag);
+		}
+
+		protected DefaultMartiniTag getSimple() {
+			String input = tag.getName().trim();
+			Matcher matcher = PATTERN_SIMPLE.matcher(input);
+			DefaultMartiniTag tag = null;
+			if (matcher.find()) {
+				String name = matcher.group(1);
+				tag = new DefaultMartiniTag(name, null);
+			}
+			return tag;
+
+		}
+
+		protected MartiniException getSyntaxException(Locale locale) {
+			ResourceBundle messageBundle = getMessageBundle(locale);
+			String input = tag.getName().trim();
+			throw new MartiniException.Builder()
+				.setResourceBundle(messageBundle)
+				.setKey(KEY_ILLEGAL_SYNTAX)
+				.setArguments(input)
+				.build();
+		}
+
+		protected ResourceBundle getMessageBundle(Locale locale) {
+			Class<DefaultMartiniTag> implementation = DefaultMartiniTag.class;
+			String baseName = implementation.getName();
+			ClassLoader loader = implementation.getClassLoader();
+			return ResourceBundle.getBundle(baseName, locale, loader);
 		}
 	}
 

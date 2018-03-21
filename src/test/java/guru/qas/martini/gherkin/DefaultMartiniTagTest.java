@@ -16,6 +16,8 @@ limitations under the License.
 
 package guru.qas.martini.gherkin;
 
+import java.util.Locale;
+
 import org.testng.annotations.Test;
 
 import gherkin.pickles.PickleTag;
@@ -29,7 +31,8 @@ public class DefaultMartiniTagTest {
 	@Test
 	public void testSimpleSyntax() throws MartiniException {
 		PickleTag pickleTag = new PickleTag(null, "@Smoke ");
-		DefaultMartiniTag tag = DefaultMartiniTag.builder().setPickleTag(pickleTag).build();
+		Locale locale = new Locale.Builder().setLanguage("fr").setRegion("CA").build();
+		DefaultMartiniTag tag = DefaultMartiniTag.builder().setPickleTag(pickleTag).build(locale);
 		assertEquals("Smoke", tag.getName(), "wrong name returned");
 		assertNull(tag.getArgument(), "non-null argument returned");
 	}
@@ -37,7 +40,8 @@ public class DefaultMartiniTagTest {
 	@Test
 	public void testArgumentedSyntax() throws MartiniException {
 		PickleTag pickleTag = new PickleTag(null, "@Meta-Data(\"beta\")");
-		DefaultMartiniTag tag = DefaultMartiniTag.builder().setPickleTag(pickleTag).build();
+		Locale locale = Locale.getDefault();
+		DefaultMartiniTag tag = DefaultMartiniTag.builder().setPickleTag(pickleTag).build(locale);
 		assertEquals("Meta-Data", tag.getName(), "wrong name returned");
 		assertEquals("beta", tag.getArgument(), "wrong argument returned");
 	}
@@ -54,9 +58,10 @@ public class DefaultMartiniTagTest {
 	 */
 	@Test(
 		expectedExceptions = {MartiniException.class},
-		expectedExceptionsMessageRegExp = "^unable to create DefaultMartiniTag$")
+		expectedExceptionsMessageRegExp = "^illegal tag syntax:\\s.*$")
 	public void testUntenableSyntax() throws MartiniException {
 		PickleTag pickleTag = new PickleTag(null, "two");
-		DefaultMartiniTag.builder().setPickleTag(pickleTag).build();
+		Locale locale = Locale.getDefault();
+		DefaultMartiniTag.builder().setPickleTag(pickleTag).build(locale);
 	}
 }
