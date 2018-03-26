@@ -1,5 +1,5 @@
 /*
-Copyright 2017 Penny Rohr Curich
+Copyright 2017-2018 Penny Rohr Curich
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -16,12 +16,14 @@ limitations under the License.
 
 package guru.qas.martini;
 
+import javax.annotation.Nonnull;
+
 import org.springframework.beans.BeansException;
-import org.springframework.beans.factory.BeanFactory;
-import org.springframework.beans.factory.BeanFactoryAware;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.beans.factory.config.AutowireCapableBeanFactory;
 import org.springframework.beans.factory.config.CustomScopeConfigurer;
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.ApplicationContextAware;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Lazy;
@@ -34,18 +36,14 @@ import guru.qas.martini.tag.Categories;
 import guru.qas.martini.tag.DefaultCategories;
 import guru.qas.martini.scope.ScenarioScope;
 
-import static com.google.common.base.Preconditions.*;
-
 @Configuration
-class MartiniConfiguration implements BeanFactoryAware {
+class MartiniConfiguration implements ApplicationContextAware {
 
 	private AutowireCapableBeanFactory beanFactory;
 
 	@Override
-	public void setBeanFactory(BeanFactory beanFactory) throws BeansException {
-		checkState(AutowireCapableBeanFactory.class.isInstance(beanFactory),
-			"BeanFactory must be of type AutowireCapableBeanFactory but found %s", beanFactory.getClass());
-		this.beanFactory = AutowireCapableBeanFactory.class.cast(beanFactory);
+	public void setApplicationContext(@Nonnull ApplicationContext applicationContext) throws BeansException {
+		beanFactory = applicationContext.getAutowireCapableBeanFactory();
 	}
 
 	@Bean
