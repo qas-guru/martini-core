@@ -17,10 +17,13 @@ limitations under the License.
 package guru.qas.martini;
 
 import java.lang.reflect.Method;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 import org.springframework.context.support.ClassPathXmlApplicationContext;
 import org.testng.annotations.AfterClass;
@@ -28,6 +31,7 @@ import org.testng.annotations.BeforeClass;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
+import com.google.common.base.Joiner;
 import com.google.common.base.Predicates;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
@@ -190,5 +194,53 @@ public class DefaultMixologistTest {
 
 		Map<Step, StepImplementation> index = martini.getStepIndex();
 		checkState(4 == index.size(), "wrong number of steps returned, expected 4 but found %s", index.size());
+	}
+
+	@Test
+	public void testGetByFeature() {
+		String feature = "Parameterized Method Calls";
+		ImmutableList<Martini> martinis = mixologist.getMartinis();
+		List<Martini> expected = martinis.stream()
+			.filter(m -> m.getFeatureName().equals(feature))
+			.collect(Collectors.toList());
+
+		String filter = String.format("isFeature('%s ')", feature); // Note the errant space.
+		List<Martini> actual = new ArrayList<>(mixologist.getMartinis(filter));
+
+		checkState(actual.equals(expected), "wrong Martinis returned, expected %s but found %s",
+			Joiner.on(", ").join(expected),
+			Joiner.on(", ").join(actual));
+	}
+
+	@Test
+	public void testGetByScenario() {
+		String scenario = "A Non-Parameterized Case";
+		ImmutableList<Martini> martinis = mixologist.getMartinis();
+		List<Martini> expected = martinis.stream()
+			.filter(m -> m.getScenarioName().equals(scenario))
+			.collect(Collectors.toList());
+
+		String filter = String.format("isScenario('%s')", scenario);
+		List<Martini> actual = new ArrayList<>(mixologist.getMartinis(filter));
+
+		checkState(actual.equals(expected), "wrong Martinis returned, expected %s but found %s",
+			Joiner.on(", ").join(expected),
+			Joiner.on(", ").join(actual));
+	}
+
+	@Test
+	public void testGetById() {
+		String id = "Parameterized_Method_Calls:A_Non-Parameterized_Case:19";
+		ImmutableList<Martini> martinis = mixologist.getMartinis();
+		List<Martini> expected = martinis.stream()
+			.filter(m -> m.getId().equals(id))
+			.collect(Collectors.toList());
+
+		String filter = String.format("isId('%s')", id);
+		List<Martini> actual = new ArrayList<>(mixologist.getMartinis(filter));
+
+		checkState(actual.equals(expected), "wrong Martinis returned, expected %s but found %s",
+			Joiner.on(", ").join(expected),
+			Joiner.on(", ").join(actual));
 	}
 }

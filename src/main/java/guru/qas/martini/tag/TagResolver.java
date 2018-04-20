@@ -24,7 +24,6 @@ import javax.annotation.Nonnull;
 
 import org.springframework.context.ApplicationContext;
 import org.springframework.core.convert.TypeDescriptor;
-import org.springframework.expression.AccessException;
 import org.springframework.expression.EvaluationContext;
 import org.springframework.expression.MethodExecutor;
 import org.springframework.expression.MethodResolver;
@@ -50,7 +49,7 @@ public class TagResolver implements MethodResolver {
 		@Nonnull Object targetObject,
 		@Nonnull String name,
 		@Nonnull List<TypeDescriptor> argumentTypes
-	) throws AccessException {
+	) {
 		return Martini.class.isInstance(targetObject) ? resolve(name, argumentTypes) : null;
 	}
 
@@ -82,6 +81,15 @@ public class TagResolver implements MethodResolver {
 				break;
 			case "Resource":
 				executor = new ResourceExecutor(applicationContext);
+				break;
+			case "Feature":
+				executor = new FeatureExecutor();
+				break;
+			case "Scenario":
+				executor = new ScenarioExecutor();
+				break;
+			case "Id":
+				executor = new IdExecutor();
 				break;
 			default:
 				executor = new TagExecutor(group);

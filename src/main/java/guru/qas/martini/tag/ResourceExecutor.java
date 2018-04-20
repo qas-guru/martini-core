@@ -25,7 +25,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.ApplicationContext;
 import org.springframework.core.io.Resource;
-import org.springframework.expression.AccessException;
 import org.springframework.expression.EvaluationContext;
 import org.springframework.expression.MethodExecutor;
 import org.springframework.expression.TypedValue;
@@ -49,12 +48,13 @@ public class ResourceExecutor implements MethodExecutor {
 		this.applicationContext = checkNotNull(applicationContext, "null ResourceLoader");
 	}
 
+	@Nonnull
 	@Override
 	public TypedValue execute(
 		@Nonnull EvaluationContext context,
 		@Nonnull Object target,
 		@Nonnull Object... arguments
-	) throws AccessException {
+	) {
 		checkState(1 == arguments.length, "expected a single resource location, found %s", arguments.length);
 		Martini martini = Martini.class.cast(target);
 		String locationPattern = String.class.cast(arguments[0]);
