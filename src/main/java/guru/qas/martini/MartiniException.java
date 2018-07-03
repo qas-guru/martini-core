@@ -25,41 +25,18 @@ import static com.google.common.base.Preconditions.checkState;
 /**
  * {@inheritDoc}
  */
-@SuppressWarnings({"WeakerAccess", "DeprecatedIsStillUsed"})
+@SuppressWarnings("WeakerAccess")
 public class MartiniException extends RuntimeException {
 
-	/**
-	 * {@inheritDoc}
-	 * <p>
-	 * deprecated, use {@link guru.qas.martini.MartiniException.Builder new guru.qas.martini.MartiniException.Builder()}
-	 */
-	@Deprecated
-	public MartiniException() {
-		super();
-	}
-
-	/**
-	 * {@inheritDoc}
-	 * <p>
-	 * deprecated, use {@link guru.qas.martini.MartiniException.Builder new guru.qas.martini.MartiniException.Builder()}
-	 */
-	@SuppressWarnings("DeprecatedIsStillUsed")
-	@Deprecated
 	public MartiniException(String message) {
 		super(message);
 	}
 
-	/**
-	 * {@inheritDoc}
-	 * <p>
-	 * deprecated, use {@link guru.qas.martini.MartiniException.Builder new guru.qas.martini.MartiniException.Builder()}
-	 */
-	@Deprecated
 	public MartiniException(String message, Throwable cause) {
 		super(message, cause);
 	}
 
-	@SuppressWarnings("unused")
+	@SuppressWarnings({"unused", "WeakerAccess"})
 	public static class Builder {
 
 		protected MessageSource messageSource;
@@ -97,7 +74,6 @@ public class MartiniException extends RuntimeException {
 			return this;
 		}
 
-		@SuppressWarnings("deprecation")
 		public MartiniException build() {
 			String message = getMessage();
 			return null == cause ? new MartiniException(message) : new MartiniException(message, cause);

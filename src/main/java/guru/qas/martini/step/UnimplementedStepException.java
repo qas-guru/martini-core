@@ -31,14 +31,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 @SuppressWarnings("WeakerAccess")
 public class UnimplementedStepException extends MartiniException {
 
-	/**
-	 * {@inheritDoc}
-	 * <p>
-	 * deprecated, use {@link guru.qas.martini.step.UnimplementedStepException.Builder new guru.qas.martini.step.UnimplementedStepException.Builder()}
-	 */
-	@SuppressWarnings("DeprecatedIsStillUsed")
-	@Deprecated
-	protected UnimplementedStepException(String message) {
+	public UnimplementedStepException(String message) {
 		super(message);
 	}
 
