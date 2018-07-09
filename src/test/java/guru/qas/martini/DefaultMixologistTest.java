@@ -243,4 +243,18 @@ public class DefaultMixologistTest {
 			Joiner.on(", ").join(expected),
 			Joiner.on(", ").join(actual));
 	}
+
+	@Test
+	public void testGetByResource() {
+		String spelFilter = "isResource(\"classpath*:/subsystem/sample.feature\")";
+		Collection<Martini> martinis = mixologist.getMartinis(spelFilter);
+
+		int count = martinis.size();
+		checkState(1 == count, "expected 1 Martini but found %s", count);
+
+		Martini martini = martinis.iterator().next();
+		String expected = "A Corner Case";
+		String actual = martini.getScenarioName();
+		checkState(expected.equals(actual), "wrong Martini returned; expected %s but found %s", expected, actual);
+	}
 }
