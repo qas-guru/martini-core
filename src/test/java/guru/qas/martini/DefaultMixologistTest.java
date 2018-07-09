@@ -245,7 +245,7 @@ public class DefaultMixologistTest {
 	}
 
 	@Test
-	public void testGetByResource() {
+	public void testGetByFileResource() {
 		String spelFilter = "isResource(\"classpath*:/subsystem/sample.feature\")";
 		Collection<Martini> martinis = mixologist.getMartinis(spelFilter);
 
@@ -256,5 +256,15 @@ public class DefaultMixologistTest {
 		String expected = "A Corner Case";
 		String actual = martini.getScenarioName();
 		checkState(expected.equals(actual), "wrong Martini returned; expected %s but found %s", expected, actual);
+	}
+
+	@Test
+	public void testGetByDirectoryResource() {
+		String spelFilter = "isResource(\"classpath*:/**/subsystem/*.feature\")";
+		Collection<Martini> martinis = mixologist.getMartinis(spelFilter);
+
+		int expected = 10;
+		int count = martinis.size();
+		checkState(expected == count, "expected % Martinis, found %s", expected, count);
 	}
 }
