@@ -42,6 +42,8 @@ import gherkin.ast.ScenarioOutline;
 import gherkin.ast.Step;
 import gherkin.ast.TableCell;
 import gherkin.ast.TableRow;
+import gherkin.pickles.Pickle;
+import gherkin.pickles.PickleLocation;
 import guru.qas.martini.Martini;
 import guru.qas.martini.event.Status;
 import guru.qas.martini.event.SuiteIdentifier;
@@ -49,6 +51,7 @@ import guru.qas.martini.gherkin.Recipe;
 import guru.qas.martini.result.DefaultMartiniResult;
 import guru.qas.martini.result.DefaultStepResult;
 import guru.qas.martini.result.MartiniResult;
+import guru.qas.martini.result.StepResult;
 import guru.qas.martini.runtime.event.EventManager;
 import guru.qas.martini.step.StepImplementation;
 import guru.qas.martini.step.UnimplementedStepException;
@@ -101,7 +104,8 @@ public class MartiniCallable implements Callable<MartiniResult> {
 
 	@Override
 	public MartiniResult call() {
-		LOGGER.info("executing scenario {}", martini.getId());
+		log();
+
 		Thread thread = Thread.currentThread();
 		Set<String> categorizations = categories.getCategorizations(martini);
 
@@ -134,6 +138,7 @@ public class MartiniCallable implements Callable<MartiniResult> {
 					lastResult.setStatus(Status.SKIPPED);
 				}
 				result.add(lastResult);
+				log(lastResult);
 				eventManager.publishAfterStep(this, result);
 			}
 		}
@@ -145,8 +150,15 @@ public class MartiniCallable implements Callable<MartiniResult> {
 		return result;
 	}
 
+	private void log() {
+		if (LOGGER.isInfoEnabled()) {
+			String martiniId = martini.getId();
+			LOGGER.info("executing scenario {}", martiniId);
+		}
+	}
+
 	protected DefaultStepResult execute(Step step, StepImplementation implementation) {
-		LOGGER.info("executing @{} {}", step.getKeyword().trim(), step.getText().trim());
+		log(step);
 
 		DefaultStepResult result = new DefaultStepResult(step, implementation);
 		result.setStartTimestamp(System.currentTimeMillis());
@@ -161,8 +173,8 @@ public class MartiniCallable implements Callable<MartiniResult> {
 			Object[] arguments = getArguments(step, method, implementation);
 			Object o = execute(method, bean, arguments);
 
-			if (HttpEntity.class.isInstance(o)) {
-				result.add(HttpEntity.class.cast(o));
+			if (o instanceof HttpEntity) {
+				result.add((HttpEntity) o);
 			}
 			result.setStatus(Status.PASSED);
 		}
@@ -180,6 +192,47 @@ public class MartiniCallable implements Callable<MartiniResult> {
 		return result;
 	}
 
+	private void log(Step step) {
+		if (LOGGER.isInfoEnabled()) {
+			String scenarioId = getScenarioId();
+			String keyword = step.getKeyword();
+			String text = step.getText();
+			LOGGER.info("executing {} @{} {}", scenarioId, keyword.trim(), text.trim());
+		}
+	}
+
+	private String getScenarioId() {
+		Recipe recipe = martini.getRecipe();
+		Pickle pickle = recipe.getPickle();
+		String scenarioName = pickle.getName();
+		PickleLocation location = recipe.getLocation();
+		int line = location.getLine();
+		return String.format("%s:%s", scenarioName, line);
+	}
+
+	protected void log(StepResult result) {
+		if (LOGGER.isInfoEnabled()) {
+			String scenarioId = getScenarioId();
+			Status status = result.getStatus();
+			Step step = result.getStep();
+			String keyword = step.getKeyword().trim();
+			String stepText = step.getText().trim();
+
+			switch (status) {
+				case PASSED:
+					LOGGER.info("{}: {} @{} {}", status, scenarioId, keyword, stepText);
+					break;
+				case FAILED:
+					Exception exception = result.getException();
+					LOGGER.error("{}: {} @{} {} {}", status, scenarioId, keyword, stepText, exception);
+					break;
+				default:
+					LOGGER.warn("{}: {} @{} {}", status, scenarioId, keyword, stepText);
+					break;
+			}
+		}
+	}
+
 	protected Object[] getArguments(Step step, Method method, StepImplementation implementation) {
 		Parameter[] parameters = method.getParameters();
 		Object[] arguments = new Object[parameters.length];
@@ -188,9 +241,9 @@ public class MartiniCallable implements Callable<MartiniResult> {
 
 		Recipe recipe = martini.getRecipe();
 		ScenarioDefinition definition = recipe.getScenarioDefinition();
-		if (ScenarioOutline.class.isInstance(definition)) {
+		if (definition instanceof ScenarioOutline) {
 			exampleValues = new HashMap<>();
-			ScenarioOutline outline = ScenarioOutline.class.cast(definition);
+			ScenarioOutline outline = (ScenarioOutline) definition;
 
 			int exampleLine = recipe.getLocation().getLine();
 
