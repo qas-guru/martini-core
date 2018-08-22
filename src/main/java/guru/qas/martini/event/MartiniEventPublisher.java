@@ -1,5 +1,5 @@
 /*
-Copyright 2017 Penny Rohr Curich
+Copyright 2017-2018 Penny Rohr Curich
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -17,6 +17,8 @@ limitations under the License.
 package guru.qas.martini.event;
 
 public interface MartiniEventPublisher {
+
+	String IMPLEMENTATION_KEY = "martini.event.publisher.implementation";
 
 	void publish(MartiniScenarioEvent event);
 

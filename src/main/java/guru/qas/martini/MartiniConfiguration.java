@@ -16,86 +16,87 @@ limitations under the License.
 
 package guru.qas.martini;
 
+import java.util.Optional;
+
 import javax.annotation.Nonnull;
 
-import org.springframework.beans.BeansException;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.beans.factory.config.AutowireCapableBeanFactory;
-import org.springframework.beans.factory.config.CustomScopeConfigurer;
+import org.springframework.beans.factory.config.ConfigurableBeanFactory;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
+import org.springframework.context.EnvironmentAware;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Lazy;
 import org.springframework.core.convert.ConversionService;
-import org.springframework.core.env.AbstractEnvironment;
+import org.springframework.core.env.ConfigurableEnvironment;
+import org.springframework.core.env.Environment;
 
 import guru.qas.martini.event.DefaultMartiniEventPublisher;
 import guru.qas.martini.event.MartiniEventPublisher;
+import guru.qas.martini.scope.DefaultMartiniScenarioScope;
+
+import guru.qas.martini.scope.MartiniScenarioScope;
 import guru.qas.martini.tag.Categories;
 import guru.qas.martini.tag.DefaultCategories;
-import guru.qas.martini.scope.ScenarioScope;
 
+import static com.google.common.base.Preconditions.*;
+
+@SuppressWarnings("WeakerAccess")
 @Configuration
-class MartiniConfiguration implements ApplicationContextAware {
+class MartiniConfiguration implements ApplicationContextAware, EnvironmentAware {
 
+	private Environment environment;
 	private AutowireCapableBeanFactory beanFactory;
 
 	@Override
-	public void setApplicationContext(@Nonnull ApplicationContext applicationContext) throws BeansException {
+	public void setApplicationContext(@Nonnull ApplicationContext applicationContext) {
+		checkNotNull(applicationContext, "null ApplicationContext");
 		beanFactory = applicationContext.getAutowireCapableBeanFactory();
 	}
 
-	@Bean
-	Mixologist getMixologist(
-		@Value("${gherkin.mixologist:#{null}}") Class<? extends Mixologist> impl
-	) {
-		return null == impl ?
-			beanFactory.createBean(DefaultMixologist.class) :
-			beanFactory.createBean(impl);
-	}
-
-	/**
-	 * @param environment Spring Environment
-	 * @param beanName    name of Conversion Service bean Martini should utilize
-	 * @return specified, or Environment default, conversion service.
-	 */
-	@Lazy
-	@Bean
-	ConversionService getConversionService(
-		AbstractEnvironment environment,
-		@Value("${conversion.service.bean.name:#{null}}") String beanName
-	) {
-		return null == beanName ?
-			environment.getConversionService() :
-			beanFactory.getBean(beanName, ConversionService.class);
+	@Override
+	public void setEnvironment(@Nonnull Environment environment) {
+		checkNotNull(environment, "null Environment");
+		this.environment = environment;
 	}
 
 	@Bean
-	@Lazy
-	public static CustomScopeConfigurer customScopeConfigurer(
-		ScenarioScope scope
-	) {
-		CustomScopeConfigurer configurer = new CustomScopeConfigurer();
-		configurer.addScope("scenario", scope);
-		return configurer;
+	ConversionService getConversionService(ConfigurableEnvironment environment) {
+		return environment.getConversionService();
 	}
 
 	@Bean
-	public Categories getCategories(
-		@Value("${categories.implementation:#{null}}") Class<? extends Categories> impl
-	) {
-		return null == impl ?
-			beanFactory.createBean(DefaultCategories.class) :
-			beanFactory.createBean(impl);
+	Mixologist getMixologist() {
+		return getOverride(Mixologist.IMPLEMENTATION_KEY, Mixologist.class)
+			.orElse(beanFactory.createBean(DefaultMixologist.class));
 	}
 
 	@Bean
-	public MartiniEventPublisher getMartiniEventPublisher(
-		@Value("${martini.event.publisher.implementation:#{null}}") Class<? extends MartiniEventPublisher> impl
-	) {
-		return null == impl ?
-			beanFactory.createBean(DefaultMartiniEventPublisher.class) :
-			beanFactory.createBean(impl);
+	MartiniScenarioScope getMartiniScenarioScope(ConfigurableBeanFactory beanFactory) {
+		MartiniScenarioScope scope =
+			getOverride(MartiniScenarioScope.IMPLEMENTATION_KEY, MartiniScenarioScope.class)
+				.orElse(this.beanFactory.createBean(DefaultMartiniScenarioScope.class));
+		beanFactory.registerScope(MartiniScenarioScope.NAME, scope);
+		return scope;
+	}
+
+	@Bean
+	public Categories getCategories() {
+		return getOverride(Categories.IMPLEMENTATION_KEY, Categories.class)
+			.orElse(beanFactory.createBean(DefaultCategories.class));
+	}
+
+	@Bean
+	public MartiniEventPublisher getMartiniEventPublisher() {
+		return getOverride(MartiniEventPublisher.IMPLEMENTATION_KEY, MartiniEventPublisher.class)
+			.orElse(beanFactory.createBean(DefaultMartiniEventPublisher.class));
+	}
+
+	protected <T> Optional<T> getOverride(String key, Class<T> expectedType) {
+		Class<?> implementation = environment.getProperty(key, Class.class);
+		Object o = null == implementation ? null : beanFactory.createBean(implementation);
+		checkState(null == o || expectedType.isInstance(o),
+			"unexpected instance type for bean %s; expected %s but got %s", key, expectedType, null == o ? null : o.getClass());
+		return null == o ? Optional.empty() : Optional.of(expectedType.cast(o));
 	}
 }

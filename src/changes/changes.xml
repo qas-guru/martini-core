@@ -10,6 +10,16 @@
 	</properties>
 
 	<body>
+		<release version="2.6.0" date="2018-08-22" description="Release 2.5.1">
+			<action dev="pcurich" type="fix">
+				Class ScenarioScope is now interface MartiniScenarioScope.
+
+				Added DefaultMartiniScenarioScope.
+
+				Beans and destruction callbacks stored in order, disposed and destroyed
+				in reverse order at end of scenario.
+			</action>
+		</release>
 		<release version="2.5.0" date="2018-08-21" description="Release 2.5.0">
 			<action dev="pcurich" type="update">
 				Updating dependency versions.

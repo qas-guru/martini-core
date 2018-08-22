@@ -1,5 +1,5 @@
 /*
-Copyright 2017 Penny Rohr Curich
+Copyright 2017-2018 Penny Rohr Curich
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -27,10 +27,10 @@ import guru.qas.martini.result.MartiniResult;
 @Component
 public class ScenarioScopeListener {
 
-	private final ScenarioScope scope;
+	private MartiniScenarioScope scope;
 
 	@Autowired
-	public ScenarioScopeListener(ScenarioScope scope) {
+	public ScenarioScopeListener(MartiniScenarioScope scope) {
 		this.scope = scope;
 	}
 
@@ -42,7 +42,7 @@ public class ScenarioScopeListener {
 	}
 
 	@EventListener
-	public void handle(AfterScenarioEvent event) {
+	public void handle(@SuppressWarnings("unused") AfterScenarioEvent ignored) {
 		scope.clear();
 	}
 }

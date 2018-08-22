@@ -133,7 +133,7 @@ public class DefaultMartini implements Martini {
 
 	@Override
 	public boolean equals(Object obj) {
-		return null != obj && Martini.class.isInstance(obj) && Martini.class.cast(obj).getId().equals(getId());
+		return Martini.class.isInstance(obj) && Martini.class.cast(obj).getId().equals(getId());
 	}
 
 	protected static Builder builder() {

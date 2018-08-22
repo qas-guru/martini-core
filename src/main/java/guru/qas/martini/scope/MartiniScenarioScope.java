@@ -1,5 +1,5 @@
 /*
-Copyright 2017-2018 Penny Rohr Curich
+Copyright 2018 Penny Rohr Curich
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -14,27 +14,25 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package guru.qas.martini;
+package guru.qas.martini.scope;
 
-import java.util.Collection;
+import java.util.Optional;
 
 import javax.annotation.Nullable;
 
-/**
- * The main Martini core endpoint from which Martini instances may be obtained.
- */
-public interface Mixologist {
+import org.springframework.beans.factory.config.Scope;
 
-	String IMPLEMENTATION_KEY = "martini.mixologist.implementation";
+import guru.qas.martini.result.MartiniResult;
 
-	/**
-	 * @return all available Martini instances
-	 */
-	Collection<Martini> getMartinis();
+@SuppressWarnings("unused")
+public interface MartiniScenarioScope extends Scope {
 
-	/**
-	 * @param spelFilter Spring SPeL expression, e.g. "isSmoke()"
-	 * @return all matching Martini instances
-	 */
-	Collection<Martini> getMartinis(@Nullable String spelFilter);
+	String NAME = "scenario";
+	String IMPLEMENTATION_KEY = "martini.scenario.scope.impl";
+
+	Optional<MartiniResult> getMartiniResult();
+
+	void setScenarioIdentifier(@Nullable MartiniResult result);
+
+	void clear();
 }

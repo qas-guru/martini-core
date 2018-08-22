@@ -1,5 +1,5 @@
 /*
-Copyright 2017 Penny Rohr Curich
+Copyright 2017-2018 Penny Rohr Curich
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -21,6 +21,8 @@ import java.util.Set;
 import guru.qas.martini.Martini;
 
 public interface Categories {
+
+	String IMPLEMENTATION_KEY = "martini.categories.implementation";
 
 	boolean isMatch(String classification, MartiniTag tag);
 
