@@ -19,7 +19,7 @@ package guru.qas.martini;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Iterator;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -43,9 +43,7 @@ import org.springframework.expression.spel.standard.SpelExpressionParser;
 import org.springframework.expression.spel.support.StandardEvaluationContext;
 
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
-import com.google.common.collect.Sets;
 
 import gherkin.ast.Background;
 import guru.qas.martini.step.AmbiguousStepException;
@@ -63,8 +61,6 @@ import guru.qas.martini.gherkin.Mixology;
 import guru.qas.martini.gherkin.Recipe;
 import guru.qas.martini.step.StepImplementation;
 import guru.qas.martini.tag.TagResolver;
-
-import static com.google.common.base.Preconditions.*;
 
 /**
  * Default implementation of a Mixologist.
@@ -121,55 +117,60 @@ public class DefaultMixologist implements Mixologist, InitializingBean, Applicat
 	@Override
 	public ImmutableList<Martini> getMartinis() {
 		synchronized (martinisReference) {
-			ImmutableList<Martini> martinis = martinisReference.get();
-			if (null == martinis) {
+			ImmutableList<Martini> list = martinisReference.get();
+			if (null == list) {
 				Map<String, StepImplementation> index = context.getBeansOfType(StepImplementation.class);
 				Collection<StepImplementation> implementations = index.values();
 
-				ImmutableList.Builder<Martini> builder = ImmutableList.builder();
-				for (Recipe recipe : recipes) {
-					DefaultMartini.Builder martiniBuilder = DefaultMartini.builder().setRecipe(recipe);
-					Pickle pickle = recipe.getPickle();
-					Background background = recipe.getBackground();
-					ScenarioDefinition scenarioDefinition = recipe.getScenarioDefinition();
-					List<PickleStep> steps = pickle.getSteps();
-
-					for (PickleStep step : steps) {
-						Step gherkinStep = getGherkinStep(background, scenarioDefinition, step);
-						StepImplementation implementation = getImplementation(recipe, gherkinStep, implementations);
-						martiniBuilder.add(gherkinStep, implementation);
-					}
-					Martini martini = martiniBuilder.build();
-					builder.add(martini);
-				}
-				martinis = builder.build();
-				martinisReference.set(martinis);
+				List<Martini> martinis = recipes.stream().map(r -> getMartini(implementations, r))
+					.collect(Collectors.toList());
+				list = ImmutableList.copyOf(martinis);
+				martinisReference.set(list);
 			}
-			return martinis;
+			return list;
 		}
 	}
 
-	private Step getGherkinStep(Background background, ScenarioDefinition definition, PickleStep step) {
-		List<Step> backgroundSteps = null == background ? ImmutableList.of() : background.getSteps();
-		List<Step> definitionSteps = definition.getSteps();
-		Iterable<Step> steps = Iterables.concat(backgroundSteps, definitionSteps);
+	protected Martini getMartini(Collection<StepImplementation> implementations, Recipe recipe) {
+		DefaultMartini.Builder martiniBuilder = DefaultMartini.builder().setRecipe(recipe);
+
+		getPickleSteps(recipe).stream()
+			.map(pickleStep -> getGherkinStep(recipe, pickleStep))
+			.forEach(gherkinStep -> {
+				StepImplementation implementation = getImplementation(recipe, gherkinStep, implementations);
+				martiniBuilder.add(gherkinStep, implementation);
+			});
+
+		return martiniBuilder.build();
+	}
+
+	protected List<PickleStep> getPickleSteps(Recipe recipe) {
+		Pickle pickle = recipe.getPickle();
+		return pickle.getSteps();
+	}
+
+	private Step getGherkinStep(Recipe recipe, PickleStep step) {
+		Background background = recipe.getBackground();
+		ScenarioDefinition scenarioDefinition = recipe.getScenarioDefinition();
+		List<Step> steps = new ArrayList<>();
+		steps.addAll(null == background ? Collections.emptyList() : background.getSteps());
+		steps.addAll(scenarioDefinition.getSteps());
+
 		List<PickleLocation> locations = step.getLocations();
-		Set<Integer> lines = Sets.newHashSetWithExpectedSize(locations.size());
-		for (PickleLocation location : locations) {
-			int line = location.getLine();
-			lines.add(line);
-		}
+		Set<Integer> lines = locations.stream().map(PickleLocation::getLine).collect(Collectors.toSet());
 
-		Step gherkinStep = null;
-		for (Iterator<Step> i = steps.iterator(); gherkinStep == null && i.hasNext(); ) {
-			Step candidate = i.next();
-			Location location = candidate.getLocation();
-			int line = location.getLine();
-			gherkinStep = lines.contains(line) ? candidate : null;
-		}
+		return steps.stream()
+			.filter(s -> lines.contains(getLine(s)))
+			.findFirst()
+			.orElseThrow(() -> {
+				String message = String.format("unable to locate Step %s in ScenarioDefinition %s", step, scenarioDefinition);
+				return new IllegalStateException(message);
+			});
+	}
 
-		checkState(null != gherkinStep, "unable to locate Step %s in ScenarioDefinition %s", step, definition);
-		return gherkinStep;
+	protected static int getLine(Step step) {
+		Location location = step.getLocation();
+		return location.getLine();
 	}
 
 	protected StepImplementation getImplementation(
