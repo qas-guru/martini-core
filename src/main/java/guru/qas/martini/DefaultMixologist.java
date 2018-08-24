@@ -133,6 +133,7 @@ public class DefaultMixologist implements Mixologist, InitializingBean, Applicat
 					Background background = recipe.getBackground();
 					ScenarioDefinition scenarioDefinition = recipe.getScenarioDefinition();
 					List<PickleStep> steps = pickle.getSteps();
+
 					for (PickleStep step : steps) {
 						Step gherkinStep = getGherkinStep(background, scenarioDefinition, step);
 						StepImplementation implementation = getImplementation(recipe, gherkinStep, implementations);
