@@ -33,6 +33,8 @@ import org.springframework.core.env.Environment;
 
 import guru.qas.martini.event.DefaultMartiniEventPublisher;
 import guru.qas.martini.event.MartiniEventPublisher;
+import guru.qas.martini.gate.DefaultMartiniGateFactory;
+import guru.qas.martini.gate.MartiniGateFactory;
 import guru.qas.martini.scope.DefaultMartiniScenarioScope;
 
 import guru.qas.martini.scope.MartiniScenarioScope;
@@ -63,6 +65,12 @@ class MartiniConfiguration implements ApplicationContextAware, EnvironmentAware 
 	@Bean
 	ConversionService getConversionService(ConfigurableEnvironment environment) {
 		return environment.getConversionService();
+	}
+
+	@Bean
+	MartiniGateFactory getMartiniGateFactory() {
+		return getOverride(MartiniGateFactory.IMPLEMENTATION_KEY, MartiniGateFactory.class)
+			.orElse(beanFactory.createBean(DefaultMartiniGateFactory.class));
 	}
 
 	@Bean

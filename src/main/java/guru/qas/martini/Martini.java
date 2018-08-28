@@ -22,6 +22,7 @@ import java.util.Collection;
 import java.util.Map;
 
 import gherkin.ast.Step;
+import guru.qas.martini.gate.MartiniGate;
 import guru.qas.martini.gherkin.Recipe;
 import guru.qas.martini.step.StepImplementation;
 import guru.qas.martini.tag.MartiniTag;
@@ -34,22 +35,27 @@ public interface Martini extends Serializable {
 
 	Map<Step, StepImplementation> getStepIndex();
 
+	Collection<MartiniGate> getGates();
+
 	Collection<MartiniTag> getTags();
 
 	/**
 	 * Convenience method.
+	 *
 	 * @return name stored in Recipe's Feature
 	 */
 	String getFeatureName();
 
 	/**
 	 * Convenience method.
+	 *
 	 * @return name stored in Recipe's Pickle
 	 */
 	String getScenarioName();
 
 	/**
 	 * Convenience method.
+	 *
 	 * @return line stored in Pickle's PickleLocation
 	 */
 	int getScenarioLine();

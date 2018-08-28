@@ -1,5 +1,5 @@
 /*
-Copyright 2017-2018 Penny Rohr Curich
+Copyright 2018 Penny Rohr Curich
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -14,20 +14,17 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package guru.qas.martini.annotation;
+package fixture.gate;
 
-import java.lang.annotation.ElementType;
-import java.lang.annotation.Repeatable;
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
-import java.lang.annotation.Target;
+import guru.qas.martini.annotation.And;
+import guru.qas.martini.annotation.Gated;
+import guru.qas.martini.annotation.Steps;
 
-@Retention(RetentionPolicy.RUNTIME)
-@Target({ElementType.TYPE, ElementType.METHOD})
-@Repeatable(GatedContainer.class)
-public @interface Gated {
+@Steps
+@Gated(name = "Three")
+public class ClassGateThreeSteps {
 
-	int order() default 1;
-
-	String name();
+	@And("^another step class having gate \"Three\"$")
+	public void given() {
+	}
 }

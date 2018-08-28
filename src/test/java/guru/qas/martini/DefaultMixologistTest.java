@@ -38,6 +38,7 @@ import com.google.common.collect.ImmutableList;
 
 import fixture.ParameterizedTestSteps;
 import gherkin.ast.Step;
+import guru.qas.martini.gate.MartiniGate;
 import guru.qas.martini.step.UnimplementedStep;
 import guru.qas.martini.step.StepImplementation;
 import guru.qas.martini.tag.MartiniTag;
@@ -242,5 +243,17 @@ public class DefaultMixologistTest {
 		checkState(actual.equals(expected), "wrong Martinis returned, expected %s but found %s",
 			Joiner.on(", ").join(expected),
 			Joiner.on(", ").join(actual));
+	}
+
+	@Test
+	public void testGates() {
+		Martini martini = mixologist.getMartinis().stream()
+			.filter(m -> "Multiple Intersecting Gates".equals(m.getScenarioName()))
+			.findFirst()
+			.orElseThrow(() -> new IllegalStateException("unable to find Scenario"));
+
+		Collection<MartiniGate> gates = martini.getGates();
+		int actual = gates.size();
+		checkState(5 == actual, "wrong number of gates; expected 5 but found %s", actual);
 	}
 }

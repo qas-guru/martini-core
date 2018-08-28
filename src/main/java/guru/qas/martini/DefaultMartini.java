@@ -18,12 +18,14 @@ package guru.qas.martini;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
+import java.util.Arrays;
+import java.util.Collection;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
-import java.util.stream.Collectors;
+import java.util.Objects;
 
 import javax.annotation.Nonnull;
 
@@ -38,6 +40,9 @@ import gherkin.ast.Step;
 import gherkin.pickles.Pickle;
 import gherkin.pickles.PickleLocation;
 import gherkin.pickles.PickleTag;
+import guru.qas.martini.annotation.Gated;
+import guru.qas.martini.gate.MartiniGate;
+import guru.qas.martini.gate.MartiniGateFactory;
 import guru.qas.martini.gherkin.FeatureWrapper;
 import guru.qas.martini.i18n.MessageSources;
 import guru.qas.martini.tag.DefaultMartiniTag;
@@ -55,6 +60,7 @@ public class DefaultMartini implements Martini {
 
 	protected final Recipe recipe;
 	protected final ImmutableMap<Step, StepImplementation> stepIndex;
+	protected final ImmutableSet<MartiniGate> gates;
 	protected final ImmutableSet<MartiniTag> tags;
 
 	@Override
@@ -63,23 +69,30 @@ public class DefaultMartini implements Martini {
 	}
 
 	@Override
-	public Map<Step, StepImplementation> getStepIndex() {
+	public ImmutableMap<Step, StepImplementation> getStepIndex() {
 		return stepIndex;
 	}
 
 	@Override
-	public Set<MartiniTag> getTags() {
+	public Collection<MartiniGate> getGates() {
+		return gates;
+	}
+
+	@Override
+	public Collection<MartiniTag> getTags() {
 		return tags;
 	}
 
-	public DefaultMartini(
+	protected DefaultMartini(
 		@Nonnull Recipe recipe,
 		@Nonnull Map<Step, StepImplementation> stepIndex,
-		@Nonnull Iterable<MartiniTag> tags
+		MartiniGate[] gates,
+		MartiniTag[] tags
 	) {
 		this.recipe = checkNotNull(recipe, "null Recipe");
 		this.stepIndex = ImmutableMap.copyOf(checkNotNull(stepIndex, "null Map"));
-		this.tags = ImmutableSet.copyOf(checkNotNull(tags, "null Iterable"));
+		this.gates = null == gates ? ImmutableSet.of() : ImmutableSet.<MartiniGate>builder().add(gates).build();
+		this.tags = null == tags ? ImmutableSet.of() : ImmutableSet.<MartiniTag>builder().add(tags).build();
 	}
 
 	@Override
@@ -156,25 +169,27 @@ public class DefaultMartini implements Martini {
 			return this;
 		}
 
-		protected Builder add(Step step, StepImplementation implementation) {
-			index.put(step, implementation);
+		protected Builder setStepImplementationIndex(LinkedHashMap<Step, StepImplementation> index) {
+			this.index.clear();
+			if (null != index) {
+				this.index.putAll(index);
+			}
 			return this;
 		}
 
-		protected DefaultMartini build() {
-			ImmutableMap<Step, StepImplementation> immutableIndex = ImmutableMap.copyOf(index);
-			ImmutableSet<MartiniTag> tags = getTags();
-			return new DefaultMartini(recipe, immutableIndex, tags);
+		protected DefaultMartini build(MartiniGateFactory gateFactory) {
+			MartiniTag[] tags = getTags();
+			MartiniGate[] gates = getGates(gateFactory);
+			return new DefaultMartini(recipe, index, gates, tags);
 		}
 
-		protected ImmutableSet<MartiniTag> getTags() {
+		protected MartiniTag[] getTags() {
 			Pickle pickle = recipe.getPickle();
 			List<PickleTag> pickleTags = pickle.getTags();
 
-			List<DefaultMartiniTag> tags = pickleTags.stream()
+			return pickleTags.stream()
 				.map(this::getDefaultMartiniTag)
-				.collect(Collectors.toList());
-			return ImmutableSet.copyOf(tags);
+				.toArray(MartiniTag[]::new);
 		}
 
 		protected DefaultMartiniTag getDefaultMartiniTag(PickleTag tag) {
@@ -191,6 +206,29 @@ public class DefaultMartini implements Martini {
 					.setArguments(recipe.getId())
 					.build();
 			}
+		}
+
+		protected MartiniGate[] getGates(MartiniGateFactory factory) {
+			LinkedHashSet<String> names = new LinkedHashSet<>();
+			index.values().stream()
+				.map(StepImplementation::getMethod)
+				.filter(Objects::nonNull)
+				.forEach(m -> {
+					Arrays.stream(m.getDeclaringClass().getDeclaredAnnotationsByType(Gated.class))
+						.map(g -> g.name().trim())
+						.forEach(names::add);
+
+					Arrays.stream(m.getDeclaredAnnotationsByType(Gated.class))
+						.map(g -> g.name().trim())
+						.forEach(names::add);
+				});
+			return getGates(factory, names);
+		}
+
+		protected MartiniGate[] getGates(MartiniGateFactory factory, Collection<String> names) {
+			return names.stream()
+				.map(factory::getGate)
+				.toArray(MartiniGate[]::new);
 		}
 	}
 }

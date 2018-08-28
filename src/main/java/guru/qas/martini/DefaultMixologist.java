@@ -20,6 +20,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -46,6 +47,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 
 import gherkin.ast.Background;
+import guru.qas.martini.gate.MartiniGateFactory;
 import guru.qas.martini.step.AmbiguousStepException;
 import guru.qas.martini.step.UnimplementedStep;
 import guru.qas.martini.step.UnimplementedStepException;
@@ -62,6 +64,8 @@ import guru.qas.martini.gherkin.Recipe;
 import guru.qas.martini.step.StepImplementation;
 import guru.qas.martini.tag.TagResolver;
 
+import static com.google.common.base.Preconditions.checkNotNull;
+
 /**
  * Default implementation of a Mixologist.
  */
@@ -72,6 +76,7 @@ public class DefaultMixologist implements Mixologist, InitializingBean, Applicat
 	protected final GherkinResourceLoader loader;
 	protected final Mixology mixology;
 	protected final Categories categories;
+	protected final MartiniGateFactory gateFactory;
 	protected final boolean unimplementedStepsFatal;
 	protected final AtomicReference<ImmutableList<Martini>> martinisReference;
 
@@ -83,18 +88,20 @@ public class DefaultMixologist implements Mixologist, InitializingBean, Applicat
 		GherkinResourceLoader loader,
 		Mixology mixology,
 		Categories categories,
+		MartiniGateFactory gateFactory,
 		@Value("${unimplemented.steps.fatal:#{false}}") boolean missingStepFatal
 	) {
 		this.loader = loader;
 		this.mixology = mixology;
 		this.categories = categories;
+		this.gateFactory = gateFactory;
 		this.unimplementedStepsFatal = missingStepFatal;
 		this.martinisReference = new AtomicReference<>();
 	}
 
 	@Override
 	public void setApplicationContext(@Nonnull ApplicationContext context) throws BeansException {
-		this.context = context;
+		this.context = checkNotNull(context, "null ApplicationContext");
 	}
 
 	@Override
@@ -117,31 +124,30 @@ public class DefaultMixologist implements Mixologist, InitializingBean, Applicat
 	@Override
 	public ImmutableList<Martini> getMartinis() {
 		synchronized (martinisReference) {
-			ImmutableList<Martini> list = martinisReference.get();
-			if (null == list) {
+			ImmutableList<Martini> immutable = martinisReference.get();
+			if (null == immutable) {
 				Map<String, StepImplementation> index = context.getBeansOfType(StepImplementation.class);
 				Collection<StepImplementation> implementations = index.values();
 
-				List<Martini> martinis = recipes.stream().map(r -> getMartini(implementations, r))
-					.collect(Collectors.toList());
-				list = ImmutableList.copyOf(martinis);
-				martinisReference.set(list);
+				List<Martini> martinis = recipes.stream()
+					.map(r -> getMartini(r, implementations)).collect(Collectors.toList());
+				immutable = ImmutableList.copyOf(martinis);
+				martinisReference.set(immutable);
 			}
-			return list;
+			return immutable;
 		}
 	}
 
-	protected Martini getMartini(Collection<StepImplementation> implementations, Recipe recipe) {
-		DefaultMartini.Builder martiniBuilder = DefaultMartini.builder().setRecipe(recipe);
-
+	protected Martini getMartini(Recipe recipe, Collection<StepImplementation> implementations) {
+		LinkedHashMap<Step, StepImplementation> index = new LinkedHashMap<>();
 		getPickleSteps(recipe).stream()
 			.map(pickleStep -> getGherkinStep(recipe, pickleStep))
 			.forEach(gherkinStep -> {
 				StepImplementation implementation = getImplementation(recipe, gherkinStep, implementations);
-				martiniBuilder.add(gherkinStep, implementation);
+				index.put(gherkinStep, implementation);
 			});
 
-		return martiniBuilder.build();
+		return getMartini(recipe, index);
 	}
 
 	protected List<PickleStep> getPickleSteps(Recipe recipe) {
@@ -149,13 +155,8 @@ public class DefaultMixologist implements Mixologist, InitializingBean, Applicat
 		return pickle.getSteps();
 	}
 
-	private Step getGherkinStep(Recipe recipe, PickleStep step) {
-		Background background = recipe.getBackground();
-		ScenarioDefinition scenarioDefinition = recipe.getScenarioDefinition();
-		List<Step> steps = new ArrayList<>();
-		steps.addAll(null == background ? Collections.emptyList() : background.getSteps());
-		steps.addAll(scenarioDefinition.getSteps());
-
+	protected Step getGherkinStep(Recipe recipe, PickleStep step) {
+		List<Step> steps = getSteps(recipe);
 		List<PickleLocation> locations = step.getLocations();
 		Set<Integer> lines = locations.stream().map(PickleLocation::getLine).collect(Collectors.toSet());
 
@@ -163,9 +164,19 @@ public class DefaultMixologist implements Mixologist, InitializingBean, Applicat
 			.filter(s -> lines.contains(getLine(s)))
 			.findFirst()
 			.orElseThrow(() -> {
+				ScenarioDefinition scenarioDefinition = recipe.getScenarioDefinition();
 				String message = String.format("unable to locate Step %s in ScenarioDefinition %s", step, scenarioDefinition);
 				return new IllegalStateException(message);
 			});
+	}
+
+	protected List<Step> getSteps(Recipe recipe) {
+		Background background = recipe.getBackground();
+		ScenarioDefinition scenarioDefinition = recipe.getScenarioDefinition();
+		List<Step> steps = new ArrayList<>();
+		steps.addAll(null == background ? Collections.emptyList() : background.getSteps());
+		steps.addAll(scenarioDefinition.getSteps());
+		return steps;
 	}
 
 	protected static int getLine(Step step) {
@@ -197,6 +208,13 @@ public class DefaultMixologist implements Mixologist, InitializingBean, Applicat
 			match = getUnimplemented(step);
 		}
 		return match;
+	}
+
+	protected Martini getMartini(Recipe recipe, LinkedHashMap<Step, StepImplementation> index) {
+		return DefaultMartini.builder()
+			.setRecipe(recipe)
+			.setStepImplementationIndex(index)
+			.build(gateFactory);
 	}
 
 	@Override
