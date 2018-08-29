@@ -18,7 +18,9 @@ package guru.qas.martini.gate;
 
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 
+import com.google.common.base.MoreObjects;
 import com.google.common.base.Objects;
 
 import static com.google.common.base.Preconditions.*;
@@ -26,10 +28,23 @@ import static com.google.common.base.Preconditions.*;
 @SuppressWarnings("WeakerAccess")
 public class DefaultMartiniGate implements MartiniGate {
 
+	private final AtomicInteger priority;
 	private final String name;
 	private final Semaphore semaphore;
 
-	protected DefaultMartiniGate(String name, Semaphore semaphore) {
+	@Override
+	public int getPriority() {
+		return priority.get();
+	}
+
+	@Override
+	public String getName() {
+		return name;
+	}
+
+	protected DefaultMartiniGate(int priority, String name, Semaphore semaphore) {
+		checkArgument(priority >= 1, "int must be zero or greater");
+		this.priority = new AtomicInteger(priority);
 		this.name = checkNotNull(name, "null String");
 		this.semaphore = checkNotNull(semaphore, "null Semaphore");
 	}
@@ -51,6 +66,18 @@ public class DefaultMartiniGate implements MartiniGate {
 	}
 
 	@Override
+	public String toString() {
+		return getToStringHelper().toString();
+	}
+
+	protected MoreObjects.ToStringHelper getToStringHelper() {
+		return MoreObjects.toStringHelper(this)
+			.add("priority", priority)
+			.add("name", name)
+			.add("permits", semaphore.availablePermits());
+	}
+
+	@Override
 	public boolean equals(Object o) {
 		if (this == o) {
 			return true;
@@ -59,11 +86,12 @@ public class DefaultMartiniGate implements MartiniGate {
 			return false;
 		}
 		DefaultMartiniGate that = (DefaultMartiniGate) o;
-		return Objects.equal(name, that.name);
+		return Objects.equal(getPriority(), that.getPriority()) &&
+			Objects.equal(getName(), that.getName());
 	}
 
 	@Override
 	public int hashCode() {
-		return Objects.hashCode(name);
+		return Objects.hashCode(getPriority(), getName());
 	}
 }

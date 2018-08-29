@@ -16,11 +16,11 @@ limitations under the License.
 
 package guru.qas.martini.gherkin;
 
-import java.io.IOException;
+import java.util.Collection;
 
 import org.springframework.core.io.Resource;
 
 public interface Mixology {
 
-	Iterable<Recipe> get(Resource resource) throws IOException;
+	Collection<Recipe> get(Resource resource);
 }

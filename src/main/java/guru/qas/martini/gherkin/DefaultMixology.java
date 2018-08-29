@@ -16,7 +16,6 @@ limitations under the License.
 
 package guru.qas.martini.gherkin;
 
-import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.Collection;
@@ -27,6 +26,7 @@ import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Configurable;
+import org.springframework.context.MessageSource;
 import org.springframework.core.io.Resource;
 
 import com.google.common.collect.ImmutableList;
@@ -46,12 +46,16 @@ import gherkin.ast.ScenarioDefinition;
 import gherkin.pickles.Compiler;
 import gherkin.pickles.Pickle;
 import gherkin.pickles.PickleLocation;
+import guru.qas.martini.MartiniException;
+import guru.qas.martini.i18n.MessageSources;
 
 import static com.google.common.base.Preconditions.*;
 
 @SuppressWarnings("WeakerAccess")
 @Configurable
 public class DefaultMixology implements Mixology {
+
+	protected static final String MESSAGE_KEY = "martini.recipe.creation.exception";
 
 	protected final Parser<GherkinDocument> parser;
 	protected final Compiler compiler;
@@ -63,7 +67,7 @@ public class DefaultMixology implements Mixology {
 	}
 
 	@Override
-	public Iterable<Recipe> get(Resource resource) throws IOException {
+	public Collection<Recipe> get(Resource resource) {
 		checkNotNull(resource, "null Resource");
 		TokenMatcher matcher = new TokenMatcher();
 
@@ -72,6 +76,15 @@ public class DefaultMixology implements Mixology {
 		) {
 			GherkinDocument document = parser.parse(isr, matcher);
 			return getRecipes(resource, document);
+		}
+		catch (Exception e) {
+			MessageSource messageSource = MessageSources.getMessageSource(DefaultMixology.class);
+			throw new MartiniException.Builder()
+				.setCause(e)
+				.setMessageSource(messageSource)
+				.setKey(MESSAGE_KEY)
+				.setArguments(resource)
+				.build();
 		}
 	}
 

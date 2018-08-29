@@ -16,52 +16,24 @@ limitations under the License.
 
 package guru.qas.martini;
 
-import java.io.IOException;
-import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
-import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Configurable;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
-import org.springframework.core.io.Resource;
 import org.springframework.expression.Expression;
-import org.springframework.expression.MethodResolver;
 import org.springframework.expression.spel.standard.SpelExpressionParser;
 import org.springframework.expression.spel.support.StandardEvaluationContext;
 
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Lists;
 
-import gherkin.ast.Background;
-import guru.qas.martini.gate.MartiniGateFactory;
-import guru.qas.martini.step.AmbiguousStepException;
-import guru.qas.martini.step.UnimplementedStep;
-import guru.qas.martini.step.UnimplementedStepException;
 import guru.qas.martini.tag.Categories;
-import gherkin.ast.Location;
-import gherkin.ast.ScenarioDefinition;
-import gherkin.ast.Step;
-import gherkin.pickles.Pickle;
-import gherkin.pickles.PickleLocation;
-import gherkin.pickles.PickleStep;
-import guru.qas.martini.gherkin.GherkinResourceLoader;
-import guru.qas.martini.gherkin.Mixology;
-import guru.qas.martini.gherkin.Recipe;
-import guru.qas.martini.step.StepImplementation;
 import guru.qas.martini.tag.TagResolver;
 
 import static com.google.common.base.Preconditions.checkNotNull;
@@ -73,183 +45,108 @@ import static com.google.common.base.Preconditions.checkNotNull;
 @Configurable
 public class DefaultMixologist implements Mixologist, InitializingBean, ApplicationContextAware {
 
-	protected final GherkinResourceLoader loader;
-	protected final Mixology mixology;
 	protected final Categories categories;
-	protected final MartiniGateFactory gateFactory;
-	protected final boolean unimplementedStepsFatal;
-	protected final AtomicReference<ImmutableList<Martini>> martinisReference;
+	protected final MartiniFactory martiniFactory;
 
-	protected ApplicationContext context;
-	protected ImmutableList<Recipe> recipes;
+	protected ApplicationContext applicationContext;
+	protected ImmutableList<Martini> martinis;
+
+	@Override
+	public Collection<Martini> getMartinis() {
+		return martinis;
+	}
 
 	@Autowired
-	protected DefaultMixologist(
-		GherkinResourceLoader loader,
-		Mixology mixology,
-		Categories categories,
-		MartiniGateFactory gateFactory,
-		@Value("${unimplemented.steps.fatal:#{false}}") boolean missingStepFatal
-	) {
-		this.loader = loader;
-		this.mixology = mixology;
+	protected DefaultMixologist(Categories categories, MartiniFactory martiniFactory) {
 		this.categories = categories;
-		this.gateFactory = gateFactory;
-		this.unimplementedStepsFatal = missingStepFatal;
-		this.martinisReference = new AtomicReference<>();
+		this.martiniFactory = martiniFactory;
 	}
 
 	@Override
-	public void setApplicationContext(@Nonnull ApplicationContext context) throws BeansException {
-		this.context = checkNotNull(context, "null ApplicationContext");
+	public void setApplicationContext(@Nonnull ApplicationContext context) {
+		this.applicationContext = checkNotNull(context, "null ApplicationContext");
 	}
 
 	@Override
-	public void afterPropertiesSet() throws Exception {
-		recipes = null;
-		martinisReference.set(null);
-		Resource[] resources = loader.getFeatureResources();
-		initialize(resources);
-	}
-
-	protected void initialize(Resource[] resources) throws IOException {
-		ImmutableList.Builder<Recipe> builder = ImmutableList.builder();
-		for (Resource resource : resources) {
-			Iterable<Recipe> recipes = mixology.get(resource);
-			builder.addAll(recipes);
-		}
-		this.recipes = builder.build();
-	}
-
-	@Override
-	public ImmutableList<Martini> getMartinis() {
-		synchronized (martinisReference) {
-			ImmutableList<Martini> immutable = martinisReference.get();
-			if (null == immutable) {
-				Map<String, StepImplementation> index = context.getBeansOfType(StepImplementation.class);
-				Collection<StepImplementation> implementations = index.values();
-
-				List<Martini> martinis = recipes.stream()
-					.map(r -> getMartini(r, implementations)).collect(Collectors.toList());
-				immutable = ImmutableList.copyOf(martinis);
-				martinisReference.set(immutable);
-			}
-			return immutable;
-		}
-	}
-
-	protected Martini getMartini(Recipe recipe, Collection<StepImplementation> implementations) {
-		LinkedHashMap<Step, StepImplementation> index = new LinkedHashMap<>();
-		getPickleSteps(recipe).stream()
-			.map(pickleStep -> getGherkinStep(recipe, pickleStep))
-			.forEach(gherkinStep -> {
-				StepImplementation implementation = getImplementation(recipe, gherkinStep, implementations);
-				index.put(gherkinStep, implementation);
-			});
-
-		return getMartini(recipe, index);
-	}
-
-	protected List<PickleStep> getPickleSteps(Recipe recipe) {
-		Pickle pickle = recipe.getPickle();
-		return pickle.getSteps();
-	}
-
-	protected Step getGherkinStep(Recipe recipe, PickleStep step) {
-		List<Step> steps = getSteps(recipe);
-		List<PickleLocation> locations = step.getLocations();
-		Set<Integer> lines = locations.stream().map(PickleLocation::getLine).collect(Collectors.toSet());
-
-		return steps.stream()
-			.filter(s -> lines.contains(getLine(s)))
-			.findFirst()
-			.orElseThrow(() -> {
-				ScenarioDefinition scenarioDefinition = recipe.getScenarioDefinition();
-				String message = String.format("unable to locate Step %s in ScenarioDefinition %s", step, scenarioDefinition);
-				return new IllegalStateException(message);
-			});
-	}
-
-	protected List<Step> getSteps(Recipe recipe) {
-		Background background = recipe.getBackground();
-		ScenarioDefinition scenarioDefinition = recipe.getScenarioDefinition();
-		List<Step> steps = new ArrayList<>();
-		steps.addAll(null == background ? Collections.emptyList() : background.getSteps());
-		steps.addAll(scenarioDefinition.getSteps());
-		return steps;
-	}
-
-	protected static int getLine(Step step) {
-		Location location = step.getLocation();
-		return location.getLine();
-	}
-
-	protected StepImplementation getImplementation(
-		Recipe recipe,
-		gherkin.ast.Step step,
-		Collection<StepImplementation> implementations
-	) {
-		List<StepImplementation> matches = implementations.stream()
-			.filter(i -> i.isMatch(step)).collect(Collectors.toList());
-
-		StepImplementation match;
-
-		int count = matches.size();
-		if (1 == count) {
-			match = matches.get(0);
-		}
-		else if (count > 1) {
-			throw new AmbiguousStepException.Builder().setStep(step).setMatches(matches).build();
-		}
-		else if (unimplementedStepsFatal) {
-			throw new UnimplementedStepException.Builder().setRecipe(recipe).setStep(step).build();
-		}
-		else {
-			match = getUnimplemented(step);
-		}
-		return match;
-	}
-
-	protected Martini getMartini(Recipe recipe, LinkedHashMap<Step, StepImplementation> index) {
-		return DefaultMartini.builder()
-			.setRecipe(recipe)
-			.setStepImplementationIndex(index)
-			.build(gateFactory);
+	public void afterPropertiesSet() {
+		Collection<Martini> martinis = martiniFactory.getMartinis();
+		this.martinis = ImmutableList.copyOf(martinis);
 	}
 
 	@Override
 	public Collection<Martini> getMartinis(@Nullable String spelFilter) {
 		String trimmed = null == spelFilter ? "" : spelFilter.trim();
+		Expression expression = trimmed.isEmpty() ? null : getExpression(trimmed);
+		return null == expression ? getMartinis() : getMartinis(expression);
+	}
 
-		Collection<Martini> martinis = null;
-		if (!trimmed.isEmpty()) {
-			SpelExpressionParser parser = new SpelExpressionParser();
-			Expression expression = parser.parseExpression(trimmed);
-			martinis = getMartinis(expression);
-		}
-		return null == martinis ? getMartinis() : martinis;
+	protected Expression getExpression(@Nonnull String expressionString) {
+		SpelExpressionParser parser = new SpelExpressionParser();
+		return parser.parseExpression(expressionString);
 	}
 
 	protected Collection<Martini> getMartinis(Expression expression) {
+		StandardEvaluationContext evaluationContext = getEvaluationContext();
+		return martinis.stream().filter(martini -> {
+			Boolean evaluation = expression.getValue(evaluationContext, martini, Boolean.class);
+			return Boolean.TRUE.equals(evaluation);
+		}).collect(Collectors.toList());
+	}
+
+	protected StandardEvaluationContext getEvaluationContext() {
+		TagResolver tagResolver = new TagResolver(applicationContext, categories);
 		StandardEvaluationContext context = new StandardEvaluationContext();
-		List<MethodResolver> methodResolvers = context.getMethodResolvers();
-		ArrayList<MethodResolver> modifiedList = Lists.newArrayList(methodResolvers);
-		modifiedList.add(new TagResolver(this.context, categories));
-		context.setMethodResolvers(modifiedList);
-
-		ImmutableList<Martini> martinis = getMartinis();
-		List<Martini> matches = Lists.newArrayListWithCapacity(martinis.size());
-		for (Martini martini : martinis) {
-			Boolean match = expression.getValue(context, martini, Boolean.class);
-			if (null != match && match) {
-				matches.add(martini);
-			}
-		}
-		return matches;
+		context.addMethodResolver(tagResolver);
+		return context;
 	}
 
-	protected UnimplementedStep getUnimplemented(Step step) {
-		String keyword = step.getKeyword();
-		return new UnimplementedStep(null == keyword ? "" : keyword.trim());
-	}
+
+	//	protected List<PickleStep> getPickleSteps(Recipe recipe) {
+	//		Pickle pickle = recipe.getPickle();
+	//		return pickle.getSteps();
+	//	}
+
+	//	protected Step getGherkinStep(Recipe recipe, PickleStep step) {
+	//		List<Step> steps = getSteps(recipe);
+	//		List<PickleLocation> locations = step.getLocations();
+	//		Set<Integer> lines = locations.stream().map(PickleLocation::getLine).collect(Collectors.toSet());
+	//
+	//		return steps.stream()
+	//			.filter(s -> lines.contains(getLine(s)))
+	//			.findFirst()
+	//			.orElseThrow(() -> {
+	//				ScenarioDefinition scenarioDefinition = recipe.getScenarioDefinition();
+	//				String message = String.format("unable to locate Step %s in ScenarioDefinition %s", step, scenarioDefinition);
+	//				return new IllegalStateException(message);
+	//			});
+	//	}
+	//
+	//	protected static int getLine(Step step) {
+	//		Location location = step.getLocation();
+	//		return location.getLine();
+	//	}
+
+	//	protected Martini getMartini(Recipe recipe, LinkedHashMap<Step, StepImplementation> index) {
+	//		LinkedHashSet<String> gateNames = new LinkedHashSet<>();
+	//		HashMultimap<String, MartiniGate> gateIndex = HashMultimap.create();
+	//
+	//		index.values().stream()
+	//			.filter(Objects::nonNull)
+	//			.map(gateFactory::getGates)
+	//			.forEach(c -> c.forEach(gate -> {
+	//				String name = gate.getName();
+	//				gateNames.add(name);
+	//				gateIndex.put(name, gate);
+	//			}));
+	//
+	//		Comparator<String> keyComparator = Ordering.explicit(new ArrayList<>(gateNames));
+	//		Comparator<MartiniGate> valueComparator = Ordering.natural().onResultOf(gate -> null == gate ? Integer.MAX_VALUE : gate.getPriority());
+	//		TreeMultimap<String, MartiniGate> orderedGateIndex = TreeMultimap.create(keyComparator, valueComparator);
+	//
+	//		return DefaultMartini.builder()
+	//			.setRecipe(recipe)
+	//			.add(Maps.immutableEntry(step, stepImplementation))
+	//			.add(gates)
+	//			.build();
+	//	}
 }

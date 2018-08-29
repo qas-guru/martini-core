@@ -22,6 +22,7 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
@@ -69,29 +70,16 @@ public class DefaultMixologistTest {
 	}
 
 	@Test
-	public void testGetMartinis() {
+	public void testGetMartiniById() {
 		String id = "Functionality_of_the_Reporting_Subsystem:A_Corner_Case:25";
-		Martini match = getMartini(id);
-		checkState(null != match, "no Martini found matching ID [%s]", id);
-	}
-
-	protected Martini getMartini(String expected) {
-		Martini match = null;
-		ImmutableList<Martini> martinis = mixologist.getMartinis();
-		for (Iterator<Martini> i = martinis.iterator(); null == match && i.hasNext(); ) {
-			Martini candidate = i.next();
-			String id = candidate.getId();
-			match = expected.equals(id) ? candidate : null;
-		}
-		return match;
+		getFixturedMartini(id);
 	}
 
 	@SuppressWarnings("Guava")
 	@Test
 	public void testGetParameterizedMartini() throws NoSuchMethodException {
 		String id = "Parameterized_Method_Calls:A_Parameterized_Case:25";
-		Martini martini = getMartini(id);
-		checkState(null != martini, "no Martini found matching ID [%s]", id);
+		Martini martini = getFixturedMartini(id);
 
 		Map<Step, StepImplementation> stepIndex = martini.getStepIndex();
 		Collection<StepImplementation> implementations = stepIndex.values();
@@ -151,8 +139,7 @@ public class DefaultMixologistTest {
 	@Test
 	public void testGetCustomSPeL() {
 		String id = "Functionality_of_the_Reporting_Subsystem:A_Corner_Case:25";
-		Martini expected = getMartini(id);
-		checkNotNull(expected, "no Martini found matching ID [%s]", id);
+		Martini expected = getFixturedMartini(id);
 
 		String filter = "isMeta('Selenium')";
 		Collection<Martini> martinis = mixologist.getMartinis(filter);
@@ -169,29 +156,27 @@ public class DefaultMixologistTest {
 	@Test
 	public void testGetByClassification() {
 		String id = "Functionality_of_the_Reporting_Subsystem:A_Corner_Case:25";
-		Martini expected = this.getMartini(id);
-		checkNotNull(expected, "no Martini found matching ID [%s]", id);
+		Martini martini = getFixturedMartini(id);
 
 		String filter = "isCategory('AdHoc')";
 		Collection<Martini> martinis = mixologist.getMartinis(filter);
-		assertTrue(martinis.contains(expected), "expected Martini not returned");
+		assertTrue(martinis.contains(martini), "expected Martini not returned");
 	}
 
 	@Test
 	public void testGetByClassificationHierarchy() {
 		String id = "Functionality_of_the_Reporting_Subsystem:A_Corner_Case:25";
-		Martini expected = this.getMartini(id);
+		Martini martini = getFixturedMartini(id);
 
 		String filter = "isCategory('Core')";
 		Collection<Martini> martinis = mixologist.getMartinis(filter);
-		assertTrue(martinis.contains(expected), "expected Martini not returned");
+		assertTrue(martinis.contains(martini), "expected Martini not returned");
 	}
 
 	@Test
 	public void testBackground() {
 		String id = "Fairytales:Sleeping_Beauty:22";
-		Martini martini = this.getMartini(id);
-		checkState(null != martini, "unable to retrieve Martini by ID %s", id);
+		Martini martini = getFixturedMartini(id);
 
 		Map<Step, StepImplementation> index = martini.getStepIndex();
 		checkState(4 == index.size(), "wrong number of steps returned, expected 4 but found %s", index.size());
@@ -200,7 +185,7 @@ public class DefaultMixologistTest {
 	@Test
 	public void testGetByFeature() {
 		String feature = "Parameterized Method Calls";
-		ImmutableList<Martini> martinis = mixologist.getMartinis();
+		Collection<Martini> martinis = mixologist.getMartinis();
 		List<Martini> expected = martinis.stream()
 			.filter(m -> m.getFeatureName().equals(feature))
 			.collect(Collectors.toList());
@@ -216,7 +201,7 @@ public class DefaultMixologistTest {
 	@Test
 	public void testGetByScenario() {
 		String scenario = "A Non-Parameterized Case";
-		ImmutableList<Martini> martinis = mixologist.getMartinis();
+		Collection<Martini> martinis = mixologist.getMartinis();
 		List<Martini> expected = martinis.stream()
 			.filter(m -> m.getScenarioName().equals(scenario))
 			.collect(Collectors.toList());
@@ -232,7 +217,7 @@ public class DefaultMixologistTest {
 	@Test
 	public void testGetById() {
 		String id = "Parameterized_Method_Calls:A_Non-Parameterized_Case:19";
-		ImmutableList<Martini> martinis = mixologist.getMartinis();
+		Collection<Martini> martinis = mixologist.getMartinis();
 		List<Martini> expected = martinis.stream()
 			.filter(m -> m.getId().equals(id))
 			.collect(Collectors.toList());
@@ -255,5 +240,20 @@ public class DefaultMixologistTest {
 		Collection<MartiniGate> gates = martini.getGates();
 		int actual = gates.size();
 		checkState(5 == actual, "wrong number of gates; expected 5 but found %s", actual);
+	}
+
+	protected Martini getFixturedMartini(String expected) {
+		return getMartiniById(expected).orElseThrow(() -> {
+			String message = String.format("no Martini found matching ID [%s]", expected);
+			return new IllegalStateException(message);
+		});
+	}
+
+	protected Optional<Martini> getMartiniById(String expected) {
+		Collection<Martini> martinis = mixologist.getMartinis();
+		return martinis.stream().filter(martini -> {
+			String id = martini.getId();
+			return expected.equals(id);
+		}).findFirst();
 	}
 }

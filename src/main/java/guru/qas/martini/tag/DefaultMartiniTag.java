@@ -16,12 +16,13 @@ limitations under the License.
 
 package guru.qas.martini.tag;
 
-import java.util.Objects;
 import java.util.Optional;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.springframework.context.MessageSource;
+
+import com.google.common.base.Objects;
 
 import gherkin.pickles.PickleTag;
 import guru.qas.martini.MartiniException;
@@ -46,6 +47,24 @@ public class DefaultMartiniTag implements MartiniTag {
 	protected DefaultMartiniTag(String name, String argument) {
 		this.name = name;
 		this.argument = argument;
+	}
+
+	@Override
+	public boolean equals(Object o) {
+		if (this == o) {
+			return true;
+		}
+		if (!(o instanceof DefaultMartiniTag)) {
+			return false;
+		}
+		DefaultMartiniTag that = (DefaultMartiniTag) o;
+		return Objects.equal(getName(), that.getName()) &&
+			Objects.equal(getArgument(), that.getArgument());
+	}
+
+	@Override
+	public int hashCode() {
+		return Objects.hashCode(getName(), getArgument());
 	}
 
 	public static Builder builder() {
@@ -112,25 +131,6 @@ public class DefaultMartiniTag implements MartiniTag {
 				tag = new DefaultMartiniTag(name, null);
 			}
 			return tag;
-
 		}
-	}
-
-	@Override
-	public boolean equals(Object o) {
-		if (this == o) {
-			return true;
-		}
-		if (!(o instanceof DefaultMartiniTag)) {
-			return false;
-		}
-		DefaultMartiniTag that = (DefaultMartiniTag) o;
-		return Objects.equals(getName(), that.getName()) &&
-			Objects.equals(getArgument(), that.getArgument());
-	}
-
-	@Override
-	public int hashCode() {
-		return Objects.hash(getName(), getArgument());
 	}
 }

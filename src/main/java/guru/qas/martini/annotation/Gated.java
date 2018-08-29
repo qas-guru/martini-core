@@ -27,7 +27,9 @@ import java.lang.annotation.Target;
 @Repeatable(GatedContainer.class)
 public @interface Gated {
 
-	int order() default 1;
+	int DEFAULT_PRIORITY = 1000;
+
+	int priority() default DEFAULT_PRIORITY;
 
 	String name();
 }

@@ -10,7 +10,7 @@
 	</properties>
 
 	<body>
-		<release version="2.6.0" date="2018-08-24" description="Release 2.6.0">
+		<release version="4.0.0" date="2018-08-29" description="Release 4.0.0">
 			<action dev="pcurich" type="update">
 				Adding gating concept.
 			</action>
@@ -32,5 +32,4 @@
 			</action>
 		</release>
 	</body>
-
 </document>

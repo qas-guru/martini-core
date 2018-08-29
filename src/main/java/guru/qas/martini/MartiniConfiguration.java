@@ -74,6 +74,12 @@ class MartiniConfiguration implements ApplicationContextAware, EnvironmentAware 
 	}
 
 	@Bean
+	MartiniFactory getMartiniFactory() {
+		return getOverride(MartiniFactory.IMPLEMENTATION_KEY, MartiniFactory.class)
+			.orElse(beanFactory.createBean(DefaultMartiniFactory.class));
+	}
+
+	@Bean
 	Mixologist getMixologist() {
 		return getOverride(Mixologist.IMPLEMENTATION_KEY, Mixologist.class)
 			.orElse(beanFactory.createBean(DefaultMixologist.class));

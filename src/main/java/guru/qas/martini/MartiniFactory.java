@@ -14,25 +14,13 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package guru.qas.martini.gate;
+package guru.qas.martini;
 
 import java.util.Collection;
 
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
+public interface MartiniFactory {
 
-import guru.qas.martini.step.StepImplementation;
+	String IMPLEMENTATION_KEY = "martini.factory.implementation";
 
-public interface MartiniGateFactory {
-
-	String IMPLEMENTATION_KEY = "martini.gate.factory.implementation";
-
-	String PROPERTY_IGNORING_GATES = "martini.gates.ignored";
-	String PROPERTY_DEFAULT_GATE_PERMITS = "martini.gate.permits.default";
-
-	String PROPERTY_GATE_PERMIT_TEMPLATE = "martini.gate.permits.%s";
-	String PROPERTY_GATE_IGNORED = "IGNORED";
-
-	@Nonnull
-	Collection<MartiniGate> getGates(@Nullable StepImplementation implementation);
+	Collection<Martini> getMartinis();
 }
