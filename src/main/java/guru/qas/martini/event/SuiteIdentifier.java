@@ -1,5 +1,5 @@
 /*
-Copyright 2017 Penny Rohr Curich
+Copyright 2017-2018 Penny Rohr Curich
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -18,6 +18,7 @@ package guru.qas.martini.event;
 
 import java.util.Collection;
 import java.util.Map;
+import java.util.Optional;
 import java.util.UUID;
 
 public interface SuiteIdentifier {
@@ -28,11 +29,11 @@ public interface SuiteIdentifier {
 
 	Long getStartTimestamp();
 
-	String getHostname();
+	Optional<String> getHostName();
 
-	String getHostAddress();
+	Optional<String> getHostAddress();
 
-	String getUsername();
+	Optional<String> getUsername();
 
 	Collection<String> getProfiles();
 

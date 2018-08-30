@@ -1,5 +1,5 @@
 /*
-Copyright 2017 Penny Rohr Curich
+Copyright 2017-2018 Penny Rohr Curich
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -20,33 +20,54 @@ import java.net.InetAddress;
 import java.net.UnknownHostException;
 
 import java.util.Map;
+import java.util.Optional;
 import java.util.UUID;
+
+import javax.annotation.Nonnull;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.BeansException;
+import org.springframework.beans.factory.InitializingBean;
+import org.springframework.beans.factory.annotation.Configurable;
 import org.springframework.context.ApplicationContext;
+import org.springframework.context.ApplicationContextAware;
 import org.springframework.core.env.Environment;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 
+import static com.google.common.base.Preconditions.checkNotNull;
+
 @SuppressWarnings({"WeakerAccess", "unused"})
-public class DefaultSuiteIdentifier implements SuiteIdentifier {
+@Configurable
+public class DefaultSuiteIdentifier implements SuiteIdentifier, ApplicationContextAware, InitializingBean {
 
-	private static final Logger LOGGER = LoggerFactory.getLogger(DefaultSuiteIdentifier.class);
+	protected final Logger logger;
+	protected ApplicationContext applicationContext;
 
-	private final UUID id;
-	private final Long startTimestamp;
-	private final ImmutableSet<String> profiles;
-	private final ImmutableMap<String, String> environmentVariables;
-	private final String name;
-	private final String hostname;
-	private final String hostAddress;
-	private final String username;
+	private UUID id;
+	private Long startTimestamp;
+	private String name;
+	private String hostName;
+	private String hostAddress;
+	private String username;
+	private ImmutableSet<String> profiles;
+	private ImmutableMap<String, String> environmentVariables;
 
 	@Override
 	public UUID getId() {
 		return id;
+	}
+
+	@Override
+	public Optional<String> getHostName() {
+		return Optional.ofNullable(hostName);
+	}
+
+	@Override
+	public Optional<String> getHostAddress() {
+		return Optional.ofNullable(hostAddress);
 	}
 
 	@Override
@@ -60,18 +81,8 @@ public class DefaultSuiteIdentifier implements SuiteIdentifier {
 	}
 
 	@Override
-	public String getHostname() {
-		return hostname;
-	}
-
-	@Override
-	public String getHostAddress() {
-		return hostAddress;
-	}
-
-	@Override
-	public String getUsername() {
-		return username;
+	public Optional<String> getUsername() {
+		return Optional.ofNullable(username);
 	}
 
 	@Override
@@ -84,65 +95,63 @@ public class DefaultSuiteIdentifier implements SuiteIdentifier {
 		return environmentVariables;
 	}
 
-	protected DefaultSuiteIdentifier(
-		UUID id,
-		Long startTimestamp,
-		String name,
-		String hostname,
-		String hostAddress,
-		String username,
-		ImmutableSet<String> profiles,
-		ImmutableMap<String, String> environmentVariables
-	) {
-		this.id = id;
-		this.startTimestamp = startTimestamp;
-		this.name = name;
-		this.hostname = hostname;
-		this.hostAddress = hostAddress;
-		this.username = username;
-		this.profiles = profiles;
-		this.environmentVariables = environmentVariables;
+	protected DefaultSuiteIdentifier() {
+		this.logger = LoggerFactory.getLogger(this.getClass());
 	}
 
-	public static Builder builder() {
-		return new Builder();
+	@Override
+	public void setApplicationContext(@Nonnull ApplicationContext applicationContext) throws BeansException {
+		checkNotNull(applicationContext, "null ApplicationContext");
+		this.applicationContext = applicationContext;
 	}
 
-	public static final class Builder {
+	@SuppressWarnings("RedundantThrows")
+	@Override
+	public void afterPropertiesSet() throws Exception {
+		initializeUUID();
+		initializeStartupDate();
+		initializeDisplayName();
+		initializeHostInformation();
+		initializeUsername();
+		initializeActiveProfiles();
+		initializeEnvironmentVariables();
+	}
 
-		protected static final String UNKNOWN = "unknown";
-		protected String hostname = UNKNOWN;
-		protected String address = UNKNOWN;
-		protected Map<String, String> environmentVariables = System.getenv();
-		protected String name;
-		protected long startupTimestamp;
+	protected void initializeUUID() {
+		this.id = UUID.randomUUID();
+	}
 
-		protected Builder() {
+	protected void initializeStartupDate() {
+		startTimestamp = applicationContext.getStartupDate();
+	}
+
+	protected void initializeDisplayName() {
+		name = applicationContext.getDisplayName();
+	}
+
+	protected void initializeHostInformation() {
+		try {
+			InetAddress localHost = InetAddress.getLocalHost();
+			hostName = localHost.getHostName();
+			hostAddress = localHost.getHostAddress();
 		}
-
-		public DefaultSuiteIdentifier build(ApplicationContext context) {
-			setHostInformation();
-			Environment environment = context.getEnvironment();
-			return new DefaultSuiteIdentifier(UUID.randomUUID(),
-				context.getStartupDate(),
-				context.getDisplayName(),
-				hostname,
-				address,
-				System.getProperty("user.name"),
-				ImmutableSet.copyOf(environment.getActiveProfiles()),
-				ImmutableMap.copyOf(System.getenv()));
+		catch (UnknownHostException e) {
+			logger.warn("unable to ascertain hostname and address", e);
 		}
+	}
 
-		protected void setHostInformation() {
-			try {
-				InetAddress localHost = InetAddress.getLocalHost();
-				hostname = localHost.getHostName();
-				address = localHost.getHostAddress();
-			}
-			catch (UnknownHostException e) {
-				LOGGER.warn("unable to ascertain hostname and address");
-			}
-		}
+	protected void initializeUsername() {
+		username = System.getProperty("user.name");
+	}
 
+	protected void initializeActiveProfiles() {
+		Environment environment = applicationContext.getEnvironment();
+		String[] activeProfiles = environment.getActiveProfiles();
+		profiles = ImmutableSet.copyOf(activeProfiles);
+	}
+
+	protected void initializeEnvironmentVariables() {
+		Map<String, String> variables = System.getenv();
+		environmentVariables = ImmutableMap.copyOf(variables);
 	}
 }

@@ -84,7 +84,7 @@ public class DefaultMartiniScenarioScope implements MartiniScenarioScope {
 
 	protected String getConversationId(MartiniResult result) {
 		SuiteIdentifier suiteIdentifier = result.getSuiteIdentifier();
-		String host = suiteIdentifier.getHostname();
+		String host = suiteIdentifier.getHostName().orElse(null);
 		String suite = suiteIdentifier.getName();
 		String threadGroup = result.getThreadGroupName();
 		String thread = result.getThreadName();

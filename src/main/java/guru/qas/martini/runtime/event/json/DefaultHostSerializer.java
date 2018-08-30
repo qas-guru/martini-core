@@ -1,5 +1,5 @@
 /*
-Copyright 2017 Penny Rohr Curich
+Copyright 2017-2018 Penny Rohr Curich
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -24,15 +24,30 @@ import com.google.gson.JsonSerializationContext;
 
 import guru.qas.martini.event.SuiteIdentifier;
 
-@SuppressWarnings("unused")
+@SuppressWarnings({"unused", "WeakerAccess"})
 public class DefaultHostSerializer implements HostSerializer {
 
 	@Override
 	public JsonElement serialize(SuiteIdentifier identifier, Type type, JsonSerializationContext context) {
 		JsonObject serialized = new JsonObject();
-		serialized.addProperty("name", identifier.getHostname());
-		serialized.addProperty("ip", identifier.getHostAddress());
-		serialized.addProperty("username", identifier.getUsername());
+		addHostName(identifier, serialized);
+		addHostAddress(identifier, serialized);
+		addUsername(identifier, serialized);
 		return serialized;
+	}
+
+	protected void addHostName(SuiteIdentifier identifier, JsonObject serialized) {
+		String hostname = identifier.getHostName().orElse(null);
+		serialized.addProperty("hostName", hostname);
+	}
+
+	protected void addHostAddress(SuiteIdentifier identifier, JsonObject serialized) {
+		String ip = identifier.getHostAddress().orElse(null);
+		serialized.addProperty("hostAddress", ip);
+	}
+
+	protected void addUsername(SuiteIdentifier identifier, JsonObject serialized) {
+		String username = identifier.getUsername().orElse(null);
+		serialized.addProperty("username", username);
 	}
 }
