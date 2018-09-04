@@ -18,6 +18,7 @@ package guru.qas.martini.gate;
 
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import com.google.common.base.MoreObjects;
@@ -31,6 +32,7 @@ public class DefaultMartiniGate implements MartiniGate {
 	private final AtomicInteger priority;
 	private final String name;
 	private final Semaphore semaphore;
+	private final AtomicBoolean hasPermit;
 
 	@Override
 	public int getPriority() {
@@ -47,22 +49,30 @@ public class DefaultMartiniGate implements MartiniGate {
 		this.priority = new AtomicInteger(priority);
 		this.name = checkNotNull(name, "null String");
 		this.semaphore = checkNotNull(semaphore, "null Semaphore");
+		this.hasPermit = new AtomicBoolean(false);
 	}
 
 	@Override
 	public boolean enter() {
-		boolean evaluation = false;
-		try {
-			evaluation = semaphore.tryAcquire(0, TimeUnit.SECONDS); // prevents barging; see javadocs
+		synchronized (hasPermit) {
+			checkState(!hasPermit.get(), "gate already holds a permit");
+			try {
+				hasPermit.set(semaphore.tryAcquire(0, TimeUnit.SECONDS)); // prevents barging; see javadocs
+			}
+			catch (InterruptedException ignored) {
+			}
+			return hasPermit.get();
 		}
-		catch (InterruptedException ignored) {
-		}
-		return evaluation;
 	}
 
 	@Override
-	public void leave() {
-		semaphore.release();
+	public synchronized void leave() {
+		synchronized (hasPermit) {
+			if (hasPermit.get()) {
+				semaphore.release();
+				hasPermit.set(false);
+			}
+		}
 	}
 
 	@Override
@@ -71,10 +81,13 @@ public class DefaultMartiniGate implements MartiniGate {
 	}
 
 	protected MoreObjects.ToStringHelper getToStringHelper() {
-		return MoreObjects.toStringHelper(this)
-			.add("priority", priority)
-			.add("name", name)
-			.add("permits", semaphore.availablePermits());
+		synchronized (hasPermit) {
+			return MoreObjects.toStringHelper(this)
+				.add("priority", priority)
+				.add("name", name)
+				.add("permits", semaphore.availablePermits())
+				.add("hasPermit", hasPermit.get());
+		}
 	}
 
 	@Override
