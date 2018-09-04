@@ -13,6 +13,7 @@
 		<release version="4.0.0" date="2018-08-29" description="Release 4.0.0">
 			<action dev="pcurich" type="update">
 				Adding gating concept.
+				Renaming some classes.
 			</action>
 			<action dev="pcurich" type="fix">
 				Class ScenarioScope is now interface MartiniScenarioScope.
