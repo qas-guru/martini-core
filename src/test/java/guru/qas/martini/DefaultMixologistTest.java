@@ -26,6 +26,7 @@ import java.util.Optional;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
+import org.springframework.beans.factory.config.AutowireCapableBeanFactory;
 import org.springframework.context.support.ClassPathXmlApplicationContext;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
@@ -57,13 +58,17 @@ public class DefaultMixologistTest {
 	@BeforeClass
 	public void setUpClass() {
 		context = new ClassPathXmlApplicationContext("applicationContext.xml");
-		mixologist = context.getBean(DefaultMixologist.class);
+		context.start();
+		AutowireCapableBeanFactory beanFactory = context.getAutowireCapableBeanFactory();
+		beanFactory.createBean(DefaultMixologist.class);
+		mixologist = beanFactory.createBean(DefaultMixologist.class);
 	}
 
 	@AfterClass
 	public void tearDownClass() {
 		mixologist = null;
 		if (null != context) {
+			context.stop();
 			context.close();
 		}
 		context = null;

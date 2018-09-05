@@ -27,6 +27,7 @@ import org.springframework.context.ApplicationContextAware;
 import org.springframework.context.EnvironmentAware;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.core.convert.ConversionService;
 import org.springframework.core.env.ConfigurableEnvironment;
 import org.springframework.core.env.Environment;
@@ -45,6 +46,7 @@ import static com.google.common.base.Preconditions.*;
 
 @SuppressWarnings("WeakerAccess")
 @Configuration
+@Lazy
 class MartiniConfiguration implements ApplicationContextAware, EnvironmentAware {
 
 	private Environment environment;

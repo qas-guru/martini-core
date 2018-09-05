@@ -23,20 +23,17 @@ import java.util.Collection;
 import java.util.Collections;
 
 import java.util.List;
-import java.util.Map;
 import java.util.stream.Collectors;
 
 import javax.annotation.Nonnull;
 
-import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Configurable;
-import org.springframework.beans.factory.annotation.Value;
+import org.springframework.beans.factory.config.AutowireCapableBeanFactory;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
+import org.springframework.context.MessageSource;
 import org.springframework.core.io.Resource;
-
-import com.google.common.collect.ImmutableList;
 
 import gherkin.ast.Background;
 import gherkin.ast.ScenarioDefinition;
@@ -46,10 +43,8 @@ import guru.qas.martini.gate.MartiniGateFactory;
 import guru.qas.martini.gherkin.GherkinResourceLoader;
 import guru.qas.martini.gherkin.Mixology;
 import guru.qas.martini.gherkin.Recipe;
-import guru.qas.martini.step.AmbiguousStepException;
+import guru.qas.martini.i18n.MessageSources;
 import guru.qas.martini.step.StepImplementation;
-import guru.qas.martini.step.UnimplementedStep;
-import guru.qas.martini.step.UnimplementedStepException;
 import guru.qas.martini.tag.Categories;
 
 import static com.google.common.base.Preconditions.*;
@@ -59,36 +54,26 @@ import static com.google.common.base.Preconditions.*;
  */
 @SuppressWarnings("WeakerAccess")
 @Configurable
-public class DefaultMartiniFactory implements MartiniFactory, InitializingBean, ApplicationContextAware {
+public class DefaultMartiniFactory implements MartiniFactory, ApplicationContextAware {
 
 	protected final GherkinResourceLoader loader;
 	protected final Mixology mixology;
 	protected final Categories categories;
 	protected final MartiniGateFactory gateFactory;
-	protected final boolean unimplementedStepsFatal;
 
 	protected ApplicationContext context;
-	protected ImmutableList<StepImplementation> stepImplementations;
-	protected ImmutableList<Martini> martinis;
-
-	@Override
-	public Collection<Martini> getMartinis() {
-		return martinis;
-	}
 
 	@Autowired
 	protected DefaultMartiniFactory(
 		GherkinResourceLoader loader,
 		Mixology mixology,
 		Categories categories,
-		MartiniGateFactory gateFactory,
-		@Value("${unimplemented.steps.fatal:#{false}}") boolean missingStepFatal
+		MartiniGateFactory gateFactory
 	) {
 		this.loader = loader;
 		this.mixology = mixology;
 		this.categories = categories;
 		this.gateFactory = gateFactory;
-		this.unimplementedStepsFatal = missingStepFatal;
 	}
 
 	@Override
@@ -97,38 +82,46 @@ public class DefaultMartiniFactory implements MartiniFactory, InitializingBean, 
 	}
 
 	@Override
-	public void afterPropertiesSet() throws Exception {
-		initializeStepImplementations();
-		initializeMartinis();
-	}
-
-	protected void initializeStepImplementations() {
-		ImmutableList.Builder<StepImplementation> builder = ImmutableList.builder();
-		Map<String, StepImplementation> beans = context.getBeansOfType(StepImplementation.class);
-		beans.values().forEach(builder::add);
-		stepImplementations = builder.build();
-	}
-
-	protected void initializeMartinis() throws IOException {
-		Resource[] resources = loader.getFeatureResources();
-		List<Recipe> recipes = Arrays.stream(resources)
+	public Collection<Martini> getMartinis() {
+		List<Resource> resources = getFeatureResources();
+		List<Recipe> recipes = resources.stream()
 			.flatMap(resource -> mixology.get(resource).stream())
 			.collect(Collectors.toList());
-		initializeMartinis(recipes);
+		return getMartinis(recipes);
 	}
 
-	protected void initializeMartinis(Collection<Recipe> recipes) {
-		ImmutableList.Builder<Martini> builder = ImmutableList.builder();
-		recipes.stream().map(this::getMartini).forEach(builder::add);
-		martinis = builder.build();
+	protected List<Resource> getFeatureResources() {
+		try {
+			Resource[] resources = loader.getFeatureResources();
+			return Arrays.stream(resources).collect(Collectors.toList());
+		}
+		catch (IOException e) {
+			MessageSource messageSource = MessageSources.getMessageSource(getClass());
+			throw new MartiniException.Builder()
+				.setCause(e)
+				.setMessageSource(messageSource)
+				.setKey("exception.loading.feature.resources")
+				.build();
+		}
+	}
+
+	protected Collection<Martini> getMartinis(Collection<Recipe> recipes) {
+		return recipes.stream()
+			.map(this::getMartini)
+			.collect(Collectors.toList());
 	}
 
 	protected Martini getMartini(Recipe recipe) {
-		List<Step> steps = getSteps(recipe);
+
+		AutowireCapableBeanFactory beanFactory = context.getAutowireCapableBeanFactory();
+		DefaultStepImplementationResolver resolver = new DefaultStepImplementationResolver(recipe);
+		beanFactory.autowireBean(resolver);
+
+		Collection<Step> steps = getSteps(recipe);
 
 		DefaultMartini.Builder builder = DefaultMartini.builder().setRecipe(recipe);
 		steps.forEach(step -> {
-			StepImplementation implementation = getImplementation(recipe, step);
+			StepImplementation implementation = resolver.getImplementation(step);
 			builder.add(step, implementation);
 			Collection<MartiniGate> gates = gateFactory.getGates(implementation);
 			builder.addAll(gates);
@@ -136,7 +129,7 @@ public class DefaultMartiniFactory implements MartiniFactory, InitializingBean, 
 		return builder.build();
 	}
 
-	protected List<Step> getSteps(Recipe recipe) {
+	protected Collection<Step> getSteps(Recipe recipe) {
 		Background background = recipe.getBackground();
 		ScenarioDefinition scenarioDefinition = recipe.getScenarioDefinition();
 		List<Step> steps = new ArrayList<>();
@@ -144,66 +137,4 @@ public class DefaultMartiniFactory implements MartiniFactory, InitializingBean, 
 		steps.addAll(scenarioDefinition.getSteps());
 		return steps;
 	}
-
-	protected StepImplementation getImplementation(Recipe recipe, Step step) {
-		List<StepImplementation> matches = stepImplementations.stream()
-			.filter(i -> i.isMatch(step))
-			.collect(Collectors.toList());
-
-		StepImplementation match;
-
-		int count = matches.size();
-		if (1 == count) {
-			match = matches.get(0);
-		}
-		else if (count > 1) {
-			throw new AmbiguousStepException.Builder().setStep(step).setMatches(matches).build();
-		}
-		else if (unimplementedStepsFatal) {
-			throw new UnimplementedStepException.Builder().setRecipe(recipe).setStep(step).build();
-		}
-		else {
-			match = getUnimplemented(step);
-		}
-		return match;
-	}
-
-	protected UnimplementedStep getUnimplemented(Step step) {
-		String keyword = step.getKeyword();
-		return new UnimplementedStep(null == keyword ? "" : keyword.trim());
-	}
-
-	//		LinkedHashMap<Step, StepImplementation> index = new LinkedHashMap<>();
-	//		getPickleSteps(recipe).stream()
-	//			.map(pickleStep -> getGherkinStep(recipe, pickleStep))
-	//			.forEach(gherkinStep -> {
-	//				StepImplementation implementation = getImplementation(recipe, gherkinStep, stepImplementations);
-	//				index.put(gherkinStep, implementation);
-	//			});
-	//
-	//		return getMartini(recipe, index);
-
-//	protected Martini getMartini(Recipe recipe, LinkedHashMap<Step, StepImplementation> index) {
-//		LinkedHashSet<String> gateNames = new LinkedHashSet<>();
-//		HashMultimap<String, MartiniGate> gateIndex = HashMultimap.create();
-//
-//		index.values().stream()
-//			.filter(Objects::nonNull)
-//			.map(gateFactory::getGates)
-//			.forEach(c -> c.forEach(gate -> {
-//				String name = gate.getName();
-//				gateNames.add(name);
-//				gateIndex.put(name, gate);
-//			}));
-//
-//		Comparator<String> keyComparator = Ordering.explicit(new ArrayList<>(gateNames));
-//		Comparator<MartiniGate> valueComparator = Ordering.natural().onResultOf(gate -> null == gate ? Integer.MAX_VALUE : gate.getPriority());
-//		TreeMultimap<String, MartiniGate> orderedGateIndex = TreeMultimap.create(keyComparator, valueComparator);
-//
-//		return DefaultMartini.builder()
-//			.setRecipe(recipe)
-//			.add(Maps.immutableEntry(step, stepImplementation))
-//			.add(gates)
-//			.build();
-//	}
 }

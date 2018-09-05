@@ -29,6 +29,8 @@ import java.util.stream.Collectors;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Configurable;
@@ -55,6 +57,7 @@ public class DefaultMartiniGateFactory implements MartiniGateFactory, Initializi
 
 	protected final Environment environment;
 	protected final Cache<String, Semaphore> semaphores;
+	protected final Logger logger;
 
 	protected boolean ignoringGates;
 	protected int defaultGatePermits;
@@ -63,6 +66,7 @@ public class DefaultMartiniGateFactory implements MartiniGateFactory, Initializi
 	DefaultMartiniGateFactory(Environment environment) {
 		this.environment = environment;
 		semaphores = CacheBuilder.newBuilder().build();
+		this.logger = LoggerFactory.getLogger(getClass());
 	}
 
 	@Override
@@ -121,6 +125,9 @@ public class DefaultMartiniGateFactory implements MartiniGateFactory, Initializi
 		try {
 			Semaphore semaphore = semaphores.get(gateName, () -> {
 				Integer permits = getPermits(gateName);
+				if (null != permits) {
+					logger.info("creating {} gate semaphore with {} permits", gateName, permits);
+				}
 				return null == permits ? null : new Semaphore(permits, true);
 			});
 			return Optional.ofNullable(semaphore);

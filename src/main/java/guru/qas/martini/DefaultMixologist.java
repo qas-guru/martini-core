@@ -22,7 +22,6 @@ import java.util.stream.Collectors;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
-import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Configurable;
 import org.springframework.context.ApplicationContext;
@@ -30,8 +29,6 @@ import org.springframework.context.ApplicationContextAware;
 import org.springframework.expression.Expression;
 import org.springframework.expression.spel.standard.SpelExpressionParser;
 import org.springframework.expression.spel.support.StandardEvaluationContext;
-
-import com.google.common.collect.ImmutableList;
 
 import guru.qas.martini.tag.Categories;
 import guru.qas.martini.tag.TagResolver;
@@ -43,18 +40,12 @@ import static com.google.common.base.Preconditions.checkNotNull;
  */
 @SuppressWarnings("WeakerAccess")
 @Configurable
-public class DefaultMixologist implements Mixologist, InitializingBean, ApplicationContextAware {
+public class DefaultMixologist implements Mixologist, ApplicationContextAware {
 
 	protected final Categories categories;
 	protected final MartiniFactory martiniFactory;
 
 	protected ApplicationContext applicationContext;
-	protected ImmutableList<Martini> martinis;
-
-	@Override
-	public Collection<Martini> getMartinis() {
-		return martinis;
-	}
 
 	@Autowired
 	protected DefaultMixologist(Categories categories, MartiniFactory martiniFactory) {
@@ -65,12 +56,6 @@ public class DefaultMixologist implements Mixologist, InitializingBean, Applicat
 	@Override
 	public void setApplicationContext(@Nonnull ApplicationContext context) {
 		this.applicationContext = checkNotNull(context, "null ApplicationContext");
-	}
-
-	@Override
-	public void afterPropertiesSet() {
-		Collection<Martini> martinis = martiniFactory.getMartinis();
-		this.martinis = ImmutableList.copyOf(martinis);
 	}
 
 	@Override
@@ -85,9 +70,14 @@ public class DefaultMixologist implements Mixologist, InitializingBean, Applicat
 		return parser.parseExpression(expressionString);
 	}
 
+	@Override
+	public Collection<Martini> getMartinis() {
+		return martiniFactory.getMartinis();
+	}
+
 	protected Collection<Martini> getMartinis(Expression expression) {
 		StandardEvaluationContext evaluationContext = getEvaluationContext();
-		return martinis.stream().filter(martini -> {
+		return getMartinis().stream().filter(martini -> {
 			Boolean evaluation = expression.getValue(evaluationContext, martini, Boolean.class);
 			return Boolean.TRUE.equals(evaluation);
 		}).collect(Collectors.toList());
@@ -99,54 +89,4 @@ public class DefaultMixologist implements Mixologist, InitializingBean, Applicat
 		context.addMethodResolver(tagResolver);
 		return context;
 	}
-
-
-	//	protected List<PickleStep> getPickleSteps(Recipe recipe) {
-	//		Pickle pickle = recipe.getPickle();
-	//		return pickle.getSteps();
-	//	}
-
-	//	protected Step getGherkinStep(Recipe recipe, PickleStep step) {
-	//		List<Step> steps = getSteps(recipe);
-	//		List<PickleLocation> locations = step.getLocations();
-	//		Set<Integer> lines = locations.stream().map(PickleLocation::getLine).collect(Collectors.toSet());
-	//
-	//		return steps.stream()
-	//			.filter(s -> lines.contains(getLine(s)))
-	//			.findFirst()
-	//			.orElseThrow(() -> {
-	//				ScenarioDefinition scenarioDefinition = recipe.getScenarioDefinition();
-	//				String message = String.format("unable to locate Step %s in ScenarioDefinition %s", step, scenarioDefinition);
-	//				return new IllegalStateException(message);
-	//			});
-	//	}
-	//
-	//	protected static int getLine(Step step) {
-	//		Location location = step.getLocation();
-	//		return location.getLine();
-	//	}
-
-	//	protected Martini getMartini(Recipe recipe, LinkedHashMap<Step, StepImplementation> index) {
-	//		LinkedHashSet<String> gateNames = new LinkedHashSet<>();
-	//		HashMultimap<String, MartiniGate> gateIndex = HashMultimap.create();
-	//
-	//		index.values().stream()
-	//			.filter(Objects::nonNull)
-	//			.map(gateFactory::getGates)
-	//			.forEach(c -> c.forEach(gate -> {
-	//				String name = gate.getName();
-	//				gateNames.add(name);
-	//				gateIndex.put(name, gate);
-	//			}));
-	//
-	//		Comparator<String> keyComparator = Ordering.explicit(new ArrayList<>(gateNames));
-	//		Comparator<MartiniGate> valueComparator = Ordering.natural().onResultOf(gate -> null == gate ? Integer.MAX_VALUE : gate.getPriority());
-	//		TreeMultimap<String, MartiniGate> orderedGateIndex = TreeMultimap.create(keyComparator, valueComparator);
-	//
-	//		return DefaultMartini.builder()
-	//			.setRecipe(recipe)
-	//			.add(Maps.immutableEntry(step, stepImplementation))
-	//			.add(gates)
-	//			.build();
-	//	}
 }
