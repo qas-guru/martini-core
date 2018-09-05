@@ -17,50 +17,37 @@ limitations under the License.
 package guru.qas.martini;
 
 import java.util.Collection;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 import javax.annotation.Nonnull;
 
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Configurable;
-import org.springframework.beans.factory.annotation.Value;
+import org.springframework.beans.BeansException;
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.ApplicationContextAware;
+import org.springframework.context.annotation.Lazy;
+import org.springframework.stereotype.Component;
 
 import com.google.common.collect.Iterables;
 
 import gherkin.ast.Step;
-import guru.qas.martini.gherkin.Recipe;
 import guru.qas.martini.step.AmbiguousStepException;
 import guru.qas.martini.step.StepImplementation;
 import guru.qas.martini.step.UnimplementedStep;
-import guru.qas.martini.step.UnimplementedStepException;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
 @SuppressWarnings("WeakerAccess")
-@Configurable
-public class DefaultStepImplementationResolver implements StepImplementationResolver {
+@Lazy
+@Component
+public class DefaultStepImplementationResolver implements StepImplementationResolver, ApplicationContextAware {
 
-	private final Recipe recipe;
+	private ApplicationContext applicationContext;
 
-	private Collection<StepImplementation> implementations;
-	private boolean unimplementedStepsFatal;
-
-	@Autowired
-	void setUnimplementedStepsFatal(@Value("${unimplemented.steps.fatal:#{false}}") boolean b) {
-		this.unimplementedStepsFatal = b;
-	}
-
-	@Autowired
-	void setStepImplementations(Collection<StepImplementation> implementations) {
-		this.implementations = implementations;
-		/*
-				Map<String, StepImplementation> beans = context.getBeansOfType(StepImplementation.class, false, false);
-		Collection<StepImplementation> implementations = beans.values();
-		 */
-	}
-
-	protected DefaultStepImplementationResolver(Recipe recipe) {
-		this.recipe = checkNotNull(recipe, "null Recipe");
+	@Override
+	public void setApplicationContext(@Nonnull ApplicationContext applicationContext) throws BeansException {
+		checkNotNull(applicationContext, "null ApplicationContext");
+		this.applicationContext = applicationContext;
 	}
 
 	public StepImplementation getImplementation(@Nonnull Step step) {
@@ -77,9 +64,6 @@ public class DefaultStepImplementationResolver implements StepImplementationReso
 		else if (count > 1) {
 			throw new AmbiguousStepException.Builder().setStep(step).setMatches(matches).build();
 		}
-		else if (unimplementedStepsFatal) {
-			throw new UnimplementedStepException.Builder().setRecipe(recipe).setStep(step).build();
-		}
 		else {
 			match = getUnimplemented(step);
 		}
@@ -87,7 +71,11 @@ public class DefaultStepImplementationResolver implements StepImplementationReso
 	}
 
 	protected Collection<StepImplementation> getMatches(Step step) {
-		return implementations.stream()
+		Map<String, StepImplementation> beans =
+			applicationContext.getBeansOfType(StepImplementation.class, false, false);
+		Collection<StepImplementation> candidates = beans.values();
+
+		return candidates.stream()
 			.filter(i -> i.isMatch(step))
 			.collect(Collectors.toList());
 	}

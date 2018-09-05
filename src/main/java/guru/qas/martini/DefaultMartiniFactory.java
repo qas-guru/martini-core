@@ -29,7 +29,6 @@ import javax.annotation.Nonnull;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Configurable;
-import org.springframework.beans.factory.config.AutowireCapableBeanFactory;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
 import org.springframework.context.MessageSource;
@@ -59,6 +58,7 @@ public class DefaultMartiniFactory implements MartiniFactory, ApplicationContext
 	protected final GherkinResourceLoader loader;
 	protected final Mixology mixology;
 	protected final Categories categories;
+	protected final StepImplementationResolver resolver;
 	protected final MartiniGateFactory gateFactory;
 
 	protected ApplicationContext context;
@@ -68,11 +68,13 @@ public class DefaultMartiniFactory implements MartiniFactory, ApplicationContext
 		GherkinResourceLoader loader,
 		Mixology mixology,
 		Categories categories,
+		StepImplementationResolver resolver,
 		MartiniGateFactory gateFactory
 	) {
 		this.loader = loader;
 		this.mixology = mixology;
 		this.categories = categories;
+		this.resolver = resolver;
 		this.gateFactory = gateFactory;
 	}
 
@@ -112,11 +114,6 @@ public class DefaultMartiniFactory implements MartiniFactory, ApplicationContext
 	}
 
 	protected Martini getMartini(Recipe recipe) {
-
-		AutowireCapableBeanFactory beanFactory = context.getAutowireCapableBeanFactory();
-		DefaultStepImplementationResolver resolver = new DefaultStepImplementationResolver(recipe);
-		beanFactory.autowireBean(resolver);
-
 		Collection<Step> steps = getSteps(recipe);
 
 		DefaultMartini.Builder builder = DefaultMartini.builder().setRecipe(recipe);

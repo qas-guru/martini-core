@@ -44,10 +44,9 @@ public class DefaultMartiniResult implements MartiniResult {
 	protected final ImmutableSet<String> categorizations;
 	protected final String threadGroupName;
 	protected final String threadName;
-	protected final List<StepResult> stepResults;
-
-	protected Long startTimestamp;
-	protected Long endTimestamp;
+	protected final Long startTimestamp;
+	protected final ImmutableList<StepResult> stepResults;
+	protected final Long endTimestamp;
 
 	@Override
 	public UUID getId() {
@@ -88,17 +87,9 @@ public class DefaultMartiniResult implements MartiniResult {
 		return startTimestamp;
 	}
 
-	public void setStartTimestamp(Long startTimestamp) {
-		this.startTimestamp = startTimestamp;
-	}
-
 	@Override
 	public Long getEndTimestamp() {
 		return endTimestamp;
-	}
-
-	public void setEndTimestamp(Long endTimestamp) {
-		this.endTimestamp = endTimestamp;
 	}
 
 	public Long getExecutionTimeMs() {
@@ -126,7 +117,9 @@ public class DefaultMartiniResult implements MartiniResult {
 		Martini martini,
 		Iterable<String> categorizations,
 		String threadGroupName,
-		String threadName
+		String threadName,
+		Long startTimestamp, Iterable<StepResult> stepResults,
+		Long endTimestamp
 	) {
 		this.id = id;
 		this.suiteIdentifier = suiteIdentifier;
@@ -134,7 +127,30 @@ public class DefaultMartiniResult implements MartiniResult {
 		this.categorizations = ImmutableSet.copyOf(categorizations);
 		this.threadGroupName = threadGroupName;
 		this.threadName = threadName;
-		this.stepResults = new ArrayList<>();
+		this.startTimestamp = startTimestamp;
+		this.stepResults = ImmutableList.copyOf(stepResults);
+		this.endTimestamp = endTimestamp;
+	}
+
+	@Override
+	public Status getStatus() {
+		Status status = null;
+		Set<Status> statii = Sets.newHashSet();
+		for (StepResult stepResult : stepResults) {
+			Status stepStatus = stepResult.getStatus();
+			statii.add(stepStatus);
+		}
+
+		if (statii.contains(Status.FAILED)) {
+			status = Status.FAILED;
+		}
+		else if (statii.contains(Status.SKIPPED)) {
+			status = Status.SKIPPED;
+		}
+		else if (statii.contains(Status.PASSED)) {
+			status = Status.PASSED;
+		}
+		return null == status ? Status.SKIPPED : status;
 	}
 
 	public static Builder builder() {
@@ -145,12 +161,16 @@ public class DefaultMartiniResult implements MartiniResult {
 
 		protected SuiteIdentifier suiteIdentifier;
 		protected Martini martini;
-		protected Set<String> categorizations;
+		protected LinkedHashSet<String> categorizations;
 		protected String threadGroupName;
 		protected String threadName;
+		protected Long startTimestamp;
+		protected Long endTimestamp;
+		protected List<StepResult> stepResults;
 
 		protected Builder() {
 			categorizations = new LinkedHashSet<>();
+			stepResults = new ArrayList<>();
 		}
 
 		public Builder setMartiniSuiteIdentifier(SuiteIdentifier i) {
@@ -188,40 +208,39 @@ public class DefaultMartiniResult implements MartiniResult {
 			return this;
 		}
 
+		@SuppressWarnings("UnusedReturnValue")
+		public Builder setStartTimestamp(Long l) {
+			this.startTimestamp = l;
+			return this;
+		}
+
+		@SuppressWarnings("UnusedReturnValue")
+		public Builder setEndTimestamp(Long l) {
+			this.endTimestamp = l;
+			return this;
+		}
+
+		public Builder add(StepResult r) {
+			this.stepResults.add(r);
+			return this;
+		}
+
 		public DefaultMartiniResult build() {
 			checkState(null != suiteIdentifier, "null DefaultSuiteIdentifier");
 			checkState(null != martini, "null Martini");
 			checkState(null != threadGroupName && !threadGroupName.isEmpty(), "null or empty thread group name");
 			checkState(null != threadName && !threadName.isEmpty(), "null or empty thread name");
 			UUID id = UUID.randomUUID();
-			return new DefaultMartiniResult(id, suiteIdentifier, martini, categorizations, threadGroupName, threadName);
+			return new DefaultMartiniResult(
+				id,
+				suiteIdentifier,
+				martini,
+				categorizations,
+				threadGroupName,
+				threadName,
+				startTimestamp,
+				stepResults,
+				endTimestamp);
 		}
-	}
-
-	@Override
-	public Status getStatus() {
-		Status status = null;
-		Set<Status> statii = Sets.newHashSet();
-		for (StepResult stepResult : stepResults) {
-			Status stepStatus = stepResult.getStatus();
-			statii.add(stepStatus);
-		}
-
-		if (statii.contains(Status.FAILED)) {
-			status = Status.FAILED;
-		}
-		else if (statii.contains(Status.SKIPPED)) {
-			status = Status.SKIPPED;
-		}
-		else if (statii.contains(Status.PASSED)) {
-			status = Status.PASSED;
-		}
-		return null == status ? Status.SKIPPED : status;
-
-	}
-
-	public void add(StepResult result) {
-		checkNotNull(result, "null StepResult");
-		stepResults.add(result);
 	}
 }

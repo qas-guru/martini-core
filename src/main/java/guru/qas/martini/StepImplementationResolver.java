@@ -21,10 +21,9 @@ import javax.annotation.Nonnull;
 import gherkin.ast.Step;
 import guru.qas.martini.step.AmbiguousStepException;
 import guru.qas.martini.step.StepImplementation;
-import guru.qas.martini.step.UnimplementedStepException;
 
 public interface StepImplementationResolver {
 
-	StepImplementation getImplementation(@Nonnull Step step) throws AmbiguousStepException, UnimplementedStepException;
+	StepImplementation getImplementation(@Nonnull Step step) throws AmbiguousStepException;
 
 }

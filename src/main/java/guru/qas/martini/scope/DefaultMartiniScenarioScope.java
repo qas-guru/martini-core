@@ -40,16 +40,9 @@ import static com.google.common.base.Preconditions.*;
 @Configurable
 public class DefaultMartiniScenarioScope implements MartiniScenarioScope {
 
-	protected static final InheritableThreadLocal<MartiniResult> CONVERSATION =
-		new InheritableThreadLocal<>();
+	protected static final ThreadLocal<MartiniResult> CONVERSATION = new ThreadLocal<>();
 
-	protected static final InheritableThreadLocal<Stack<Scoped>> SCOPED =
-		new InheritableThreadLocal<Stack<Scoped>>() {
-			@Override
-			protected Stack<Scoped> initialValue() {
-				return new Stack<>();
-			}
-		};
+	protected static final ThreadLocal<Stack<Scoped>> SCOPED = ThreadLocal.withInitial(Stack::new);
 
 	protected final Logger logger;
 
@@ -142,8 +135,15 @@ public class DefaultMartiniScenarioScope implements MartiniScenarioScope {
 	@Override
 	public Object remove(@Nonnull String name) {
 		checkNotNull(name, "null String");
-		Object bean = dispose(name);
-		destroy(name);
+
+		Object bean = null;
+		try {
+			bean = dispose(name);
+			destroy(name);
+		}
+		catch (Exception e) {
+			logger.warn("unable to clean up scoped bean {}", name, e);
+		}
 		return bean;
 	}
 
