@@ -14,16 +14,18 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package guru.qas.martini.annotation;
+package guru.qas.martini.spring;
+
+import java.lang.annotation.Annotation;
 
 import javax.annotation.Nonnull;
 
 import org.springframework.aop.support.AopUtils;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.FatalBeanException;
+import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.config.AutowireCapableBeanFactory;
 import org.springframework.beans.factory.config.BeanPostProcessor;
-import org.springframework.beans.factory.config.ConfigurableListableBeanFactory;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
 import org.springframework.context.annotation.Lazy;
@@ -32,28 +34,44 @@ import org.springframework.stereotype.Component;
 import org.springframework.util.ReflectionUtils;
 
 import com.google.common.collect.ImmutableList;
+
+import guru.qas.martini.annotation.And;
+import guru.qas.martini.annotation.Given;
+import guru.qas.martini.annotation.MartiniAnnotationCallback;
+import guru.qas.martini.annotation.Steps;
+import guru.qas.martini.annotation.Then;
+import guru.qas.martini.annotation.When;
+
 import static com.google.common.base.Preconditions.*;
 
+@SuppressWarnings("WeakerAccess")
 @Component
 @Lazy
-class StepsAnnotationProcessor implements BeanPostProcessor, ApplicationContextAware {
+public class StepsAnnotationProcessor implements BeanPostProcessor, ApplicationContextAware, InitializingBean {
 
 	private ApplicationContext context;
 	private ImmutableList<ReflectionUtils.MethodCallback> callbacks;
 
 	@Override
-	public void setApplicationContext(@Nonnull ApplicationContext context) throws BeansException {
+	public void setApplicationContext(@Nonnull ApplicationContext context) {
 		this.context = context;
+	}
+
+	@Override
+	public void afterPropertiesSet() {
+		callbacks = ImmutableList.of(
+			getCallback(Given.class),
+			getCallback(And.class),
+			getCallback(When.class),
+			getCallback(Then.class));
+	}
+
+	protected <T extends Annotation> MartiniAnnotationCallback getCallback(Class<T> keywordAnnotation) {
 		AutowireCapableBeanFactory beanFactory = context.getAutowireCapableBeanFactory();
-		checkState(ConfigurableListableBeanFactory.class.isInstance(beanFactory),
-			"Martini requires the use of a ConfigurableListableBeanFactory");
-		ConfigurableListableBeanFactory configurable = ConfigurableListableBeanFactory.class.cast(beanFactory);
-		callbacks = ImmutableList.<ReflectionUtils.MethodCallback>builder()
-			.add(new MartiniAnnotationCallback<>(Given.class, GivenContainer.class, configurable))
-			.add(new MartiniAnnotationCallback<>(And.class, AndContainer.class, configurable))
-			.add(new MartiniAnnotationCallback<>(When.class, WhenContainer.class, configurable))
-			.add(new MartiniAnnotationCallback<>(Then.class, ThenContainer.class, configurable))
-			.build();
+		MartiniAnnotationCallback<T> callback = new MartiniAnnotationCallback<>(keywordAnnotation);
+		beanFactory.autowireBean(callback);
+		beanFactory.initializeBean(callback, keywordAnnotation.getName());
+		return callback;
 	}
 
 	@Override

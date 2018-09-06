@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package guru.qas.martini;
+package guru.qas.martini.spring;
 
 import java.util.Collection;
 import java.util.Map;
@@ -31,6 +31,7 @@ import org.springframework.stereotype.Component;
 import com.google.common.collect.Iterables;
 
 import gherkin.ast.Step;
+import guru.qas.martini.StepImplementationResolver;
 import guru.qas.martini.step.AmbiguousStepException;
 import guru.qas.martini.step.StepImplementation;
 import guru.qas.martini.step.UnimplementedStep;

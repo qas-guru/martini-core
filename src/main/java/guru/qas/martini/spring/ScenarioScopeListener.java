@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package guru.qas.martini.scope;
+package guru.qas.martini.spring;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.event.EventListener;
@@ -23,6 +23,7 @@ import org.springframework.stereotype.Component;
 import guru.qas.martini.event.AfterScenarioEvent;
 import guru.qas.martini.event.BeforeScenarioEvent;
 import guru.qas.martini.result.MartiniResult;
+import guru.qas.martini.scope.MartiniScenarioScope;
 
 @Component
 public class ScenarioScopeListener {

@@ -17,6 +17,7 @@ limitations under the License.
 package guru.qas.martini.annotation;
 
 import java.lang.annotation.Annotation;
+import java.lang.annotation.Repeatable;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.util.Set;
@@ -25,6 +26,9 @@ import java.util.regex.Pattern;
 
 import javax.annotation.Nonnull;
 
+import org.springframework.beans.factory.InitializingBean;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Configurable;
 import org.springframework.beans.factory.config.ConfigurableListableBeanFactory;
 import org.springframework.context.MessageSource;
 import org.springframework.core.annotation.AnnotationUtils;
@@ -39,27 +43,35 @@ import guru.qas.martini.step.DefaultStep;
 import static com.google.common.base.Preconditions.*;
 
 @SuppressWarnings("WeakerAccess")
-public class MartiniAnnotationCallback<A extends Annotation, C extends Annotation> implements ReflectionUtils.MethodCallback {
+@Configurable
+public class MartiniAnnotationCallback<A extends Annotation> implements ReflectionUtils.MethodCallback, InitializingBean {
 
 	protected static final String REGEX_PATTERN_METHOD = "value";
 	protected static final String KEY_ERROR_MESSAGE = "martini.annotation.exception";
 
 	protected final Class<A> annotationClass;
-	protected final Class<C> annotationContainerClass;
-	protected final ConfigurableListableBeanFactory beanFactory;
 	protected final AtomicInteger atomicInteger;
 	protected final Set<String> regularExpressions;
 
-	protected MartiniAnnotationCallback(
-		Class<A> annotationClass,
-		Class<C> annotationContainerClass,
-		ConfigurableListableBeanFactory beanFactory
-	) {
-		this.annotationClass = annotationClass;
-		this.annotationContainerClass = annotationContainerClass;
-		this.beanFactory = beanFactory;
+	protected ConfigurableListableBeanFactory beanFactory;
+	protected Class<? extends Annotation> annotationContainerClass;
+
+	@Autowired
+	protected void setBeanFactory(ConfigurableListableBeanFactory f) {
+		this.beanFactory = f;
+	}
+
+	public MartiniAnnotationCallback(Class<A> annotationClass) {
+		this.annotationClass = checkNotNull(annotationClass, "null Class");
 		this.atomicInteger = new AtomicInteger();
 		this.regularExpressions = Sets.newHashSet();
+	}
+
+	@Override
+	public void afterPropertiesSet() {
+		Repeatable repeatable = annotationClass.getDeclaredAnnotation(Repeatable.class);
+		checkNotNull(repeatable, "annotation not Repeatable");
+		annotationContainerClass = repeatable.value();
 	}
 
 	@Override
@@ -114,7 +126,8 @@ public class MartiniAnnotationCallback<A extends Annotation, C extends Annotatio
 	}
 
 	protected void processAnnotationContainer(Method method) {
-		C container = AnnotationUtils.findAnnotation(method, annotationContainerClass);
+		Annotation container = AnnotationUtils.findAnnotation(method, annotationContainerClass);
+
 		if (null != container) {
 			A[] annotations = getValues(container);
 			for (A annotation : annotations) {
@@ -124,7 +137,7 @@ public class MartiniAnnotationCallback<A extends Annotation, C extends Annotatio
 	}
 
 	@SuppressWarnings("unchecked")
-	protected A[] getValues(C annotation) {
+	protected A[] getValues(Annotation annotation) {
 		try {
 			Method valueMethod = annotationContainerClass.getMethod(REGEX_PATTERN_METHOD);
 			Object value = valueMethod.invoke(annotation);

@@ -1,5 +1,5 @@
 /*
-Copyright 2017 Penny Rohr Curich
+Copyright 2017-2018 Penny Rohr Curich
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -19,6 +19,7 @@ package nonfixture;
 import guru.qas.martini.annotation.Given;
 import guru.qas.martini.annotation.Steps;
 
+@SuppressWarnings("unused") // Referenced by Martini.
 @Steps
 public class MultipleGivenBean {
 

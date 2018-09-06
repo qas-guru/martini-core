@@ -1,5 +1,5 @@
 /*
-Copyright 2017 Penny Rohr Curich
+Copyright 2017-2018 Penny Rohr Curich
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -16,7 +16,6 @@ limitations under the License.
 
 package guru.qas.martini.annotation;
 
-import java.io.IOException;
 import java.lang.reflect.Method;
 import java.util.Collection;
 import java.util.List;
@@ -36,6 +35,7 @@ import org.testng.annotations.Test;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 
+import guru.qas.martini.spring.StepsAnnotationProcessor;
 import guru.qas.martini.step.StepImplementation;
 import nonfixture.DuplicateGivenBeanA;
 import nonfixture.DuplicateGivenBeanB;
@@ -48,7 +48,7 @@ import static org.testng.Assert.*;
 public class StepsAnnotationProcessorTest {
 
 	@Test
-	public void testPostProcessAfterInitialization() throws IOException, NoSuchMethodException {
+	public void testPostProcessAfterInitialization() throws NoSuchMethodException {
 		ClassPathXmlApplicationContext context = new ClassPathXmlApplicationContext("applicationContext.xml");
 		TestSteps steps = context.getBean(TestSteps.class);
 

@@ -14,12 +14,15 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package guru.qas.martini.runtime.event;
+package guru.qas.martini.spring.configuration;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.beans.factory.config.AutowireCapableBeanFactory;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+
+import guru.qas.martini.runtime.event.DefaultEventManager;
+import guru.qas.martini.runtime.event.EventManager;
 
 @Configuration
 public class EventManagerConfiguration {

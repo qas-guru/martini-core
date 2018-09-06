@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package guru.qas.martini;
+package guru.qas.martini.spring.configuration;
 
 import java.util.Optional;
 
@@ -32,6 +32,10 @@ import org.springframework.core.convert.ConversionService;
 import org.springframework.core.env.ConfigurableEnvironment;
 import org.springframework.core.env.Environment;
 
+import guru.qas.martini.DefaultMartiniFactory;
+import guru.qas.martini.DefaultMixologist;
+import guru.qas.martini.MartiniFactory;
+import guru.qas.martini.Mixologist;
 import guru.qas.martini.event.DefaultMartiniEventPublisher;
 import guru.qas.martini.event.MartiniEventPublisher;
 import guru.qas.martini.gate.DefaultMartiniGateFactory;

@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package guru.qas.martini.runtime.event.json;
+package guru.qas.martini.spring.configuration;
 
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.BeanFactory;
@@ -24,6 +24,19 @@ import org.springframework.beans.factory.config.AutowireCapableBeanFactory;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Lazy;
+
+import guru.qas.martini.runtime.event.json.DefaultFeatureSerializer;
+import guru.qas.martini.runtime.event.json.DefaultHostSerializer;
+import guru.qas.martini.runtime.event.json.DefaultMartiniResultSerializer;
+import guru.qas.martini.runtime.event.json.DefaultStepImplementationSerializer;
+import guru.qas.martini.runtime.event.json.DefaultStepResultSerializer;
+import guru.qas.martini.runtime.event.json.DefaultSuiteIdentifierSerializer;
+import guru.qas.martini.runtime.event.json.FeatureSerializer;
+import guru.qas.martini.runtime.event.json.HostSerializer;
+import guru.qas.martini.runtime.event.json.MartiniResultSerializer;
+import guru.qas.martini.runtime.event.json.StepImplementationSerializer;
+import guru.qas.martini.runtime.event.json.StepResultSerializer;
+import guru.qas.martini.runtime.event.json.SuiteIdentifierSerializer;
 
 import static com.google.common.base.Preconditions.checkState;
 

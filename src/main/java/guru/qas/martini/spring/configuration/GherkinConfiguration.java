@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package guru.qas.martini.gherkin;
+package guru.qas.martini.spring.configuration;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -22,6 +22,11 @@ import org.springframework.beans.factory.config.AutowireCapableBeanFactory;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Lazy;
+
+import guru.qas.martini.gherkin.DefaultGherkinResourceLoader;
+import guru.qas.martini.gherkin.DefaultMixology;
+import guru.qas.martini.gherkin.GherkinResourceLoader;
+import guru.qas.martini.gherkin.Mixology;
 
 @Configuration
 @Lazy

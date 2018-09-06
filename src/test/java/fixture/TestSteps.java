@@ -24,6 +24,7 @@ import guru.qas.martini.annotation.Given;
 import guru.qas.martini.annotation.Steps;
 import guru.qas.martini.gherkin.Mixology;
 
+@SuppressWarnings("unused") // Referenced by Martini.
 @Steps
 public class TestSteps {
 	private static final Logger LOGGER = LoggerFactory.getLogger(TestSteps.class);
