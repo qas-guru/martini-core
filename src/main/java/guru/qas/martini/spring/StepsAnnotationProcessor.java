@@ -16,8 +16,6 @@ limitations under the License.
 
 package guru.qas.martini.spring;
 
-import java.lang.annotation.Annotation;
-
 import javax.annotation.Nonnull;
 
 import org.springframework.aop.support.AopUtils;
@@ -25,7 +23,12 @@ import org.springframework.beans.BeansException;
 import org.springframework.beans.FatalBeanException;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.config.AutowireCapableBeanFactory;
+import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.beans.factory.config.BeanPostProcessor;
+import org.springframework.beans.factory.config.ConstructorArgumentValues;
+import org.springframework.beans.factory.support.AbstractBeanDefinition;
+import org.springframework.beans.factory.support.DefaultListableBeanFactory;
+import org.springframework.beans.factory.support.GenericBeanDefinition;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
 import org.springframework.context.annotation.Lazy;
@@ -49,12 +52,12 @@ import static com.google.common.base.Preconditions.*;
 @Lazy
 public class StepsAnnotationProcessor implements BeanPostProcessor, ApplicationContextAware, InitializingBean {
 
-	private ApplicationContext context;
+	private ApplicationContext applicationContext;
 	private ImmutableList<ReflectionUtils.MethodCallback> callbacks;
 
 	@Override
-	public void setApplicationContext(@Nonnull ApplicationContext context) {
-		this.context = context;
+	public void setApplicationContext(@Nonnull ApplicationContext applicationContext) throws BeansException {
+		this.applicationContext = checkNotNull(applicationContext, "null ApplicationContext");
 	}
 
 	@Override
@@ -66,12 +69,31 @@ public class StepsAnnotationProcessor implements BeanPostProcessor, ApplicationC
 			getCallback(Then.class));
 	}
 
-	protected <T extends Annotation> MartiniAnnotationCallback getCallback(Class<T> keywordAnnotation) {
-		AutowireCapableBeanFactory beanFactory = context.getAutowireCapableBeanFactory();
-		MartiniAnnotationCallback<T> callback = new MartiniAnnotationCallback<>(keywordAnnotation);
-		beanFactory.autowireBean(callback);
-		beanFactory.initializeBean(callback, keywordAnnotation.getName());
-		return callback;
+	protected <Keyword> MartiniAnnotationCallback getCallback(Class<? extends Keyword> keywordAnnotation) {
+		AutowireCapableBeanFactory beanFactory = applicationContext.getAutowireCapableBeanFactory();
+		checkState(DefaultListableBeanFactory.class.isInstance(beanFactory),
+			"expected BeanFactory to be an instance of DefaultListableBeanFactory");
+
+		DefaultListableBeanFactory factory = DefaultListableBeanFactory.class.cast(beanFactory);
+		String beanName = String.format("%s.callback", keywordAnnotation.getName());
+
+		BeanDefinition beanDefinition = getBeanDefinition(keywordAnnotation);
+
+		factory.registerBeanDefinition(beanName, beanDefinition);
+		return beanFactory.getBean(beanName, MartiniAnnotationCallback.class);
+	}
+
+	protected <Keyword> BeanDefinition getBeanDefinition(Class<? extends Keyword> keyword) {
+		GenericBeanDefinition beanDefinition = new GenericBeanDefinition();
+		beanDefinition.setAutowireMode(AbstractBeanDefinition.AUTOWIRE_BY_TYPE);
+		beanDefinition.setRole(BeanDefinition.ROLE_INFRASTRUCTURE);
+		beanDefinition.setBeanClass(MartiniAnnotationCallback.class);
+		beanDefinition.setDependencyCheck(AbstractBeanDefinition.DEPENDENCY_CHECK_ALL);
+
+		ConstructorArgumentValues constructorArgumentValues = new ConstructorArgumentValues();
+		constructorArgumentValues.addGenericArgumentValue(keyword);
+		beanDefinition.setConstructorArgumentValues(constructorArgumentValues);
+		return beanDefinition;
 	}
 
 	@Override
@@ -86,6 +108,8 @@ public class StepsAnnotationProcessor implements BeanPostProcessor, ApplicationC
 			if (!isSpring(wrapped)) {
 				Class<?> declaring = AnnotationUtils.findAnnotationDeclaringClass(Steps.class, wrapped);
 				if (null != declaring) {
+					Steps annotation = applicationContext.findAnnotationOnBean(beanName, Steps.class);
+					Lazy lazy = applicationContext.findAnnotationOnBean(beanName, Lazy.class);
 					processStepsBean(beanName, wrapped);
 				}
 			}
@@ -102,7 +126,7 @@ public class StepsAnnotationProcessor implements BeanPostProcessor, ApplicationC
 	}
 
 	private void processStepsBean(String beanName, Class wrapped) {
-		checkState(context.isSingleton(beanName), "Beans annotated @Steps must have singleton scope.");
+		checkState(applicationContext.isSingleton(beanName), "Beans annotated @Steps must have singleton scope.");
 		for (ReflectionUtils.MethodCallback callback : callbacks) {
 			ReflectionUtils.doWithMethods(wrapped, callback);
 		}

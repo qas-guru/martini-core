@@ -90,7 +90,8 @@ public class StepsAnnotationProcessorTest {
 		ClassPathXmlApplicationContext context = new ClassPathXmlApplicationContext("emptyContext.xml");
 		ConfigurableListableBeanFactory factory = context.getBeanFactory();
 		for (Object bean : beans) {
-			factory.registerSingleton(bean.getClass().getName(), bean);
+			String beanName = bean.getClass().getName();
+			factory.registerSingleton(beanName, bean);
 		}
 		return context;
 	}
