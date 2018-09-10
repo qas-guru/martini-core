@@ -128,7 +128,7 @@ public class MartiniCallable implements Callable<MartiniResult> {
 
 			DefaultStepResult lastResult = null;
 			for (Map.Entry<Step, StepImplementation> mapEntry : stepIndex.entrySet()) {
-
+				assertNotInterrupted();
 				Step step = mapEntry.getKey();
 				eventManager.publishBeforeStep(this, builder.build());
 
@@ -140,6 +140,8 @@ public class MartiniCallable implements Callable<MartiniResult> {
 					lastResult = new DefaultStepResult(step, implementation);
 					lastResult.setStatus(Status.SKIPPED);
 				}
+
+				assertNotInterrupted();
 				builder.add(lastResult);
 				logStepResult(lastResult);
 				eventManager.publishAfterStep(this, builder.build());
@@ -321,6 +323,7 @@ public class MartiniCallable implements Callable<MartiniResult> {
 	}
 
 	protected Object execute(Method method, Object bean, Object[] arguments) {
+		assertNotInterrupted();
 		try {
 			return method.invoke(bean, arguments);
 		}
@@ -331,5 +334,10 @@ public class MartiniCallable implements Callable<MartiniResult> {
 			logger.warn(message, thrown);
 			throw thrown;
 		}
+	}
+
+	protected void assertNotInterrupted() {
+		Thread thread = Thread.currentThread();
+		checkState(!thread.isInterrupted(), "execution interrupted");
 	}
 }
