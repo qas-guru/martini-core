@@ -18,22 +18,21 @@ package guru.qas.martini.result;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicLong;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Ordering;
 
 import guru.qas.martini.Martini;
-import guru.qas.martini.event.SuiteIdentifier;
 import guru.qas.martini.event.Status;
+import guru.qas.martini.event.SuiteIdentifier;
 import guru.qas.martini.tag.Categories;
 
 import static com.google.common.base.Preconditions.*;
-import static guru.qas.martini.event.Status.PASSED;
 
 @SuppressWarnings({"WeakerAccess", "unused"})
 public class DefaultMartiniResult implements MartiniResult {
@@ -45,12 +44,6 @@ public class DefaultMartiniResult implements MartiniResult {
 	protected final String threadGroupName;
 	protected final String threadName;
 	protected final List<StepResult> stepResults;
-
-	protected Long startTimestamp;
-	protected Long endTimestamp;
-	protected Status status;
-	protected Exception exception;
-	protected AtomicLong executionTimeMs;
 
 	@Override
 	public UUID getId() {
@@ -86,39 +79,6 @@ public class DefaultMartiniResult implements MartiniResult {
 		return ImmutableList.copyOf(stepResults);
 	}
 
-	public void setStartTimestamp(Long l) {
-		this.startTimestamp = l;
-	}
-
-	@Override
-	public Optional<Long> getStartTimestamp() {
-		return Optional.ofNullable(startTimestamp);
-	}
-
-	public void setEndTimestamp(Long l) {
-		this.endTimestamp = l;
-	}
-
-	@Override
-	public Optional<Long> getEndTimestamp() {
-		return Optional.ofNullable(endTimestamp);
-	}
-
-	@Override
-	public Optional<Exception> getException() {
-		return Optional.ofNullable(exception);
-	}
-
-	@Override
-	public Optional<Long> getExecutionTimeMs() {
-		return null == this.executionTimeMs ? Optional.empty() : Optional.of(executionTimeMs.get());
-	}
-
-	@Override
-	public Optional<Status> getStatus() {
-		return Optional.ofNullable(status);
-	}
-
 	protected DefaultMartiniResult(
 		SuiteIdentifier suiteIdentifier,
 		Martini martini,
@@ -138,31 +98,50 @@ public class DefaultMartiniResult implements MartiniResult {
 	public void add(StepResult result) {
 		checkNotNull(result, "null StepResult");
 		stepResults.add(result);
-		updateException(result);
-		updateExecutionTime(result);
-		updateStatus(result);
 	}
 
-	protected void updateException(StepResult result) {
-		result.getException().ifPresent(exception ->
-			this.exception = null == this.exception ? exception : this.exception);
+	@Override
+	public Optional<Status> getStatus() {
+		return stepResults.stream()
+			.map(result -> result.getStatus().orElse(null))
+			.filter(Objects::nonNull)
+			.distinct()
+			.max(Ordering.natural());
 	}
 
-	protected void updateExecutionTime(StepResult result) {
-		result.getExecutionTime(TimeUnit.MILLISECONDS).ifPresent(executionTime -> {
-			if (null == this.executionTimeMs) {
-				this.executionTimeMs = new AtomicLong(0);
-			}
-			this.executionTimeMs.getAndAdd(executionTime);
-		});
+	@Override
+	public Optional<Long> getStartTimestamp() {
+		return stepResults.stream()
+			.map(result -> result.getStartTimestamp().orElse(null))
+			.filter(Objects::nonNull)
+			.distinct()
+			.min(Ordering.natural());
 	}
 
-	protected void updateStatus(StepResult result) {
-		result.getStatus().ifPresent(status -> {
-			if (null == this.status || PASSED.equals(this.status)) {
-				this.status = status;
-			}
-		});
+	@Override
+	public Optional<Long> getEndTimestamp() {
+		return stepResults.stream()
+			.map(result -> result.getEndTimestamp().orElse(null))
+			.filter(Objects::nonNull)
+			.distinct()
+			.max(Ordering.natural());
+	}
+
+	@Override
+	public Optional<Long> getExecutionTimeMs() {
+		Long evaluation = null;
+		if (getStartTimestamp().isPresent() && getEndTimestamp().isPresent()) {
+			evaluation = getEndTimestamp().get() - getStartTimestamp().get();
+		}
+		return Optional.ofNullable(evaluation);
+	}
+
+	@Override
+	public Optional<Exception> getException() {
+		return stepResults.stream()
+			.map(result -> result.getException().orElse(null))
+			.filter(Objects::nonNull)
+			.findFirst();
 	}
 
 	public static Builder builder() {
@@ -196,13 +175,13 @@ public class DefaultMartiniResult implements MartiniResult {
 			checkState(null != suiteIdentifier, "null DefaultSuiteIdentifier");
 			checkState(null != martini, "null Martini");
 
+			Set<String> categorizations = categories.getCategorizations(martini);
+
 			Thread thread = Thread.currentThread();
 			String threadName = thread.getName();
 
 			ThreadGroup threadGroup = thread.getThreadGroup();
 			String threadGroupName = threadGroup.getName();
-
-			Set<String> categorizations = categories.getCategorizations(martini);
 
 			return new DefaultMartiniResult(suiteIdentifier, martini, categorizations, threadGroupName, threadName);
 		}

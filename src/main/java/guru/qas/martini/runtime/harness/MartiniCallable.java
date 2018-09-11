@@ -123,7 +123,6 @@ public class MartiniCallable implements Callable<MartiniResult> {
 			eventManager.publishBeforeScenario(this, result);
 
 			Map<Step, StepImplementation> stepIndex = martini.getStepIndex();
-			result.setStartTimestamp(System.currentTimeMillis());
 
 			DefaultStepResult stepResult = null;
 			for (Map.Entry<Step, StepImplementation> mapEntry : stepIndex.entrySet()) {
@@ -152,7 +151,6 @@ public class MartiniCallable implements Callable<MartiniResult> {
 		}
 		finally {
 			if (null != result) {
-				result.setEndTimestamp(System.currentTimeMillis());
 				eventManager.publishAfterScenario(this, result);
 			}
 		}
