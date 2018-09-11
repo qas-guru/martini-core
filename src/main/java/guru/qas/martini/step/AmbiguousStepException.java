@@ -34,7 +34,7 @@ import guru.qas.martini.MartiniException;
 import guru.qas.martini.gherkin.Recipe;
 import guru.qas.martini.i18n.MessageSources;
 
-import static com.google.common.base.Preconditions.checkState;
+import static com.google.common.base.Preconditions.*;
 
 @SuppressWarnings("WeakerAccess")
 public class AmbiguousStepException extends MartiniException {
@@ -123,7 +123,10 @@ public class AmbiguousStepException extends MartiniException {
 		}
 
 		protected String getDetail(StepImplementation match) {
-			Method method = match.getMethod();
+			Method method = match.getMethod().orElse(null);
+			checkNotNull(method,
+				"no method; is StepImplementation %s return false positives on isMatch()?", match.getClass());
+
 			Annotation[] annotations = method.getAnnotations();
 			String joinedAnnotations = Joiner.on("\n\t").join(annotations);
 

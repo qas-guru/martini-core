@@ -1,5 +1,5 @@
 /*
-Copyright 2017 Penny Rohr Curich
+Copyright 2017-2018 Penny Rohr Curich
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -32,7 +32,6 @@ import com.google.gson.reflect.TypeToken;
 
 import gherkin.ast.ScenarioDefinition;
 import guru.qas.martini.Martini;
-import guru.qas.martini.event.Status;
 import guru.qas.martini.event.SuiteIdentifier;
 import guru.qas.martini.gherkin.FeatureWrapper;
 import guru.qas.martini.gherkin.Recipe;
@@ -126,13 +125,11 @@ public class DefaultMartiniResultSerializer implements MartiniResultSerializer {
 		}
 
 		protected void setStartTimestamp() {
-			Long timestamp = result.getStartTimestamp();
-			serialized.addProperty("startTimestamp", timestamp);
+			result.getStartTimestamp().ifPresent(timestamp -> serialized.addProperty("startTimestamp", timestamp));
 		}
 
 		protected void setEndTimestamp() {
-			Long endTimestamp = result.getEndTimestamp();
-			serialized.addProperty("endTimestamp", endTimestamp);
+			result.getEndTimestamp().ifPresent(timestamp -> serialized.addProperty("endTimestamp", timestamp));
 		}
 
 		protected void setThreadGroup() {
@@ -184,13 +181,12 @@ public class DefaultMartiniResultSerializer implements MartiniResultSerializer {
 		}
 
 		protected void setStatus() {
-			Status status = result.getStatus();
-			serialized.addProperty("status", status.name());
+			result.getStatus().ifPresent(status -> serialized.addProperty("status", status.name()));
 		}
 
 		protected void setSteps() {
 			List<StepResult> stepResults = result.getStepResults();
-			StepResult[] stepResultArray = stepResults.toArray(new StepResult[stepResults.size()]);
+			StepResult[] stepResultArray = stepResults.toArray(new StepResult[0]);
 			setSteps(stepResultArray);
 		}
 

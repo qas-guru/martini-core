@@ -127,7 +127,7 @@ public class DefaultMartini implements Martini {
 		while (!evaluation && i.hasNext()) {
 			Map.Entry<Step, StepImplementation> mapEntry = i.next();
 			StepImplementation implementation = mapEntry.getValue();
-			Method method = implementation.getMethod();
+			Method method = implementation.getMethod().orElse(null);
 			evaluation = null != method && method.isAnnotationPresent(annotationClass);
 		}
 		return evaluation;

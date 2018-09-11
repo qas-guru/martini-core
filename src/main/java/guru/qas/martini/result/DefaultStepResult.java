@@ -1,5 +1,5 @@
 /*
-Copyright 2017 Penny Rohr Curich
+Copyright 2017-2018 Penny Rohr Curich
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -17,6 +17,7 @@ limitations under the License.
 package guru.qas.martini.result;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.http.HttpEntity;
@@ -35,8 +36,10 @@ public class DefaultStepResult implements StepResult {
 
 	private final Step step;
 	private final StepImplementation implementation;
-	private final ElapsedTime elapsedTime;
 	private final List<HttpEntity> embedded;
+
+	private Long startTimestamp;
+	private Long endTimestamp;
 	private Status status;
 	private Exception exception;
 
@@ -55,8 +58,8 @@ public class DefaultStepResult implements StepResult {
 	}
 
 	@Override
-	public Status getStatus() {
-		return status;
+	public Optional<Status> getStatus() {
+		return Optional.ofNullable(status);
 	}
 
 	public void setStatus(Status status) {
@@ -64,8 +67,8 @@ public class DefaultStepResult implements StepResult {
 	}
 
 	@Override
-	public Exception getException() {
-		return exception;
+	public Optional<Exception> getException() {
+		return Optional.ofNullable(exception);
 	}
 
 	public void setException(Exception exception) {
@@ -73,28 +76,27 @@ public class DefaultStepResult implements StepResult {
 	}
 
 	@Override
-	public Long getStartTimestamp() {
-		return elapsedTime.getStartTimestamp();
+	public Optional<Long> getStartTimestamp() {
+		return Optional.ofNullable(startTimestamp);
 	}
 
-	public void setStartTimestamp(Long timestamp) {
-		elapsedTime.setStartTimestamp(timestamp);
+	public void setStartTimestamp(Long l) {
+		this.startTimestamp = l;
 	}
 
 	@Override
-	public Long getEndTimestamp() {
-		return elapsedTime.getEndTimestamp();
+	public Optional<Long> getEndTimestamp() {
+		return Optional.ofNullable(endTimestamp);
 	}
 
-	public void setEndTimestamp(Long timestamp) {
-		elapsedTime.setEndTimestamp(timestamp);
+	public void setEndTimestamp(Long l) {
+		endTimestamp = l;
 	}
 
 	public DefaultStepResult(Step step, StepImplementation implementation) {
 		this.step = checkNotNull(step, "null Step");
 		this.implementation = implementation;
 		this.embedded = Lists.newArrayList();
-		this.elapsedTime = new ElapsedTime();
 	}
 
 	public void add(HttpEntity entity) {
@@ -104,8 +106,12 @@ public class DefaultStepResult implements StepResult {
 	}
 
 	@Override
-	public Long getExecutionTime(TimeUnit unit) {
+	public Optional<Long> getExecutionTime(TimeUnit unit) {
 		checkNotNull(unit, "null TimeUnit");
-		return elapsedTime.getExecutionTime(unit);
+
+		Long millis = getStartTimestamp().isPresent() && getEndTimestamp().isPresent() ?
+			getEndTimestamp().get() - getStartTimestamp().get() : null;
+		Long conversion = null == millis ? null : unit.convert(millis, TimeUnit.MILLISECONDS);
+		return Optional.ofNullable(conversion);
 	}
 }

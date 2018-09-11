@@ -1,5 +1,5 @@
 /*
-Copyright 2017 Penny Rohr Curich
+Copyright 2017-2018 Penny Rohr Curich
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -17,23 +17,23 @@ limitations under the License.
 package guru.qas.martini.result;
 
 import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicLong;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Sets;
 
 import guru.qas.martini.Martini;
 import guru.qas.martini.event.SuiteIdentifier;
 import guru.qas.martini.event.Status;
+import guru.qas.martini.tag.Categories;
 
 import static com.google.common.base.Preconditions.*;
+import static guru.qas.martini.event.Status.PASSED;
 
 @SuppressWarnings({"WeakerAccess", "unused"})
 public class DefaultMartiniResult implements MartiniResult {
@@ -44,9 +44,13 @@ public class DefaultMartiniResult implements MartiniResult {
 	protected final ImmutableSet<String> categorizations;
 	protected final String threadGroupName;
 	protected final String threadName;
-	protected final Long startTimestamp;
-	protected final ImmutableList<StepResult> stepResults;
-	protected final Long endTimestamp;
+	protected final List<StepResult> stepResults;
+
+	protected Long startTimestamp;
+	protected Long endTimestamp;
+	protected Status status;
+	protected Exception exception;
+	protected AtomicLong executionTimeMs;
 
 	@Override
 	public UUID getId() {
@@ -82,75 +86,83 @@ public class DefaultMartiniResult implements MartiniResult {
 		return ImmutableList.copyOf(stepResults);
 	}
 
-	@Override
-	public Long getStartTimestamp() {
-		return startTimestamp;
+	public void setStartTimestamp(Long l) {
+		this.startTimestamp = l;
 	}
 
 	@Override
-	public Long getEndTimestamp() {
-		return endTimestamp;
+	public Optional<Long> getStartTimestamp() {
+		return Optional.ofNullable(startTimestamp);
 	}
 
-	public Long getExecutionTimeMs() {
-		Long executionTime = null;
-		for (StepResult stepResult : stepResults) {
-			Long elapsed = stepResult.getExecutionTime(TimeUnit.MILLISECONDS);
-			executionTime = null == executionTime ? elapsed : null == elapsed ? executionTime : executionTime + elapsed;
-		}
-		return executionTime;
+	public void setEndTimestamp(Long l) {
+		this.endTimestamp = l;
 	}
 
 	@Override
-	public Exception getException() {
-		Exception e = null;
-		for (Iterator<StepResult> i = stepResults.iterator(); null == e && i.hasNext(); ) {
-			StepResult stepResult = i.next();
-			e = stepResult.getException();
-		}
-		return e;
+	public Optional<Long> getEndTimestamp() {
+		return Optional.ofNullable(endTimestamp);
+	}
+
+	@Override
+	public Optional<Exception> getException() {
+		return Optional.ofNullable(exception);
+	}
+
+	@Override
+	public Optional<Long> getExecutionTimeMs() {
+		return null == this.executionTimeMs ? Optional.empty() : Optional.of(executionTimeMs.get());
+	}
+
+	@Override
+	public Optional<Status> getStatus() {
+		return Optional.ofNullable(status);
 	}
 
 	protected DefaultMartiniResult(
-		UUID id,
 		SuiteIdentifier suiteIdentifier,
 		Martini martini,
 		Iterable<String> categorizations,
 		String threadGroupName,
-		String threadName,
-		Long startTimestamp, Iterable<StepResult> stepResults,
-		Long endTimestamp
+		String threadName
 	) {
-		this.id = id;
+		this.id = UUID.randomUUID();
 		this.suiteIdentifier = suiteIdentifier;
 		this.martini = martini;
 		this.categorizations = ImmutableSet.copyOf(categorizations);
 		this.threadGroupName = threadGroupName;
 		this.threadName = threadName;
-		this.startTimestamp = startTimestamp;
-		this.stepResults = ImmutableList.copyOf(stepResults);
-		this.endTimestamp = endTimestamp;
+		this.stepResults = new ArrayList<>();
 	}
 
-	@Override
-	public Status getStatus() {
-		Status status = null;
-		Set<Status> statii = Sets.newHashSet();
-		for (StepResult stepResult : stepResults) {
-			Status stepStatus = stepResult.getStatus();
-			statii.add(stepStatus);
-		}
+	public void add(StepResult result) {
+		checkNotNull(result, "null StepResult");
+		stepResults.add(result);
+		updateException(result);
+		updateExecutionTime(result);
+		updateStatus(result);
+	}
 
-		if (statii.contains(Status.FAILED)) {
-			status = Status.FAILED;
-		}
-		else if (statii.contains(Status.SKIPPED)) {
-			status = Status.SKIPPED;
-		}
-		else if (statii.contains(Status.PASSED)) {
-			status = Status.PASSED;
-		}
-		return null == status ? Status.SKIPPED : status;
+	protected void updateException(StepResult result) {
+		result.getException().ifPresent(exception ->
+			this.exception = null == this.exception ? exception : this.exception);
+	}
+
+	protected void updateExecutionTime(StepResult result) {
+		result.getExecutionTime(TimeUnit.MILLISECONDS).ifPresent(executionTime -> {
+			if (null == this.executionTimeMs) {
+				this.executionTimeMs = new AtomicLong(0);
+			}
+			this.executionTimeMs.getAndAdd(executionTime);
+		});
+	}
+
+	protected void updateStatus(StepResult result) {
+		result.getStatus().ifPresent(status -> {
+			if (null == this.status || PASSED.equals(this.status)) {
+				this.status = status;
+			}
+		});
 	}
 
 	public static Builder builder() {
@@ -161,16 +173,8 @@ public class DefaultMartiniResult implements MartiniResult {
 
 		protected SuiteIdentifier suiteIdentifier;
 		protected Martini martini;
-		protected LinkedHashSet<String> categorizations;
-		protected String threadGroupName;
-		protected String threadName;
-		protected Long startTimestamp;
-		protected Long endTimestamp;
-		protected List<StepResult> stepResults;
 
 		protected Builder() {
-			categorizations = new LinkedHashSet<>();
-			stepResults = new ArrayList<>();
 		}
 
 		public Builder setMartiniSuiteIdentifier(SuiteIdentifier i) {
@@ -183,64 +187,24 @@ public class DefaultMartiniResult implements MartiniResult {
 			return this;
 		}
 
-		public Builder setCategorizations(Iterable<String> i) {
-			categorizations.clear();
-			if (null != i) {
-				Lists.newArrayList(i).stream()
-					.map(s -> null == s ? "" : s.trim())
-					.filter(s -> !s.isEmpty())
-					.forEach(s -> categorizations.add(s));
-			}
-			return this;
-		}
-
-		public Builder setThreadGroupName(String s) {
-			this.threadGroupName = normalize(s);
-			return this;
-		}
-
 		protected String normalize(String s) {
 			return null == s ? null : s.trim();
 		}
 
-		public Builder setThreadName(String s) {
-			this.threadName = normalize(s);
-			return this;
-		}
-
-		@SuppressWarnings("UnusedReturnValue")
-		public Builder setStartTimestamp(Long l) {
-			this.startTimestamp = l;
-			return this;
-		}
-
-		@SuppressWarnings("UnusedReturnValue")
-		public Builder setEndTimestamp(Long l) {
-			this.endTimestamp = l;
-			return this;
-		}
-
-		public Builder add(StepResult r) {
-			this.stepResults.add(r);
-			return this;
-		}
-
-		public DefaultMartiniResult build() {
+		public DefaultMartiniResult build(Categories categories) {
+			checkNotNull(categories, "null Categories");
 			checkState(null != suiteIdentifier, "null DefaultSuiteIdentifier");
 			checkState(null != martini, "null Martini");
-			checkState(null != threadGroupName && !threadGroupName.isEmpty(), "null or empty thread group name");
-			checkState(null != threadName && !threadName.isEmpty(), "null or empty thread name");
-			UUID id = UUID.randomUUID();
-			return new DefaultMartiniResult(
-				id,
-				suiteIdentifier,
-				martini,
-				categorizations,
-				threadGroupName,
-				threadName,
-				startTimestamp,
-				stepResults,
-				endTimestamp);
+
+			Thread thread = Thread.currentThread();
+			String threadName = thread.getName();
+
+			ThreadGroup threadGroup = thread.getThreadGroup();
+			String threadGroupName = threadGroup.getName();
+
+			Set<String> categorizations = categories.getCategorizations(martini);
+
+			return new DefaultMartiniResult(suiteIdentifier, martini, categorizations, threadGroupName, threadName);
 		}
 	}
 }

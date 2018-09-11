@@ -1,5 +1,5 @@
 /*
-Copyright 2017 Penny Rohr Curich
+Copyright 2017-2018 Penny Rohr Curich
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -17,6 +17,7 @@ limitations under the License.
 package guru.qas.martini.result;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.http.HttpEntity;
@@ -33,13 +34,13 @@ public interface StepResult {
 
 	List<HttpEntity> getEmbedded();
 
-	Status getStatus();
+	Optional<Status> getStatus();
 
-	Exception getException();
+	Optional<Exception> getException();
 
-	Long getStartTimestamp();
+	Optional<Long> getStartTimestamp();
 
-	Long getEndTimestamp();
+	Optional<Long> getEndTimestamp();
 
-	Long getExecutionTime(TimeUnit unit);
+	Optional<Long> getExecutionTime(TimeUnit unit);
 }

@@ -33,8 +33,8 @@ import com.google.common.collect.Iterables;
 import gherkin.ast.Step;
 import guru.qas.martini.StepImplementationResolver;
 import guru.qas.martini.step.AmbiguousStepException;
+import guru.qas.martini.step.DefaultStepImplementation;
 import guru.qas.martini.step.StepImplementation;
-import guru.qas.martini.step.UnimplementedStep;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
@@ -81,8 +81,8 @@ public class DefaultStepImplementationResolver implements StepImplementationReso
 			.collect(Collectors.toList());
 	}
 
-	protected UnimplementedStep getUnimplemented(Step step) {
+	protected StepImplementation getUnimplemented(Step step) {
 		String keyword = step.getKeyword();
-		return new UnimplementedStep(null == keyword ? "" : keyword.trim());
+		return new DefaultStepImplementation(keyword);
 	}
 }

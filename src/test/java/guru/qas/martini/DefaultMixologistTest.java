@@ -22,6 +22,7 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -34,19 +35,16 @@ import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
 import com.google.common.base.Joiner;
-import com.google.common.base.Predicates;
-import com.google.common.collect.FluentIterable;
-import com.google.common.collect.ImmutableList;
+
 
 import fixture.ParameterizedTestSteps;
 import gherkin.ast.Step;
 import guru.qas.martini.gate.MartiniGate;
-import guru.qas.martini.step.UnimplementedStep;
+
 import guru.qas.martini.step.StepImplementation;
 import guru.qas.martini.tag.MartiniTag;
 
 import static com.google.common.base.Preconditions.*;
-import static com.google.common.base.Predicates.notNull;
 import static org.testng.Assert.*;
 
 @SuppressWarnings("WeakerAccess")
@@ -88,20 +86,21 @@ public class DefaultMixologistTest {
 
 		Map<Step, StepImplementation> stepIndex = martini.getStepIndex();
 		Collection<StepImplementation> implementations = stepIndex.values();
-		ImmutableList<StepImplementation> filtered = FluentIterable.from(implementations)
-			.filter(notNull())
-			.filter(Predicates.not(Predicates.instanceOf(UnimplementedStep.class)))
-			.toList();
+		List<StepImplementation> filtered = implementations.stream()
+			.filter(Objects::nonNull)
+			.filter(implementation -> implementation.getMethod().isPresent())
+			.collect(Collectors.toList());
+
 		assertFalse(filtered.isEmpty(), "expected at least one implementation");
 		StepImplementation givenImplementation = filtered.get(0);
 
-		Pattern pattern = givenImplementation.getPattern();
+		Pattern pattern = givenImplementation.getPattern().orElse(null);
 		assertNotNull(pattern, "expected implementation to have a Pattern");
 
 		String regex = pattern.pattern();
 		assertEquals(regex, "^a pre-existing condition known as \"(.+)\"$", "Pattern contains wrong regex");
 
-		Method method = givenImplementation.getMethod();
+		Method method = givenImplementation.getMethod().orElse(null);
 		Method expected = ParameterizedTestSteps.class.getDeclaredMethod("aPreExistingConditionKnownAs", String.class);
 		assertEquals(method, expected, "implementation contains wrong Method");
 	}

@@ -33,6 +33,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.BeanFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Configurable;
+import org.springframework.context.MessageSource;
 import org.springframework.core.convert.ConversionService;
 
 import com.google.common.base.Joiner;
@@ -46,9 +47,11 @@ import gherkin.ast.TableRow;
 import gherkin.pickles.Pickle;
 import gherkin.pickles.PickleLocation;
 import guru.qas.martini.Martini;
+import guru.qas.martini.MartiniException;
 import guru.qas.martini.event.Status;
 import guru.qas.martini.event.SuiteIdentifier;
 import guru.qas.martini.gherkin.Recipe;
+import guru.qas.martini.i18n.MessageSources;
 import guru.qas.martini.result.DefaultMartiniResult;
 import guru.qas.martini.result.DefaultStepResult;
 import guru.qas.martini.result.MartiniResult;
@@ -59,6 +62,7 @@ import guru.qas.martini.step.UnimplementedStepException;
 import guru.qas.martini.tag.Categories;
 
 import static com.google.common.base.Preconditions.*;
+import static guru.qas.martini.event.Status.PASSED;
 
 @SuppressWarnings({"WeakerAccess", "unused"})
 @Configurable
@@ -108,43 +112,38 @@ public class MartiniCallable implements Callable<MartiniResult> {
 	public MartiniResult call() {
 		logScenario();
 
-		DefaultMartiniResult.Builder builder = null;
-		MartiniResult result = null;
-
+		DefaultMartiniResult result = null;
 		try {
-			Thread thread = Thread.currentThread();
 			Set<String> categorizations = categories.getCategorizations(martini);
-			builder = DefaultMartiniResult.builder()
-				.setThreadGroupName(thread.getThreadGroup().getName())
-				.setThreadName(thread.getName())
-				.setCategorizations(categorizations)
+			result = DefaultMartiniResult.builder()
+				.setMartiniSuiteIdentifier(suiteIdentifier)
 				.setMartini(martini)
-				.setMartiniSuiteIdentifier(suiteIdentifier);
+				.build(categories);
 
-			eventManager.publishBeforeScenario(this, builder.build());
+			eventManager.publishBeforeScenario(this, result);
 
 			Map<Step, StepImplementation> stepIndex = martini.getStepIndex();
-			builder.setStartTimestamp(System.currentTimeMillis());
+			result.setStartTimestamp(System.currentTimeMillis());
 
-			DefaultStepResult lastResult = null;
+			DefaultStepResult stepResult = null;
 			for (Map.Entry<Step, StepImplementation> mapEntry : stepIndex.entrySet()) {
 				assertNotInterrupted();
 				Step step = mapEntry.getKey();
-				eventManager.publishBeforeStep(this, builder.build());
+				eventManager.publishBeforeStep(this, result);
 
 				StepImplementation implementation = mapEntry.getValue();
-				if (null == lastResult || Status.PASSED == lastResult.getStatus()) {
-					lastResult = execute(step, implementation);
+				if (null == stepResult || PASSED.equals(stepResult.getStatus().orElse(null))) {
+					stepResult = execute(step, implementation);
 				}
 				else {
-					lastResult = new DefaultStepResult(step, implementation);
-					lastResult.setStatus(Status.SKIPPED);
+					stepResult = new DefaultStepResult(step, implementation);
+					stepResult.setStatus(Status.SKIPPED);
 				}
 
 				assertNotInterrupted();
-				builder.add(lastResult);
-				logStepResult(lastResult);
-				eventManager.publishAfterStep(this, builder.build());
+				result.add(stepResult);
+				logStepResult(stepResult);
+				eventManager.publishAfterStep(this, result);
 			}
 		}
 		catch (RuntimeException e) {
@@ -152,9 +151,8 @@ public class MartiniCallable implements Callable<MartiniResult> {
 			throw e;
 		}
 		finally {
-			if (null != builder) {
-				builder.setEndTimestamp(System.currentTimeMillis());
-				result = builder.build();
+			if (null != result) {
+				result.setEndTimestamp(System.currentTimeMillis());
 				eventManager.publishAfterScenario(this, result);
 			}
 		}
@@ -175,11 +173,10 @@ public class MartiniCallable implements Callable<MartiniResult> {
 		DefaultStepResult result = new DefaultStepResult(step, implementation);
 		result.setStartTimestamp(System.currentTimeMillis());
 		try {
-			Method method = implementation.getMethod();
-			if (null == method) {
+			Method method = implementation.getMethod().orElseThrow(() -> {
 				Recipe recipe = martini.getRecipe();
-				throw new UnimplementedStepException.Builder().setRecipe(recipe).setStep(step).build();
-			}
+				return new UnimplementedStepException.Builder().setRecipe(recipe).setStep(step).build();
+			});
 
 			Object bean = getBean(method);
 			Object[] arguments = getArguments(step, method, implementation);
@@ -188,7 +185,7 @@ public class MartiniCallable implements Callable<MartiniResult> {
 			if (o instanceof HttpEntity) {
 				result.add((HttpEntity) o);
 			}
-			result.setStatus(Status.PASSED);
+			result.setStatus(PASSED);
 		}
 		catch (UnimplementedStepException e) {
 			result.setException(e);
@@ -223,26 +220,32 @@ public class MartiniCallable implements Callable<MartiniResult> {
 	}
 
 	protected void logStepResult(StepResult result) {
-		if (logger.isInfoEnabled()) {
-			String scenarioId = getScenarioId();
-			Status status = result.getStatus();
-			Step step = result.getStep();
-			String keyword = step.getKeyword().trim();
-			String stepText = step.getText().trim();
+		result.getStatus().ifPresent(status -> {
+			if (logger.isInfoEnabled()) {
+				String scenarioId = getScenarioId();
+				Step step = result.getStep();
+				String keyword = step.getKeyword().trim();
+				String stepText = step.getText().trim();
 
-			switch (status) {
-				case PASSED:
-					logger.info("{}: {} @{} {}", status, scenarioId, keyword, stepText);
-					break;
-				case FAILED:
-					Exception exception = result.getException();
-					logger.error("{}: {} @{} {} {}", status, scenarioId, keyword, stepText, exception);
-					break;
-				default:
-					logger.warn("{}: {} @{} {}", status, scenarioId, keyword, stepText);
-					break;
+				switch (status) {
+					case PASSED:
+						logger.info("{}: {} @{} {}", status, scenarioId, keyword, stepText);
+						break;
+					case FAILED:
+						Exception exception = result.getException().orElse(null);
+						if (null == exception) {
+							logger.error("{}: {} @{} {}", status, scenarioId, keyword, stepText);
+						}
+						else {
+							logger.error("{}: {} @{} {}", status, scenarioId, keyword, stepText, exception);
+						}
+						break;
+					default:
+						logger.warn("{}: {} @{} {}", status, scenarioId, keyword, stepText);
+						break;
+				}
 			}
-		}
+		});
 	}
 
 	protected Object[] getArguments(Step step, Method method, StepImplementation implementation) {
@@ -286,11 +289,7 @@ public class MartiniCallable implements Callable<MartiniResult> {
 		}
 
 		if (parameters.length > 0) {
-			String text = step.getText();
-			Pattern pattern = implementation.getPattern();
-			Matcher matcher = pattern.matcher(text);
-			checkState(matcher.find(),
-				"unable to locate substitution parameters for pattern %s with input %s", pattern.pattern(), text);
+			Matcher matcher = getMatcher(step, implementation);
 
 			int groupCount = matcher.groupCount();
 			for (int i = 0; i < groupCount; i++) {
@@ -313,8 +312,21 @@ public class MartiniCallable implements Callable<MartiniResult> {
 				arguments[i] = converted;
 			}
 		}
-
 		return arguments;
+	}
+
+	protected Matcher getMatcher(Step step, StepImplementation implementation) {
+		Pattern pattern = implementation.getPattern().orElse(null);
+
+		Matcher matcher = null;
+		if (null != pattern) {
+			String text = step.getText();
+			matcher = pattern.matcher(text);
+			checkState(matcher.find(),
+				"unable to locate substitution parameters for pattern %s with input %s", pattern.pattern(), text);
+		}
+
+		return checkNotNull(matcher, "unable to create Matcher");
 	}
 
 	protected Object getBean(Method method) {
@@ -328,11 +340,13 @@ public class MartiniCallable implements Callable<MartiniResult> {
 			return method.invoke(bean, arguments);
 		}
 		catch (Exception e) {
-			String message = String.format("unable to invoke method %s on bean %s with arguments %s",
-				method.getName(), bean, Joiner.on(", ").join(arguments));
-			RuntimeException thrown = new RuntimeException(message, e);
-			logger.warn(message, thrown);
-			throw thrown;
+			MessageSource messageSource = MessageSources.getMessageSource(this.getClass());
+			throw new MartiniException.Builder()
+				.setMessageSource(messageSource)
+				.setCause(e)
+				.setKey("execution.exception")
+				.setArguments(method.getName(), bean, Joiner.on(", ").join(arguments))
+				.build();
 		}
 	}
 

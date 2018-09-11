@@ -38,7 +38,7 @@ import com.google.common.collect.Sets;
 
 import guru.qas.martini.MartiniException;
 import guru.qas.martini.i18n.MessageSources;
-import guru.qas.martini.step.DefaultStep;
+import guru.qas.martini.step.DefaultStepImplementation;
 
 import static com.google.common.base.Preconditions.*;
 
@@ -100,7 +100,7 @@ public class MartiniAnnotationCallback<A extends Annotation> implements Reflecti
 
 		String name = String.format("%s%s", annotationName.toLowerCase(), atomicInteger.getAndIncrement());
 
-		DefaultStep step = new DefaultStep(annotationName, pattern, method);
+		DefaultStepImplementation step = new DefaultStepImplementation(annotationName, pattern, method);
 		beanFactory.registerSingleton(name, step);
 	}
 

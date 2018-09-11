@@ -1,5 +1,5 @@
 /*
-Copyright 2017 Penny Rohr Curich
+Copyright 2017-2018 Penny Rohr Curich
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -19,7 +19,6 @@ package guru.qas.martini.runtime.event.json;
 import java.lang.reflect.Method;
 import java.lang.reflect.Type;
 import java.util.List;
-import java.util.regex.Pattern;
 
 import com.google.common.collect.Lists;
 import com.google.gson.JsonElement;
@@ -50,11 +49,12 @@ public class DefaultStepImplementationSerializer implements StepImplementationSe
 
 		protected JsonObject build() {
 			setClass();
-
-			Method method = implementation.getMethod();
-			setName(method);
-			setParameters(method);
 			setPattern();
+
+			implementation.getMethod().ifPresent(method -> {
+				setName(method);
+				setParameters(method);
+			});
 
 			return serialized;
 		}
@@ -90,9 +90,10 @@ public class DefaultStepImplementationSerializer implements StepImplementationSe
 		}
 
 		protected void setPattern() {
-			Pattern pattern = implementation.getPattern();
-			String serializedPattern = pattern.pattern();
-			serialized.addProperty("pattern", serializedPattern);
+			implementation.getPattern().ifPresent(pattern -> {
+				String serializedPattern = pattern.pattern();
+				serialized.addProperty("pattern", serializedPattern);
+			});
 		}
 	}
 }

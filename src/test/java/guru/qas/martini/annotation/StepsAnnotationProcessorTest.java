@@ -43,6 +43,7 @@ import fixture.TestSteps;
 import nonfixture.MultipleGivenBean;
 import nonfixture.PrivateGivenMethodBean;
 
+import static com.google.common.base.Preconditions.checkNotNull;
 import static org.testng.Assert.*;
 
 public class StepsAnnotationProcessorTest {
@@ -59,18 +60,19 @@ public class StepsAnnotationProcessorTest {
 		Collection<StepImplementation> givens = givenBeanIndex.values();
 
 		List<StepImplementation> matches = Lists.newArrayList();
-		for (StepImplementation given : givens) {
-			Method givenMethod = given.getMethod();
+		givens.forEach(given -> given.getMethod().ifPresent(givenMethod -> {
 			if (givenMethod.equals(method)) {
 				matches.add(given);
 			}
-		}
+		}));
 
 		int count = matches.size();
 		assertEquals(count, 1, "wrong number of GivenStep objects registered for TestSteps.anotherStep()");
 
 		StepImplementation match = matches.get(0);
-		Pattern pattern = match.getPattern();
+		Pattern pattern = match.getPattern().orElse(null);
+		checkNotNull(pattern, "StepImplementation lacking a Pattern: %s", match);
+
 		Matcher matcher = pattern.matcher("another \"(.+)\" here");
 		assertTrue(matcher.find(), "expected Pattern to match Gherkin regular expression");
 		assertEquals(matcher.groupCount(), 1, "wrong number of parameters captured for TestSteps.anotherStep()");
@@ -117,14 +119,14 @@ public class StepsAnnotationProcessorTest {
 		Collection<StepImplementation> givens = givenBeanIndex.values();
 
 		Set<String> matches = Sets.newHashSetWithExpectedSize(2);
-		for (StepImplementation given : givens) {
-			Method givenMethod = given.getMethod();
+		givens.forEach(given -> given.getMethod().ifPresent(givenMethod -> {
 			if (givenMethod.equals(method)) {
-				Pattern pattern = given.getPattern();
-				String regex = pattern.pattern();
-				matches.add(regex);
+				given.getPattern().ifPresent(pattern -> {
+					String regex = pattern.pattern();
+					matches.add(regex);
+				});
 			}
-		}
+		}));
 
 		int count = matches.size();
 		assertEquals(count, 2, "wrong number of GivenStep objects registered for MultipleGivenBean.getMartinis()");

@@ -78,7 +78,7 @@ public class DefaultMartiniGateFactory implements MartiniGateFactory, Initializi
 	@Nonnull
 	@Override
 	public Collection<MartiniGate> getGates(@Nullable StepImplementation implementation) {
-		Method method = ignoringGates || null == implementation ? null : implementation.getMethod();
+		Method method = ignoringGates || null == implementation ? null : implementation.getMethod().orElse(null);
 		return null == method ? Collections.emptyList() : getGates(method);
 	}
 

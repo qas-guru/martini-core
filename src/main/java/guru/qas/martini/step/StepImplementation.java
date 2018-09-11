@@ -1,5 +1,5 @@
 /*
-Copyright 2017 Penny Rohr Curich
+Copyright 2017-2018 Penny Rohr Curich
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -17,6 +17,7 @@ limitations under the License.
 package guru.qas.martini.step;
 
 import java.lang.reflect.Method;
+import java.util.Optional;
 import java.util.regex.Pattern;
 
 import gherkin.ast.Step;
@@ -25,11 +26,11 @@ public interface StepImplementation {
 
 	String getKeyword();
 
-	default Pattern getPattern() {
+	default Optional<Pattern> getPattern() {
 		throw new UnsupportedOperationException();
 	}
 
-	default Method getMethod() {
+	default Optional<Method> getMethod() {
 		throw new UnsupportedOperationException();
 	}
 

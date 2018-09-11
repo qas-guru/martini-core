@@ -17,6 +17,7 @@ limitations under the License.
 package guru.qas.martini.result;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 
@@ -36,17 +37,17 @@ public interface MartiniResult {
 
 	String getThreadName();
 
-	Status getStatus();
+	Optional<Status> getStatus();
 
-	Long getStartTimestamp();
+	Optional<Long> getStartTimestamp();
 
-	Long getEndTimestamp();
+	Optional<Long> getEndTimestamp();
 
-	Long getExecutionTimeMs();
+	Optional<Long> getExecutionTimeMs();
 
 	List<StepResult> getStepResults();
 
 	Set<String> getCategorizations();
 
-	Exception getException();
+	Optional<Exception> getException();
 }
