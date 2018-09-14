@@ -17,6 +17,7 @@ limitations under the License.
 package guru.qas.martini;
 
 import java.util.Collection;
+import java.util.List;
 import java.util.stream.Collectors;
 
 import javax.annotation.Nonnull;
@@ -27,17 +28,22 @@ import org.springframework.beans.factory.annotation.Configurable;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
 import org.springframework.expression.Expression;
+import org.springframework.expression.MethodResolver;
 import org.springframework.expression.spel.standard.SpelExpressionParser;
 import org.springframework.expression.spel.support.StandardEvaluationContext;
 
+import com.google.common.collect.ImmutableList;
+
+import guru.qas.martini.filter.category.CategoryResolver;
+import guru.qas.martini.filter.feature.FeatureResolver;
+import guru.qas.martini.filter.id.IdResolver;
+import guru.qas.martini.filter.resource.ResourceResolver;
+import guru.qas.martini.filter.scenario.ScenarioResolver;
 import guru.qas.martini.tag.Categories;
-import guru.qas.martini.tag.TagResolver;
+import guru.qas.martini.filter.tag.TagResolver;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
-/**
- * Default implementation of a Mixologist.
- */
 @SuppressWarnings("WeakerAccess")
 @Configurable
 public class DefaultMixologist implements Mixologist, ApplicationContextAware {
@@ -84,9 +90,20 @@ public class DefaultMixologist implements Mixologist, ApplicationContextAware {
 	}
 
 	protected StandardEvaluationContext getEvaluationContext() {
-		TagResolver tagResolver = new TagResolver(applicationContext, categories);
+		List<MethodResolver> resolvers = getMethodResolvers();
 		StandardEvaluationContext context = new StandardEvaluationContext();
-		context.addMethodResolver(tagResolver);
+		resolvers.forEach(context::addMethodResolver);
 		return context;
+	}
+
+	protected List<MethodResolver> getMethodResolvers() {
+		return ImmutableList.of(
+			new ScenarioResolver(),
+			new CategoryResolver(categories),
+			new FeatureResolver(),
+			new ResourceResolver(applicationContext),
+			new IdResolver(),
+			new TagResolver()
+		);
 	}
 }

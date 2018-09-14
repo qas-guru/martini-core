@@ -27,6 +27,7 @@ import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.beans.factory.config.BeanPostProcessor;
 import org.springframework.beans.factory.config.ConstructorArgumentValues;
 import org.springframework.beans.factory.support.AbstractBeanDefinition;
+import org.springframework.beans.factory.support.BeanDefinitionValidationException;
 import org.springframework.beans.factory.support.DefaultListableBeanFactory;
 import org.springframework.beans.factory.support.GenericBeanDefinition;
 import org.springframework.context.ApplicationContext;
@@ -109,7 +110,6 @@ public class StepsAnnotationProcessor implements BeanPostProcessor, ApplicationC
 				Class<?> declaring = AnnotationUtils.findAnnotationDeclaringClass(Steps.class, wrapped);
 				if (null != declaring) {
 					Steps annotation = applicationContext.findAnnotationOnBean(beanName, Steps.class);
-					Lazy lazy = applicationContext.findAnnotationOnBean(beanName, Lazy.class);
 					processStepsBean(beanName, wrapped);
 				}
 			}
@@ -126,9 +126,27 @@ public class StepsAnnotationProcessor implements BeanPostProcessor, ApplicationC
 	}
 
 	private void processStepsBean(String beanName, Class wrapped) {
-		checkState(applicationContext.isSingleton(beanName), "Beans annotated @Steps must have singleton scope.");
+		assertSingleton(beanName);
+		assertNotLazy(beanName);
+
 		for (ReflectionUtils.MethodCallback callback : callbacks) {
 			ReflectionUtils.doWithMethods(wrapped, callback);
+		}
+	}
+
+	protected void assertSingleton(String beanName) throws BeansException {
+		boolean singleton = applicationContext.isSingleton(beanName);
+		if (!singleton) {
+			String message = String.format("Steps bean %s must have a singleton scope.", beanName);
+			throw new BeanDefinitionValidationException(message);
+		}
+	}
+
+	protected void assertNotLazy(String beanName) {
+		Lazy lazy = applicationContext.findAnnotationOnBean(beanName, Lazy.class);
+		if (null != lazy) {
+			String message = String.format("Steps bean %s must not be annotated @Lazy.", beanName);
+			throw new BeanDefinitionValidationException(message);
 		}
 	}
 }

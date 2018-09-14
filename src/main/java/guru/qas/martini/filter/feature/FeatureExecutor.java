@@ -14,22 +14,23 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package guru.qas.martini.tag;
+package guru.qas.martini.filter.feature;
 
 import guru.qas.martini.Martini;
+import guru.qas.martini.filter.id.AbstractIdentifierExecutor;
 
 import static com.google.common.base.Preconditions.*;
 
 @SuppressWarnings("WeakerAccess")
-public class ScenarioExecutor extends AbstractIdentifierExecutor {
+public class FeatureExecutor extends AbstractIdentifierExecutor {
 
 	@Override
 	protected void assertValidArguments(Object... arguments) throws IllegalArgumentException {
-		checkArgument(1 == arguments.length, "expected a single Scenario name, found %s", arguments.length);
+		checkArgument(1 == arguments.length, "expected a single Feature name, found %s", arguments.length);
 	}
 
 	@Override
 	protected String getIdentifier(Martini martini) {
-		return martini.getScenarioName();
+		return martini.getFeatureName();
 	}
 }

@@ -1,5 +1,5 @@
 /*
-Copyright 2017 Penny Rohr Curich
+Copyright 2017-2018 Penny Rohr Curich
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -21,7 +21,8 @@ import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Set;
 
-import org.springframework.beans.BeansException;
+import javax.annotation.Nonnull;
+
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Configurable;
 import org.springframework.context.ApplicationContext;
@@ -48,12 +49,12 @@ public class DefaultCategories implements Categories, ApplicationContextAware, I
 	}
 
 	@Override
-	public void setApplicationContext(ApplicationContext applicationContext) throws BeansException {
-		this.applicationContext = applicationContext;
+	public void setApplicationContext(@Nonnull ApplicationContext applicationContext) {
+		this.applicationContext = checkNotNull(applicationContext, "null ApplicationContext");
 	}
 
 	@Override
-	public void afterPropertiesSet() throws Exception {
+	public void afterPropertiesSet() {
 		Map<String, Category> beans = applicationContext.getBeansOfType(Category.class);
 		Collection<Category> categories = beans.values();
 
@@ -70,6 +71,12 @@ public class DefaultCategories implements Categories, ApplicationContextAware, I
 				}
 			}
 		}
+	}
+
+	@Override
+	public boolean isDefined(String classification) {
+		checkNotNull(classification, "null String");
+		return ascendingHierarchy.containsKey(classification) || ascendingHierarchy.containsValue(classification);
 	}
 
 	@Override

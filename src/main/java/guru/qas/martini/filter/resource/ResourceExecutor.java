@@ -1,5 +1,5 @@
 /*
-Copyright 2017 Penny Rohr Curich
+Copyright 2017-2018 Penny Rohr Curich
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -14,17 +14,17 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package guru.qas.martini.tag;
+package guru.qas.martini.filter.resource;
 
+import java.io.IOException;
 import java.net.URI;
 import java.util.List;
 
 import javax.annotation.Nonnull;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.context.ApplicationContext;
 import org.springframework.core.io.Resource;
+import org.springframework.core.io.support.ResourcePatternResolver;
+import org.springframework.expression.AccessException;
 import org.springframework.expression.EvaluationContext;
 import org.springframework.expression.MethodExecutor;
 import org.springframework.expression.TypedValue;
@@ -40,12 +40,10 @@ import static com.google.common.base.Preconditions.*;
 @SuppressWarnings("WeakerAccess")
 public class ResourceExecutor implements MethodExecutor {
 
-	private static final Logger LOGGER = LoggerFactory.getLogger(ResourceExecutor.class);
+	protected final ResourcePatternResolver resourcePatternResolver;
 
-	protected final ApplicationContext applicationContext;
-
-	public ResourceExecutor(ApplicationContext applicationContext) {
-		this.applicationContext = checkNotNull(applicationContext, "null ResourceLoader");
+	public ResourceExecutor(ResourcePatternResolver resourcePatternResolver) {
+		this.resourcePatternResolver = checkNotNull(resourcePatternResolver, "null ResourcePatternResolver");
 	}
 
 	@Nonnull
@@ -54,21 +52,22 @@ public class ResourceExecutor implements MethodExecutor {
 		@Nonnull EvaluationContext context,
 		@Nonnull Object target,
 		@Nonnull Object... arguments
-	) {
-		checkState(1 == arguments.length, "expected a single resource location, found %s", arguments.length);
-		Martini martini = Martini.class.cast(target);
-		String locationPattern = String.class.cast(arguments[0]);
-		return execute(martini, locationPattern);
+	) throws AccessException {
+		try {
+			checkState(1 == arguments.length, "expected a single resource location, found %s", arguments.length);
+			Martini martini = Martini.class.cast(target);
+			String locationPattern = String.class.cast(arguments[0]);
+			return execute(martini, locationPattern);
+		}
+		catch (Exception e) {
+			throw new AccessException("unable to execute filter", e);
+		}
 	}
 
-	public TypedValue execute(Martini martini, String locationPattern) {
+	public TypedValue execute(Martini martini, String locationPattern) throws IOException {
+		List<Resource> resources = getResources(locationPattern);
 		URI martiniURI = getResource(martini);
-		boolean evaluation = false;
-		if (null != martiniURI) {
-			List<Resource> resources = getResources(locationPattern);
-			evaluation = resources.stream().map(ResourceExecutor::getURI).anyMatch(martiniURI::equals);
-		}
-
+		boolean evaluation = resources.stream().map(ResourceExecutor::getURI).anyMatch(martiniURI::equals);
 		return new TypedValue(evaluation);
 	}
 
@@ -80,23 +79,16 @@ public class ResourceExecutor implements MethodExecutor {
 	}
 
 	private static URI getURI(Resource resource) {
-		URI uri = null;
 		try {
-			uri = resource.getURI();
+			return resource.getURI();
 		}
 		catch (Exception e) {
-			LOGGER.warn("unable to obtain URI from resource {}", resource, e);
+			throw new RuntimeException(e);
 		}
-		return uri;
 	}
 
-	private List<Resource> getResources(String locationPattern) {
-		try {
-			Resource[] resources = applicationContext.getResources(locationPattern);
-			return Lists.newArrayList(resources);
-		}
-		catch (Exception e) {
-			throw new RuntimeException("unable to evaluation resource location " + locationPattern, e);
-		}
+	private List<Resource> getResources(String locationPattern) throws IOException {
+		Resource[] resources = resourcePatternResolver.getResources(locationPattern);
+		return Lists.newArrayList(resources);
 	}
 }

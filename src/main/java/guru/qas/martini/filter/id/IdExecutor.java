@@ -1,5 +1,5 @@
 /*
-Copyright 2017-2018 Penny Rohr Curich
+Copyright 2018 Penny Rohr Curich
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -14,23 +14,22 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package guru.qas.martini.tag;
-
-import java.util.Set;
+package guru.qas.martini.filter.id;
 
 import guru.qas.martini.Martini;
 
-public interface Categories {
+import static com.google.common.base.Preconditions.*;
 
-	String IMPLEMENTATION_KEY = "martini.categories.implementation";
+@SuppressWarnings("WeakerAccess")
+public class IdExecutor extends AbstractIdentifierExecutor {
 
-	boolean isDefined(String classification);
+	@Override
+	protected void assertValidArguments(Object... arguments) throws IllegalArgumentException {
+		checkArgument(1 == arguments.length, "expected a single ID, found %s", arguments.length);
+	}
 
-	boolean isMatch(String classification, MartiniTag tag);
-
-	/*
-	 * @param martini
-	 * @return names of immediate and all ancestor categories for given Martini
-	 */
-	Set<String> getCategorizations(Martini martini);
+	@Override
+	protected String getIdentifier(Martini martini) {
+		return martini.getId();
+	}
 }

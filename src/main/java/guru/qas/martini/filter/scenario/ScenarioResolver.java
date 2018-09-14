@@ -14,22 +14,27 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package guru.qas.martini.tag;
+package guru.qas.martini.filter.scenario;
 
-import guru.qas.martini.Martini;
+import org.springframework.expression.MethodExecutor;
 
-import static com.google.common.base.Preconditions.*;
+import guru.qas.martini.filter.AbstractMartiniCachingMethodResolver;
 
 @SuppressWarnings("WeakerAccess")
-public class FeatureExecutor extends AbstractIdentifierExecutor {
+public class ScenarioResolver extends AbstractMartiniCachingMethodResolver {
 
-	@Override
-	protected void assertValidArguments(Object... arguments) throws IllegalArgumentException {
-		checkArgument(1 == arguments.length, "expected a single Feature name, found %s", arguments.length);
+	public static final String NAME = "isScenario";
+
+	public ScenarioResolver() {
+		super();
+	}
+
+	protected boolean isNameMatch(String name) {
+		return NAME.equals(name);
 	}
 
 	@Override
-	protected String getIdentifier(Martini martini) {
-		return martini.getFeatureName();
+	protected MethodExecutor getMethodExecutor(String name) {
+		return new ScenarioExecutor();
 	}
 }

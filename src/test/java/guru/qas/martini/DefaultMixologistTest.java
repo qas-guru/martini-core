@@ -36,7 +36,6 @@ import org.testng.annotations.Test;
 
 import com.google.common.base.Joiner;
 
-
 import fixture.ParameterizedTestSteps;
 import gherkin.ast.Step;
 import guru.qas.martini.gate.MartiniGate;
@@ -76,6 +75,10 @@ public class DefaultMixologistTest {
 	public void testGetMartiniById() {
 		String id = "Functionality_of_the_Reporting_Subsystem:A_Corner_Case:25";
 		getFixturedMartini(id);
+		String spelFilter = String.format("isId('%s')", id);
+		Collection<Martini> martinis = mixologist.getMartinis(spelFilter);
+		checkState(!martinis.isEmpty(), "no Martinis found by ID");
+		checkState(1 == martinis.size(), "multiple Martinis found by ID %s", id);
 	}
 
 	@SuppressWarnings("Guava")
