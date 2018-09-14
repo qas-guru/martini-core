@@ -19,6 +19,7 @@ package guru.qas.martini;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -35,9 +36,12 @@ import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
 import com.google.common.base.Joiner;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 
 import fixture.ParameterizedTestSteps;
 import gherkin.ast.Step;
+import guru.qas.martini.annotation.Gated;
 import guru.qas.martini.gate.MartiniGate;
 
 import guru.qas.martini.step.StepImplementation;
@@ -79,6 +83,63 @@ public class DefaultMixologistTest {
 		Collection<Martini> martinis = mixologist.getMartinis(spelFilter);
 		checkState(!martinis.isEmpty(), "no Martinis found by ID");
 		checkState(1 == martinis.size(), "multiple Martinis found by ID %s", id);
+	}
+
+	@Test
+	public void testGetGated() {
+		Collection<Martini> allMartinis = mixologist.getMartinis();
+		List<Martini> expected = allMartinis.stream()
+			.filter(martini -> martini.isAnyStepAnnotated(Gated.class))
+			.collect(Collectors.toList());
+
+		String spelFilter = "isGated()";
+		Collection<Martini> martinis = mixologist.getMartinis(spelFilter);
+
+		int expectedCount = expected.size();
+		int actualCount = martinis.size();
+		checkState(expectedCount == actualCount,
+			"wrong number of objects returned; expected %s but got %s", expectedCount, actualCount);
+
+		HashSet<Martini> expectedSet = Sets.newHashSet(expected);
+		HashSet<Martini> actualSet = Sets.newHashSet(martinis);
+		Sets.SetView<Martini> difference = Sets.symmetricDifference(expectedSet, actualSet);
+		checkState(difference.isEmpty(), "wrong objects returned; expected %s but got %s",
+			Joiner.on("\n").join(expected), Joiner.on("\n").join(martinis));
+	}
+
+	@Test
+	public void testGetGatedArgument() {
+		Collection<Martini> allMartinis = mixologist.getMartinis();
+		String expectedGateName = "One";
+		List<Martini> expected = allMartinis.stream()
+			.filter(martini -> martini.isAnyStepAnnotated(Gated.class))
+			.filter(martini -> {
+				Map<Step, StepImplementation> stepIndex = martini.getStepIndex();
+				Collection<StepImplementation> values = stepIndex.values();
+				return values.stream()
+					.map(stepImplementation -> stepImplementation.getMethod().orElse(null))
+					.filter(Objects::nonNull)
+					.map(method -> method.getDeclaredAnnotationsByType(Gated.class))
+					.flatMap(gateds -> Lists.newArrayList(gateds).stream())
+					.map(Gated::name)
+					.anyMatch(expectedGateName::equals);
+
+			})
+			.collect(Collectors.toList());
+
+		String spelFilter = String.format("isGated('%s')", expectedGateName);
+		Collection<Martini> martinis = mixologist.getMartinis(spelFilter);
+
+		int expectedCount = expected.size();
+		int actualCount = martinis.size();
+		checkState(expectedCount == actualCount,
+			"wrong number of objects returned; expected %s but got %s", expectedCount, actualCount);
+
+		HashSet<Martini> expectedSet = Sets.newHashSet(expected);
+		HashSet<Martini> actualSet = Sets.newHashSet(martinis);
+		Sets.SetView<Martini> difference = Sets.symmetricDifference(expectedSet, actualSet);
+		checkState(difference.isEmpty(), "wrong objects returned; expected %s but got %s",
+			Joiner.on("\n").join(expected), Joiner.on("\n").join(martinis));
 	}
 
 	@SuppressWarnings("Guava")

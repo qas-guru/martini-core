@@ -36,6 +36,7 @@ import com.google.common.collect.ImmutableList;
 
 import guru.qas.martini.filter.category.CategoryResolver;
 import guru.qas.martini.filter.feature.FeatureResolver;
+import guru.qas.martini.filter.gated.GatedResolver;
 import guru.qas.martini.filter.id.IdResolver;
 import guru.qas.martini.filter.resource.ResourceResolver;
 import guru.qas.martini.filter.scenario.ScenarioResolver;
@@ -100,6 +101,7 @@ public class DefaultMixologist implements Mixologist, ApplicationContextAware {
 		return ImmutableList.of(
 			new ScenarioResolver(),
 			new CategoryResolver(categories),
+			new GatedResolver(),
 			new FeatureResolver(),
 			new ResourceResolver(applicationContext),
 			new IdResolver(),
