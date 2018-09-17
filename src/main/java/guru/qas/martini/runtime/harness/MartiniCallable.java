@@ -339,17 +339,22 @@ public class MartiniCallable implements Callable<MartiniResult> {
 		}
 		catch (Exception e) {
 			MessageSource messageSource = MessageSources.getMessageSource(this.getClass());
+			boolean argumented = null == arguments || 0 == arguments.length;
+
+			//noinspection ConstantConditions
 			throw new MartiniException.Builder()
 				.setMessageSource(messageSource)
 				.setCause(e)
-				.setKey("execution.exception")
-				.setArguments(method.getName(), bean, Joiner.on(", ").join(arguments))
+				.setKey(argumented ? "execution.exception.argumented" : "execution.exception.no.arguments")
+				.setArguments(argumented ?
+					new Object[]{method.getName(), bean, Joiner.on(", ").join(arguments)} :
+					new Object[]{method.getName(), bean})
 				.build();
 		}
-	}
+		}
 
-	protected void assertNotInterrupted() {
-		Thread thread = Thread.currentThread();
-		checkState(!thread.isInterrupted(), "execution interrupted");
+		protected void assertNotInterrupted () {
+			Thread thread = Thread.currentThread();
+			checkState(!thread.isInterrupted(), "execution interrupted");
+		}
 	}
-}
