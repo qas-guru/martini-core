@@ -66,7 +66,7 @@ public class MartiniException extends RuntimeException {
 		protected Locale locale;
 		protected String key;
 		protected Object[] arguments;
-		protected Exception cause;
+		protected Throwable cause;
 
 		public Builder() {
 			locale = Locale.getDefault();
@@ -92,8 +92,8 @@ public class MartiniException extends RuntimeException {
 			return this;
 		}
 
-		public Builder setCause(Exception e) {
-			this.cause = e;
+		public Builder setCause(Throwable t) {
+			this.cause = t;
 			return this;
 		}
 

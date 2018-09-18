@@ -16,6 +16,7 @@ limitations under the License.
 
 package guru.qas.martini.runtime.harness;
 
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
 import java.util.HashMap;
@@ -334,27 +335,32 @@ public class MartiniCallable implements Callable<MartiniResult> {
 
 	protected Object execute(Method method, Object bean, Object[] arguments) {
 		assertNotInterrupted();
+		Throwable cause;
+
 		try {
 			return method.invoke(bean, arguments);
 		}
+		catch (InvocationTargetException e) {
+			cause = e.getTargetException();
+		}
 		catch (Exception e) {
-			MessageSource messageSource = MessageSources.getMessageSource(this.getClass());
-			boolean argumented = null == arguments || 0 == arguments.length;
-
-			//noinspection ConstantConditions
-			throw new MartiniException.Builder()
-				.setMessageSource(messageSource)
-				.setCause(e)
-				.setKey(argumented ? "execution.exception.argumented" : "execution.exception.no.arguments")
-				.setArguments(argumented ?
-					new Object[]{method.getName(), bean, Joiner.on(", ").join(arguments)} :
-					new Object[]{method.getName(), bean})
-				.build();
-		}
+			cause = e;
 		}
 
-		protected void assertNotInterrupted () {
-			Thread thread = Thread.currentThread();
-			checkState(!thread.isInterrupted(), "execution interrupted");
-		}
+		MessageSource messageSource = MessageSources.getMessageSource(this.getClass());
+		boolean argumented = null != arguments && 0 < arguments.length;
+		throw new MartiniException.Builder()
+			.setMessageSource(messageSource)
+			.setCause(cause)
+			.setKey(argumented ? "execution.exception.argumented" : "execution.exception.no.arguments")
+			.setArguments(argumented ?
+				new Object[]{method.getName(), bean, Joiner.on(", ").join(arguments)} :
+				new Object[]{method.getName(), bean})
+			.build();
 	}
+
+	protected void assertNotInterrupted() {
+		Thread thread = Thread.currentThread();
+		checkState(!thread.isInterrupted(), "execution interrupted");
+	}
+}
