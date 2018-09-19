@@ -341,21 +341,17 @@ public class MartiniCallable implements Callable<MartiniResult> {
 			return method.invoke(bean, arguments);
 		}
 		catch (InvocationTargetException e) {
-			cause = e.getTargetException();
+			cause = e.getCause();
 		}
 		catch (Exception e) {
 			cause = e;
 		}
 
 		MessageSource messageSource = MessageSources.getMessageSource(this.getClass());
-		boolean argumented = null != arguments && 0 < arguments.length;
 		throw new MartiniException.Builder()
 			.setMessageSource(messageSource)
 			.setCause(cause)
-			.setKey(argumented ? "execution.exception.argumented" : "execution.exception.no.arguments")
-			.setArguments(argumented ?
-				new Object[]{method.getName(), bean, Joiner.on(", ").join(arguments)} :
-				new Object[]{method.getName(), bean})
+			.setKey("execution.exception")
 			.build();
 	}
 
