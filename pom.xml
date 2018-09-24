@@ -5,13 +5,13 @@
 	<modelVersion>4.0.0</modelVersion>
 
 	<groupId>guru.qas</groupId>
-	<artifactId>martini-core-jdk10</artifactId>
-	<version>4.0.0-SNAPSHOT</version>
+	<artifactId>martini-core</artifactId>
+	<version>4.0.0-JDK10-SNAPSHOT</version>
 	<packaging>jar</packaging>
 
 	<name>${project.groupId}:${project.artifactId}</name>
 	<description>Martini: Core Libraries for Java</description>
-	<url>https://github.com/qas-guru/martini-core-jdk10</url>
+	<url>https://github.com/qas-guru/martini-core</url>
 
 	<licenses>
 		<license>
@@ -35,9 +35,9 @@
 	</developers>
 
 	<scm>
-		<connection>scm:git:git://github.com/qas-guru/martini-core-jdk10.git</connection>
-		<developerConnection>scm:git:ssh://github.com:qas-guru/martini-core-jdk10.git</developerConnection>
-		<url>https://github.com/qas-guru/martini-core-jdk10/tree/master</url>
+		<connection>scm:git:git://github.com/qas-guru/martini-core.git</connection>
+		<developerConnection>scm:git:ssh://github.com:qas-guru/martini-core.git</developerConnection>
+		<url>https://github.com/qas-guru/martini-core/tree/master</url>
 		<tag>HEAD</tag>
 	</scm>
 
@@ -155,7 +155,6 @@
 			<groupId>org.springframework</groupId>
 			<artifactId>spring-core</artifactId>
 			<version>${spring.version}</version>
-			<classifier>sources</classifier>
 		</dependency>
 
 		<!-- https://mvnrepository.com/artifact/org.springframework/spring-context -->

@@ -10,7 +10,7 @@
 	</properties>
 
 	<body>
-		<release version="4.0.0" date="2018-09-24" description="Release 4.0.0">
+		<release version="4.0.0-JDK10" date="2018-09-24" description="Release 4.0.0 for Java 10">
 			<action dev="pcurich" type="update">
 				Updating to Java 10.
 			</action>
