@@ -10,26 +10,9 @@
 	</properties>
 
 	<body>
-		<release version="4.0.0" date="2018-08-29" description="Release 4.0.0">
+		<release version="4.0.0" date="2018-09-24" description="Release 4.0.0">
 			<action dev="pcurich" type="update">
-				Adding gating concept.
-				Renaming some classes.
-			</action>
-			<action dev="pcurich" type="fix">
-				Class ScenarioScope is now interface MartiniScenarioScope.
-
-				Added DefaultMartiniScenarioScope.
-
-				Beans and destruction callbacks stored in order, disposed and destroyed
-				in reverse order at end of scenario.
-			</action>
-		</release>
-		<release version="2.5.0" date="2018-08-21" description="Release 2.5.0">
-			<action dev="pcurich" type="update">
-				Updating dependency versions.
-			</action>
-			<action dev="pcurich" type="fix">
-				ScenarioScope.remove() will run registered destruction callbacks.
+				Updating to Java 10.
 			</action>
 		</release>
 	</body>

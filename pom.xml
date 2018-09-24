@@ -5,13 +5,13 @@
 	<modelVersion>4.0.0</modelVersion>
 
 	<groupId>guru.qas</groupId>
-	<artifactId>martini-core</artifactId>
+	<artifactId>martini-core-jdk10</artifactId>
 	<version>4.0.0-SNAPSHOT</version>
 	<packaging>jar</packaging>
 
 	<name>${project.groupId}:${project.artifactId}</name>
 	<description>Martini: Core Libraries for Java</description>
-	<url>https://github.com/qas-guru/martini-core</url>
+	<url>https://github.com/qas-guru/martini-core-jdk10</url>
 
 	<licenses>
 		<license>
@@ -35,17 +35,18 @@
 	</developers>
 
 	<scm>
-		<connection>scm:git:git://github.com/qas-guru/martini-core.git</connection>
-		<developerConnection>scm:git:ssh://github.com:qas-guru/martini-core.git</developerConnection>
-		<url>https://github.com/qas-guru/martini-core/tree/master</url>
+		<connection>scm:git:git://github.com/qas-guru/martini-core-jdk10.git</connection>
+		<developerConnection>scm:git:ssh://github.com:qas-guru/martini-core-jdk10.git</developerConnection>
+		<url>https://github.com/qas-guru/martini-core-jdk10/tree/master</url>
 		<tag>HEAD</tag>
 	</scm>
 
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-		<maven.compiler.source>1.8</maven.compiler.source>
-		<maven.compiler.target>1.8</maven.compiler.target>
-		<spring.version>5.0.8.RELEASE</spring.version>
+		<maven.compiler.source>10</maven.compiler.source>
+		<maven.compiler.target>10</maven.compiler.target>
+		<maven.compiler.release>10</maven.compiler.release>
+		<spring.version>5.1.0.RELEASE</spring.version>
 		<slf4j.version>1.7.25</slf4j.version>
 	</properties>
 
@@ -61,7 +62,7 @@
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-compiler-plugin</artifactId>
-				<version>3.7.0</version>
+				<version>3.8.0</version>
 			</plugin>
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
@@ -79,7 +80,13 @@
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-javadoc-plugin</artifactId>
-				<version>3.0.0</version>
+				<version>3.0.1</version>
+				<configuration>
+					<failOnError>true</failOnError>
+					<additionalOptions>-html5</additionalOptions>
+					<!--Excluded for causing havoc with JDK10 Javadoc -->
+					<sourceFileExcludes>guru/qas/martini/annotation/MartiniAnnotationCallback.java</sourceFileExcludes>
+				</configuration>
 				<executions>
 					<execution>
 						<id>attach-javadocs</id>
@@ -148,6 +155,7 @@
 			<groupId>org.springframework</groupId>
 			<artifactId>spring-core</artifactId>
 			<version>${spring.version}</version>
+			<classifier>sources</classifier>
 		</dependency>
 
 		<!-- https://mvnrepository.com/artifact/org.springframework/spring-context -->
@@ -200,7 +208,5 @@
 			<version>6.14.3</version>
 			<scope>test</scope>
 		</dependency>
-
 	</dependencies>
-
 </project>
