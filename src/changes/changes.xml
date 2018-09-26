@@ -1,18 +1,22 @@
 <document xmlns="http://maven.apache.org/changes/1.0.0"
 		  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 		  xsi:schemaLocation="
-		http://maven.apache.org/changes/1.0.0
-		http://maven.apache.org/xsd/changes-1.0.0.xsd">
+			http://maven.apache.org/changes/1.0.0
+			http://maven.apache.org/xsd/changes-1.0.0.xsd">
 
 	<properties>
-		<title>Martini Project</title>
+		<title>Martini Core Project</title>
 		<author email="penny.curich@gmail.com">Penny Rohr Curich</author>
 	</properties>
 
 	<body>
-		<release version="4.0.0-JDK10" date="2018-09-24" description="Release 4.0.0 for Java 10">
+		<release version="4.0.0-JDK10" date="2018-09-26" description="Release 4.0.0 for Java 10">
 			<action dev="pcurich" type="update">
 				Updating to Java 10.
+				Removing MIT license.
+				Updating README.md.
+				Adding gating concept.
+				Correcting scenario destruction callback ordering.
 			</action>
 		</release>
 	</body>
