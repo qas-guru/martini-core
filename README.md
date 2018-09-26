@@ -103,7 +103,7 @@ maintaining Cucumber.
 that can happen is that nobody pays any attention.**"
 * Thank you to Ethan Jahns, formerly of Digital Measures, for soundboarding ideas and for forking an 
 improved Gherkin parser.
-* Thank you to John Keiffer and Benjamin Newman for encouragement.
+* Thank you to John Keiffer and Benjamin Newman at Digital Measures for encouragement.
 
 
 ### Where can I find more information on Martini? <a name="info"></a>
