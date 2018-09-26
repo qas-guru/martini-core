@@ -98,16 +98,20 @@ Requests for outside contribution are welcome!
 #### Recognitions from Penny <a name="thanks"></a>
 * A big thank you to [Aslak Hellesøy](http://aslakhellesoy.com/) et al, for creating, releasing and 
 maintaining Cucumber.
-* Thank you to Digital Measures CEO Matt Bartel and CTO Michael Rentas for sponsoring employee sabbaticals.
+* Thank you to [Rod Johnson](https://en.wikipedia.org/wiki/Rod_Johnson_(programmer)) et al, for creating, releasing 
+and maintaining Spring.
+* Thank you to [Cedric Beust](https://beust.com), for all the great Java contributions over the years.
+* Thank you to [Digital Measures](https://www.digitalmeasures.com/) CEO Matt Bartel and CTO Michael Rentas for 
+sponsoring employee sabbaticals.
 * Thank you to friends at Spotify (you know who you are) for the open-source encouragement. "**The worst thing
 that can happen is that nobody pays any attention.**"
 * Thank you to Ethan Jahns, formerly of Digital Measures, for soundboarding ideas and for forking an 
 improved Gherkin parser.
-* Thank you to John Keiffer and Benjamin Newman at Digital Measures for encouragement.
+* Thank you to John Kieffer and Benjamin Newman at Digital Measures for encouragement.
 
 
 ### Where can I find more information on Martini? <a name="info"></a>
 
 #### In Progress: [Martini Core Wiki](https://github.com/qas-guru/martini-core/wiki) <a name="wiki"></a>
 
-#### In Progress: [__**Martini** swank software testing in Java__](https://leanpub.com/martini) <a name="book"></a>
+#### In Progress: [__Martini - swank software testing in Java__](https://leanpub.com/martini) <a name="book"></a>
