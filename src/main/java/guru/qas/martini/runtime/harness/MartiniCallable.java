@@ -37,8 +37,6 @@ import org.springframework.beans.factory.annotation.Configurable;
 import org.springframework.context.MessageSource;
 import org.springframework.core.convert.ConversionService;
 
-import com.google.common.base.Joiner;
-
 import gherkin.ast.Examples;
 import gherkin.ast.ScenarioDefinition;
 import gherkin.ast.ScenarioOutline;
@@ -174,7 +172,10 @@ public class MartiniCallable implements Callable<MartiniResult> {
 		try {
 			Method method = implementation.getMethod().orElseThrow(() -> {
 				Recipe recipe = martini.getRecipe();
-				return new UnimplementedStepException.Builder().setRecipe(recipe).setStep(step).build();
+				UnimplementedStepException exception =
+					new UnimplementedStepException.Builder().setRecipe(recipe).setStep(step).build();
+				logger.warn(exception.getMessage());
+				return exception;
 			});
 
 			Object bean = getBean(method);

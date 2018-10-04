@@ -14,6 +14,7 @@
 			<action dev="pcurich" type="update">
 				Removing transitively duplicate dependencies from POM.
 				@Steps annotation now takes a name.
+				Logging warning when an unimplemented step is encountered.
 			</action>
 		</release>
 		<release version="4.0.0-JDK10" date="2018-09-26" description="Release 4.0.0 for Java 10">
