@@ -29,4 +29,5 @@ import org.springframework.stereotype.Component;
 @Documented
 @Component
 public @interface Steps {
+	String value() default "";
 }
