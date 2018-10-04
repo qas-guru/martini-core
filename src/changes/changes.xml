@@ -10,8 +10,9 @@
 	</properties>
 
 	<body>
-		<release version="4.0.1-JDK10-SNAPSHOT" date="2018-09-26" description="Release 4.0.1 for Java 10">
+		<release version="4.0.1-JDK10" date="2018-09-26" description="Release 4.0.1 for Java 10">
 			<action dev="pcurich" type="update">
+				Removing transitively duplicate dependencies from POM.
 			</action>
 		</release>
 		<release version="4.0.0-JDK10" date="2018-09-26" description="Release 4.0.0 for Java 10">
