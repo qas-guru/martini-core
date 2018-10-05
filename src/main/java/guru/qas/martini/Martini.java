@@ -19,6 +19,7 @@ package guru.qas.martini;
 import java.io.Serializable;
 import java.lang.annotation.Annotation;
 import java.util.Collection;
+import java.util.List;
 import java.util.Map;
 
 import gherkin.ast.Step;
@@ -59,6 +60,8 @@ public interface Martini extends Serializable {
 	 * @return line stored in Pickle's PickleLocation
 	 */
 	int getScenarioLine();
+
+	<T extends Annotation> List<T> getStepAnnotations(Class<T> implementation);
 
 	boolean isAnyStepAnnotated(Class<? extends Annotation> implementation);
 }

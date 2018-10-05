@@ -18,14 +18,14 @@ package guru.qas.martini;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
+import java.util.Arrays;
 import java.util.Collection;
-import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -118,19 +118,27 @@ public class DefaultMartini implements Martini {
 	}
 
 	@Override
-	public boolean isAnyStepAnnotated(Class<? extends Annotation> annotationClass) {
-		checkNotNull(annotationClass, "null Class");
-		Map<Step, StepImplementation> index = getStepIndex();
+	public <T extends Annotation> List<T> getStepAnnotations(Class<T> implementation) {
+		checkNotNull(implementation, "null Class");
 
-		boolean evaluation = false;
-		Iterator<Map.Entry<Step, StepImplementation>> i = index.entrySet().iterator();
-		while (!evaluation && i.hasNext()) {
-			Map.Entry<Step, StepImplementation> mapEntry = i.next();
-			StepImplementation implementation = mapEntry.getValue();
-			Method method = implementation.getMethod().orElse(null);
-			evaluation = null != method && method.isAnnotationPresent(annotationClass);
-		}
-		return evaluation;
+		return getStepImplementationMethods()
+			.flatMap(method -> {
+				T[] annotations = method.getDeclaredAnnotationsByType(implementation);
+				return Arrays.stream(annotations);
+			}).collect(Collectors.toList());
+	}
+
+	@Override
+	public boolean isAnyStepAnnotated(Class<? extends Annotation> implementation) {
+		return getStepImplementationMethods()
+			.anyMatch(method -> method.isAnnotationPresent(implementation));
+	}
+
+	protected Stream<Method> getStepImplementationMethods() {
+		return getStepIndex().values().stream()
+			.filter(Objects::nonNull)
+			.map(stepImplementation -> stepImplementation.getMethod().orElse(null))
+			.filter(Objects::nonNull);
 	}
 
 	@Override
