@@ -19,6 +19,9 @@ package guru.qas.martini.scope;
 import java.util.Optional;
 import java.util.Stack;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -28,6 +31,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.DisposableBean;
 import org.springframework.beans.factory.ObjectFactory;
 import org.springframework.beans.factory.annotation.Configurable;
+import org.springframework.context.SmartLifecycle;
 
 import guru.qas.martini.Martini;
 import guru.qas.martini.event.SuiteIdentifier;
@@ -38,40 +42,64 @@ import static com.google.common.base.Preconditions.*;
 
 @SuppressWarnings("WeakerAccess")
 @Configurable
-public class DefaultMartiniScenarioScope implements MartiniScenarioScope {
-
-	protected static final ThreadLocal<MartiniResult> CONVERSATION = new ThreadLocal<>();
-
-	protected static final ThreadLocal<Stack<Scoped>> SCOPED = ThreadLocal.withInitial(Stack::new);
+public class DefaultMartiniScenarioScope implements MartiniScenarioScope, SmartLifecycle {
 
 	protected final Logger logger;
+	protected final AtomicBoolean running;
+
+	protected final ConcurrentMap<Thread, Stack<Scoped>> scopeIndex;
+	protected final ConcurrentMap<Thread, MartiniResult> resultIndex;
 
 	public DefaultMartiniScenarioScope() {
 		logger = LoggerFactory.getLogger(this.getClass());
+		running = new AtomicBoolean(false);
+		scopeIndex = new ConcurrentHashMap<>();
+		resultIndex = new ConcurrentHashMap<>();
+	}
+
+	@Override
+	public synchronized void start() {
+		if (running.compareAndSet(false, true)) {
+			running.set(true);
+			scopeIndex.clear();
+		}
+	}
+
+	@Override
+	public boolean isRunning() {
+		return running.get();
 	}
 
 	@Override
 	public void setScenarioIdentifier(@Nullable MartiniResult result) {
-		CONVERSATION.set(result);
+		Thread thread = Thread.currentThread();
+
+		if (null == result) {
+			resultIndex.remove(thread);
+		}
+		else {
+			resultIndex.put(thread, result);
+		}
 	}
 
 	@Override
 	public Optional<MartiniResult> getMartiniResult() {
-		MartiniResult martiniResult = CONVERSATION.get();
-		return Optional.ofNullable(martiniResult);
+		Thread thread = Thread.currentThread();
+		MartiniResult result = resultIndex.get(thread);
+		return Optional.ofNullable(result);
 	}
 
 	@Override
 	@Nullable
 	public Object resolveContextualObject(@Nonnull String key) {
 		checkNotNull(key, "null String");
-		return "martiniResult".equals(key) ? CONVERSATION.get() : null;
+		return "martiniResult".equals(key) ? getMartiniResult().orElse(null) : null;
 	}
 
 	@Override
 	@Nullable
 	public String getConversationId() {
-		MartiniResult result = CONVERSATION.get();
+		MartiniResult result = getMartiniResult().orElse(null);
 		return null == result ? null : getConversationId(result);
 	}
 
@@ -101,14 +129,19 @@ public class DefaultMartiniScenarioScope implements MartiniScenarioScope {
 		Scoped scoped = getWrappedBean(name).orElseGet(() -> {
 			Object bean = objectFactory.getObject();
 			Scoped wrapped = Scoped.bean(name, bean);
-			return SCOPED.get().push(wrapped);
+			return getScoped().push(wrapped);
 		});
 		return scoped.getObject();
 	}
 
+	protected Stack<Scoped> getScoped() {
+		Thread thread = Thread.currentThread();
+		return scopeIndex.computeIfAbsent(thread, t -> new Stack<>());
+	}
+
 	protected Optional<Scoped> getWrappedBean(String name) {
 		checkNotNull(name, "null String");
-		return SCOPED.get().stream()
+		return getScoped().stream()
 			.filter(Scoped::isBean)
 			.filter(s -> s.getName().equals(name))
 			.findFirst();
@@ -121,12 +154,12 @@ public class DefaultMartiniScenarioScope implements MartiniScenarioScope {
 
 		getDestructionCallback(name).ifPresent(s -> remove(name));
 		Scoped wrapped = Scoped.destructionCallback(name, callback);
-		SCOPED.get().push(wrapped);
+		getScoped().push(wrapped);
 	}
 
 	protected Optional<Scoped> getDestructionCallback(String name) {
 		checkNotNull(name, "null String");
-		return SCOPED.get().stream()
+		return getScoped().stream()
 			.filter(Scoped::isDestructionCallback)
 			.filter(s -> s.getName().equals(name))
 			.findFirst();
@@ -151,7 +184,7 @@ public class DefaultMartiniScenarioScope implements MartiniScenarioScope {
 	protected Object dispose(String name) {
 		Scoped wrapped = getWrappedBean(name).orElse(null);
 		if (null != wrapped) {
-			SCOPED.get().remove(wrapped);
+			getScoped().remove(wrapped);
 			dispose(wrapped);
 		}
 		return null == wrapped ? null : wrapped.getObject();
@@ -175,7 +208,7 @@ public class DefaultMartiniScenarioScope implements MartiniScenarioScope {
 		checkNotNull(name, "null String");
 		Scoped wrapped = getDestructionCallback(name).orElse(null);
 		if (null != wrapped) {
-			SCOPED.get().remove(wrapped);
+			getScoped().remove(wrapped);
 			destroy(wrapped);
 		}
 	}
@@ -195,7 +228,15 @@ public class DefaultMartiniScenarioScope implements MartiniScenarioScope {
 
 	@Override
 	public void clear() {
-		Stack<Scoped> scope = SCOPED.get();
+		Thread thread = Thread.currentThread();
+		Stack<Scoped> scoped = scopeIndex.get(thread);
+		if (null != scoped) {
+			clear(scoped);
+			closeConversation();
+		}
+	}
+
+	protected void clear(Stack<Scoped> scope) {
 		while (!scope.isEmpty()) {
 			Scoped scoped = scope.pop();
 			if (scoped.isBean()) {
@@ -205,11 +246,20 @@ public class DefaultMartiniScenarioScope implements MartiniScenarioScope {
 				destroy(scoped);
 			}
 		}
-		closeConversation();
 	}
 
 	protected void closeConversation() {
-		CONVERSATION.remove();
-		SCOPED.remove();
+		Thread thread = Thread.currentThread();
+		resultIndex.remove(thread);
+		scopeIndex.remove(thread);
+	}
+
+	@Override
+	public synchronized void stop() {
+		if (running.compareAndSet(true, false)) {
+			scopeIndex.values().forEach(this::clear);
+			scopeIndex.clear();
+			resultIndex.clear();
+		}
 	}
 }

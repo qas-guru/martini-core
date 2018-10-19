@@ -21,6 +21,7 @@ import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 
 import guru.qas.martini.event.AfterScenarioEvent;
+import guru.qas.martini.event.AfterSuiteEvent;
 import guru.qas.martini.event.BeforeScenarioEvent;
 import guru.qas.martini.result.MartiniResult;
 import guru.qas.martini.scope.MartiniScenarioScope;
@@ -44,6 +45,11 @@ public class ScenarioScopeListener {
 
 	@EventListener
 	public void handle(@SuppressWarnings("unused") AfterScenarioEvent ignored) {
+		scope.clear();
+	}
+
+	@EventListener
+	public void handle(@SuppressWarnings("unused") AfterSuiteEvent event) {
 		scope.clear();
 	}
 }
