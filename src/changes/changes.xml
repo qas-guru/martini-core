@@ -10,8 +10,9 @@
 	</properties>
 
 	<body>
-		<release version="4.0.1-JDK10" date="2018-09-26" description="Release 4.0.1 for Java 10">
+		<release version="4.0.2" date="2018-10-30" description="Release 4.0.2">
 			<action dev="pcurich" type="update">
+				Explicitly defining depedency on 5.1.2.RELEASE versioned Spring core and beans libraries.
 				Removing transitively duplicate dependencies from POM.
 				@Steps annotation now takes a name.
 				Logging warning when an unimplemented step is encountered.
