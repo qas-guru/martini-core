@@ -35,4 +35,6 @@ public interface MartiniScenarioScope extends Scope {
 	void setScenarioIdentifier(@Nullable MartiniResult result);
 
 	void clear();
+
+	void clear(Thread thread);
 }

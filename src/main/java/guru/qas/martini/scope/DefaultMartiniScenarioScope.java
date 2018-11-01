@@ -229,10 +229,16 @@ public class DefaultMartiniScenarioScope implements MartiniScenarioScope, SmartL
 	@Override
 	public void clear() {
 		Thread thread = Thread.currentThread();
+		clear(thread);
+	}
+
+	@Override
+	public void clear(Thread thread) {
+		checkNotNull(thread, "null Thread");
 		Stack<Scoped> scoped = scopeIndex.get(thread);
 		if (null != scoped) {
 			clear(scoped);
-			closeConversation();
+			closeConversation(thread);
 		}
 	}
 
@@ -248,8 +254,7 @@ public class DefaultMartiniScenarioScope implements MartiniScenarioScope, SmartL
 		}
 	}
 
-	protected void closeConversation() {
-		Thread thread = Thread.currentThread();
+	protected void closeConversation(Thread thread) {
 		resultIndex.remove(thread);
 		scopeIndex.remove(thread);
 	}
