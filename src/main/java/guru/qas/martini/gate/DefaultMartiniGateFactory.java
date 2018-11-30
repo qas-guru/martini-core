@@ -20,10 +20,12 @@ import java.lang.reflect.Method;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.Semaphore;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 
 import javax.annotation.Nonnull;
@@ -38,14 +40,13 @@ import org.springframework.core.env.Environment;
 
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
-import com.google.common.collect.HashBasedTable;
-import com.google.common.collect.Maps;
-import com.google.common.collect.Table;
+import com.google.common.collect.ArrayListMultimap;
+import com.google.common.collect.Multimap;
 
 import guru.qas.martini.annotation.Gated;
 import guru.qas.martini.step.StepImplementation;
 
-import static com.google.common.base.Preconditions.*;
+import static com.google.common.base.Preconditions.checkState;
 
 @SuppressWarnings("WeakerAccess")
 @Configurable
@@ -56,7 +57,7 @@ public class DefaultMartiniGateFactory implements MartiniGateFactory, Initializi
 	}
 
 	protected final Environment environment;
-	protected final Cache<String, Semaphore> semaphores;
+	protected final Cache<String, Optional<Semaphore>> index;
 	protected final Logger logger;
 
 	protected boolean ignoringGates;
@@ -65,7 +66,7 @@ public class DefaultMartiniGateFactory implements MartiniGateFactory, Initializi
 	@Autowired
 	DefaultMartiniGateFactory(Environment environment) {
 		this.environment = environment;
-		semaphores = CacheBuilder.newBuilder().build();
+		index = CacheBuilder.newBuilder().build();
 		this.logger = LoggerFactory.getLogger(getClass());
 	}
 
@@ -87,35 +88,27 @@ public class DefaultMartiniGateFactory implements MartiniGateFactory, Initializi
 		Gated[] classAnnotations = declaringClass.getDeclaredAnnotationsByType(Gated.class);
 		Gated[] methodAnnotations = method.getDeclaredAnnotationsByType(Gated.class);
 
-		Table<String, Source, Integer> table = HashBasedTable.create();
-		add(classAnnotations, Source.CLASS, table);
-		add(methodAnnotations, Source.METHOD, table);
+		ArrayListMultimap<String, Source> map = ArrayListMultimap.create();
+		add(classAnnotations, Source.CLASS, map);
+		add(methodAnnotations, Source.METHOD, map);
 
-		return getGates(table);
+		return getGates(map);
 	}
 
-	protected void add(Gated[] annotations, Source column, Table<String, Source, Integer> table) {
+	protected void add(Gated[] annotations, Source column, Multimap<String, Source> gates) {
 		Arrays.stream(annotations).forEach(a -> {
 			String row = a.name();
-			int value = a.priority();
-			table.put(row, column, value);
+			gates.put(row, column);
 		});
 	}
 
-	protected Collection<MartiniGate> getGates(Table<String, Source, Integer> table) {
-		Set<String> gateNames = table.rowKeySet();
+	protected Collection<MartiniGate> getGates(Multimap<String, Source> map) {
+		Set<String> gateNames = map.keySet();
 
 		return gateNames.stream()
 			.map(n -> {
-				Integer priority = table.contains(n, Source.METHOD) ? table.get(n, Source.METHOD) : table.get(n, Source.CLASS);
-				checkNotNull(priority, "table contains neither METHOD or CLASS priority for row: %s", table.row(n));
-				return Maps.immutableEntry(n, priority);
-			})
-			.map(e -> {
-				Integer priority = e.getValue();
-				String gateName = e.getKey();
-				Semaphore semaphore = getSemaphore(gateName).orElse(null);
-				return null == semaphore ? null : new DefaultMartiniGate(priority, gateName, semaphore);
+				Semaphore semaphore = getSemaphore(n).orElse(null);
+				return null == semaphore ? null : new DefaultMartiniGate(n, semaphore);
 			})
 			.filter(Objects::nonNull)
 			.collect(Collectors.toList());
@@ -123,23 +116,27 @@ public class DefaultMartiniGateFactory implements MartiniGateFactory, Initializi
 
 	protected Optional<Semaphore> getSemaphore(String gateName) {
 		try {
-			Semaphore semaphore = semaphores.get(gateName, () -> {
-				Integer permits = getPermits(gateName);
-				if (null != permits) {
+			return index.get(gateName, () -> {
+				AtomicReference<Semaphore> ref = new AtomicReference<>();
+				getPermits(gateName).ifPresent(permits -> {
 					logger.info("creating {} gate semaphore with {} permits", gateName, permits);
-				}
-				return null == permits ? null : new Semaphore(permits, true);
+					ref.set(new Semaphore(permits, true));
+				});
+				return Optional.ofNullable(ref.get());
 			});
-			return Optional.ofNullable(semaphore);
 		}
 		catch (Exception e) {
 			throw new RuntimeException("unable to obtain semaphore for gate " + gateName, e);
 		}
 	}
 
-	protected Integer getPermits(String gateName) {
-		String property = String.format(MartiniGateFactory.PROPERTY_GATE_PERMIT_TEMPLATE, gateName);
+	protected Optional<Integer> getPermits(String gateName) {
+		String property = String.format(PROPERTY_GATE_PERMIT_TEMPLATE, gateName);
 		String configured = environment.getProperty(property, String.valueOf(defaultGatePermits)).trim();
-		return MartiniGateFactory.PROPERTY_GATE_IGNORED.equals(configured) ? null : Integer.parseInt(configured);
+		Integer permits = PROPERTY_GATE_IGNORED.equals(configured) ? null : Integer.parseInt(configured);
+		checkState(null == permits || permits > 0,
+			"invalid permit setting %s for gate %s, must be %s or greater than zero",
+			permits, gateName, PROPERTY_GATE_IGNORED);
+		return Optional.ofNullable(permits);
 	}
 }

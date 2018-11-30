@@ -18,8 +18,6 @@ package guru.qas.martini.gate;
 
 public interface MartiniGate {
 
-	int getPriority();
-
 	String getName();
 
 	boolean enter();
