@@ -44,6 +44,11 @@ public class DefaultMartiniGate implements MartiniGate {
 	}
 
 	@Override
+	public int getPermits() {
+		return semaphore.availablePermits();
+	}
+
+	@Override
 	public boolean enter() {
 		synchronized (hasPermit) {
 			checkState(!hasPermit.get(), "gate already holds a permit");

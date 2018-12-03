@@ -20,6 +20,8 @@ public interface MartiniGate {
 
 	String getName();
 
+	int getPermits();
+
 	boolean enter();
 
 	void leave();
