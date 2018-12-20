@@ -15,7 +15,7 @@
 				SuiteIdentifier now injected onto MartiniCallable.
 				Added dependency on ch.qos.cal10n:cal10n-api.
 				Switching MartiniCallable to localized logging.
-				Added interface guru.qas.martini.result.ModifiableMartiniResult.
+				Added interface guru.qas.martini.result.MutableMartiniResult.
 				Class guru.qas.martini.result.DefaultMartiniResult extends ModifiableMartiniResult.
 			</action>
 		</release>

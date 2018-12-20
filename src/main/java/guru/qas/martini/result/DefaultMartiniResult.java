@@ -35,7 +35,7 @@ import guru.qas.martini.tag.Categories;
 import static com.google.common.base.Preconditions.*;
 
 @SuppressWarnings({"WeakerAccess", "unused"})
-public class DefaultMartiniResult implements ModifiableMartiniResult {
+public class DefaultMartiniResult implements MutableMartiniResult {
 
 	protected final UUID id;
 	protected final SuiteIdentifier suiteIdentifier;

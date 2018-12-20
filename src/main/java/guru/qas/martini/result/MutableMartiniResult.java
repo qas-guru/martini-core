@@ -16,7 +16,7 @@ limitations under the License.
 
 package guru.qas.martini.result;
 
-public interface ModifiableMartiniResult extends MartiniResult {
+public interface MutableMartiniResult extends MartiniResult {
 
 	void add(StepResult result);
 }
