@@ -10,6 +10,15 @@
 	</properties>
 
 	<body>
+		<release version="4.1.1" date="2018-12-20" description="Release 4.1.1">
+			<action dev="pcurich" type="update">
+				SuiteIdentifier now injected onto MartiniCallable.
+				Added dependency on ch.qos.cal10n:cal10n-api.
+				Switching MartiniCallable to localized logging.
+				Added interface guru.qas.martini.result.ModifiableMartiniResult.
+				Class guru.qas.martini.result.DefaultMartiniResult extends ModifiableMartiniResult.
+			</action>
+		</release>
 		<release version="4.1.0" date="2018-11-29" description="Release 4.1.0">
 			<action dev="pcurich" type="update">
 				Updating to Java 11.

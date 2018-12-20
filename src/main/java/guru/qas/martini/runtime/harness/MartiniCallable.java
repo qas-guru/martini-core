@@ -29,14 +29,17 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.apache.http.HttpEntity;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.slf4j.cal10n.LocLogger;
+import org.slf4j.cal10n.LocLoggerFactory;
 import org.springframework.beans.factory.BeanFactory;
+import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Configurable;
-import org.springframework.context.MessageSource;
 import org.springframework.core.convert.ConversionService;
 
+import com.google.common.base.Throwables;
+
+import ch.qos.cal10n.IMessageConveyor;
 import gherkin.ast.Examples;
 import gherkin.ast.ScenarioDefinition;
 import gherkin.ast.ScenarioOutline;
@@ -47,10 +50,10 @@ import gherkin.pickles.Pickle;
 import gherkin.pickles.PickleLocation;
 import guru.qas.martini.Martini;
 import guru.qas.martini.MartiniException;
+import guru.qas.martini.Messages;
 import guru.qas.martini.event.Status;
 import guru.qas.martini.event.SuiteIdentifier;
 import guru.qas.martini.gherkin.Recipe;
-import guru.qas.martini.i18n.MessageSources;
 import guru.qas.martini.result.DefaultMartiniResult;
 import guru.qas.martini.result.DefaultStepResult;
 import guru.qas.martini.result.MartiniResult;
@@ -61,22 +64,28 @@ import guru.qas.martini.step.UnimplementedStepException;
 import guru.qas.martini.tag.Categories;
 
 import static com.google.common.base.Preconditions.*;
-import static guru.qas.martini.event.Status.PASSED;
+import static guru.qas.martini.runtime.harness.MartiniCallableMessages.*;
 
 @SuppressWarnings({"WeakerAccess", "unused"})
 @Configurable
-public class MartiniCallable implements Callable<MartiniResult> {
+public class MartiniCallable implements Callable<MartiniResult>, InitializingBean {
 
 	private static final Pattern OUTLINE_PATTERN = Pattern.compile("^<(.*)>$");
 
-	protected final Logger logger;
-	protected final SuiteIdentifier suiteIdentifier;
 	protected final Martini martini;
 
 	protected BeanFactory beanFactory;
+	protected SuiteIdentifier suiteIdentifier;
 	protected EventManager eventManager;
 	protected ConversionService conversionService;
 	protected Categories categories;
+
+	protected LocLogger logger;
+
+	@Autowired
+	protected void set(SuiteIdentifier i) {
+		this.suiteIdentifier = i;
+	}
 
 	@Autowired
 	protected void set(BeanFactory beanFactory) {
@@ -98,13 +107,20 @@ public class MartiniCallable implements Callable<MartiniResult> {
 		this.categories = categories;
 	}
 
-	public MartiniCallable(
-		SuiteIdentifier suiteIdentifier,
-		Martini martini
-	) {
-		this.suiteIdentifier = checkNotNull(suiteIdentifier, "null SuiteIdentifier");
+	public MartiniCallable(Martini martini) {
 		this.martini = checkNotNull(martini, "null Martini");
-		this.logger = LoggerFactory.getLogger(getClass());
+	}
+
+	@SuppressWarnings("RedundantThrows")
+	@Override
+	public void afterPropertiesSet() throws Exception {
+		setUpLogger();
+	}
+
+	protected void setUpLogger() {
+		IMessageConveyor messageConveyor = Messages.getMessageConveyor();
+		LocLoggerFactory loggerFactory = new LocLoggerFactory(messageConveyor);
+		logger = loggerFactory.getLocLogger(this.getClass());
 	}
 
 	@Override
@@ -130,7 +146,7 @@ public class MartiniCallable implements Callable<MartiniResult> {
 				eventManager.publishBeforeStep(this, result);
 
 				StepImplementation implementation = mapEntry.getValue();
-				if (null == stepResult || PASSED.equals(stepResult.getStatus().orElse(null))) {
+				if (null == stepResult || Status.PASSED.equals(stepResult.getStatus().orElse(null))) {
 					stepResult = execute(step, implementation);
 				}
 				else {
@@ -145,7 +161,9 @@ public class MartiniCallable implements Callable<MartiniResult> {
 			}
 		}
 		catch (RuntimeException e) {
-			logger.warn("unable to execute Martini {}; will rethrow RuntimeException", martini, e);
+			String stacktrace = Throwables.getStackTraceAsString(e);
+			logger.warn(UNEXPECTED_EXCEPTION, martini, stacktrace);
+			e.fillInStackTrace();
 			throw e;
 		}
 		finally {
@@ -159,8 +177,8 @@ public class MartiniCallable implements Callable<MartiniResult> {
 
 	private void logScenario() {
 		if (logger.isInfoEnabled()) {
-			String martiniId = martini.getId();
-			logger.info("executing scenario {}", martiniId);
+			String id = martini.getId();
+			logger.info(STARTING, id);
 		}
 	}
 
@@ -172,9 +190,9 @@ public class MartiniCallable implements Callable<MartiniResult> {
 		try {
 			Method method = implementation.getMethod().orElseThrow(() -> {
 				Recipe recipe = martini.getRecipe();
-				UnimplementedStepException exception =
-					new UnimplementedStepException.Builder().setRecipe(recipe).setStep(step).build();
-				logger.warn(exception.getMessage());
+				UnimplementedStepException exception = new UnimplementedStepException.Builder().setRecipe(recipe).setStep(step).build();
+				String message = exception.getLocalizedMessage();
+				logger.warn(message);
 				return exception;
 			});
 
@@ -185,7 +203,7 @@ public class MartiniCallable implements Callable<MartiniResult> {
 			if (o instanceof HttpEntity) {
 				result.add((HttpEntity) o);
 			}
-			result.setStatus(PASSED);
+			result.setStatus(Status.PASSED);
 		}
 		catch (UnimplementedStepException e) {
 			result.setException(e);
@@ -206,7 +224,7 @@ public class MartiniCallable implements Callable<MartiniResult> {
 			String scenarioId = getScenarioId();
 			String keyword = step.getKeyword().trim();
 			String text = step.getText().trim();
-			logger.info("executing {} @{} {}", scenarioId, keyword, text);
+			logger.info(EXECUTING_STEP, scenarioId, keyword, text);
 		}
 	}
 
@@ -229,19 +247,20 @@ public class MartiniCallable implements Callable<MartiniResult> {
 
 				switch (status) {
 					case PASSED:
-						logger.info("{}: {} @{} {}", status, scenarioId, keyword, stepText);
+						logger.info(MartiniCallableMessages.PASSED, status, scenarioId, keyword, stepText);
 						break;
 					case FAILED:
 						Exception exception = result.getException().orElse(null);
 						if (null == exception) {
-							logger.error("{}: {} @{} {}", status, scenarioId, keyword, stepText);
+							logger.info(FAILED, status, scenarioId, keyword, stepText);
 						}
 						else {
-							logger.error("{}: {} @{} {}", status, scenarioId, keyword, stepText, exception);
+							String stacktrace = '\n' + Throwables.getStackTraceAsString(exception);
+							logger.info(FAILED_WITH_EXCEPTION, status, scenarioId, keyword, stepText, stacktrace);
 						}
 						break;
 					default:
-						logger.warn("{}: {} @{} {}", status, scenarioId, keyword, stepText);
+						logger.warn(SKIPPED, status, scenarioId, keyword, stepText);
 						break;
 				}
 			}
@@ -277,10 +296,10 @@ public class MartiniCallable implements Callable<MartiniResult> {
 				}
 			}
 
-			checkState(null != header, "unable to locate matching Examples table");
+			checkState(null != header, Messages.getMessage(MISSING_EXAMPLES));
 			List<TableCell> headerCells = header.getCells();
 			List<TableCell> rowCells = match.getCells();
-			checkState(headerCells.size() == rowCells.size(), "Examples header to row size mismatch");
+			checkState(headerCells.size() == rowCells.size(), Messages.getMessage(INVALID_EXAMPLES_HEADER));
 			for (int i = 0; i < headerCells.size(); i++) {
 				String headerValue = headerCells.get(i).getValue();
 				String rowValue = rowCells.get(i).getValue();
@@ -303,7 +322,7 @@ public class MartiniCallable implements Callable<MartiniResult> {
 				}
 				else {
 					Matcher tableMatcher = OUTLINE_PATTERN.matcher(parameterAsString);
-					checkState(tableMatcher.find(), "Example table keys must be in the format <key>");
+					checkState(tableMatcher.find(), Messages.getMessage(INVALID_EXAMPLES_FORMAT));
 					String key = tableMatcher.group(1);
 					String tableValue = exampleValues.get(key);
 					converted = conversionService.convert(tableValue, parameterType);
@@ -322,11 +341,10 @@ public class MartiniCallable implements Callable<MartiniResult> {
 		if (null != pattern) {
 			String text = step.getText();
 			matcher = pattern.matcher(text);
-			checkState(matcher.find(),
-				"unable to locate substitution parameters for pattern %s with input %s", pattern.pattern(), text);
+			checkState(matcher.find(), Messages.getMessage(INVALID_SUBSTITUTION, pattern.pattern(), text));
 		}
 
-		return checkNotNull(matcher, "unable to create Matcher");
+		return checkNotNull(matcher, Messages.getMessage(NO_MATCHER));
 	}
 
 	protected Object getBean(Method method) {
@@ -334,30 +352,22 @@ public class MartiniCallable implements Callable<MartiniResult> {
 		return beanFactory.getBean(declaringClass);
 	}
 
-	protected Object execute(Method method, Object bean, Object[] arguments) {
+	protected Object execute(Method method, Object bean, Object[] arguments) throws MartiniException {
 		assertNotInterrupted();
-		Throwable cause;
 
 		try {
 			return method.invoke(bean, arguments);
 		}
 		catch (InvocationTargetException e) {
-			cause = e.getCause();
+			throw new MartiniException(e.getCause(), EXECUTION_EXCEPTION);
 		}
 		catch (Exception e) {
-			cause = e;
+			throw new MartiniException(e, EXECUTION_EXCEPTION);
 		}
-
-		MessageSource messageSource = MessageSources.getMessageSource(this.getClass());
-		throw new MartiniException.Builder()
-			.setMessageSource(messageSource)
-			.setCause(cause)
-			.setKey("execution.exception")
-			.build();
 	}
 
 	protected void assertNotInterrupted() {
 		Thread thread = Thread.currentThread();
-		checkState(!thread.isInterrupted(), "execution interrupted");
+		checkState(!thread.isInterrupted(), Messages.getMessage(INTERRUPTED));
 	}
 }

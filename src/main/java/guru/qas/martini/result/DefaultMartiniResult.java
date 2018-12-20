@@ -35,7 +35,7 @@ import guru.qas.martini.tag.Categories;
 import static com.google.common.base.Preconditions.*;
 
 @SuppressWarnings({"WeakerAccess", "unused"})
-public class DefaultMartiniResult implements MartiniResult {
+public class DefaultMartiniResult implements ModifiableMartiniResult {
 
 	protected final UUID id;
 	protected final SuiteIdentifier suiteIdentifier;
@@ -95,6 +95,7 @@ public class DefaultMartiniResult implements MartiniResult {
 		this.stepResults = new ArrayList<>();
 	}
 
+	@Override
 	public void add(StepResult result) {
 		checkNotNull(result, "null StepResult");
 		stepResults.add(result);

@@ -18,9 +18,11 @@ package guru.qas.martini;
 
 import java.util.Locale;
 
+import javax.annotation.Nullable;
+
 import org.springframework.context.MessageSource;
 
-import static com.google.common.base.Preconditions.checkState;
+import static com.google.common.base.Preconditions.*;
 
 /**
  * {@inheritDoc}
@@ -59,6 +61,11 @@ public class MartiniException extends RuntimeException {
 		super(message, cause);
 	}
 
+	public MartiniException(@Nullable Throwable cause, Enum<?> messageKey, Object... messageArgs) {
+		super(Messages.getMessage(checkNotNull(messageKey, "null Enum"), messageArgs), cause);
+	}
+
+	@Deprecated
 	@SuppressWarnings("unused")
 	public static class Builder {
 
