@@ -27,7 +27,7 @@ import static com.google.common.base.Preconditions.*;
 /**
  * {@inheritDoc}
  */
-@SuppressWarnings({"WeakerAccess", "DeprecatedIsStillUsed"})
+@SuppressWarnings({"WeakerAccess", "DeprecatedIsStillUsed", "unused"})
 public class MartiniException extends RuntimeException {
 
 	/**
@@ -61,8 +61,14 @@ public class MartiniException extends RuntimeException {
 		super(message, cause);
 	}
 
-	public MartiniException(@Nullable Throwable cause, Enum<?> messageKey, Object... messageArgs) {
-		super(Messages.getMessage(checkNotNull(messageKey, "null Enum"), messageArgs), cause);
+	public MartiniException(Throwable cause, Enum<?> messageKey, @Nullable Object... messageArgs) {
+		super(
+			Messages.getMessage(checkNotNull(messageKey, "null Enum"), messageArgs),
+			checkNotNull(cause, "null Throwable"));
+	}
+
+	public MartiniException(Enum<?> messageKey, @Nullable Object... messageArgs) {
+		super(Messages.getMessage(checkNotNull(messageKey, "null Enum"), messageArgs));
 	}
 
 	@Deprecated
