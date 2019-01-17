@@ -10,6 +10,21 @@
 	</properties>
 
 	<body>
+		<release version="4.3" date="2019-01-17" description="Release 4.3">
+			<action dev="pcurich" type="remove">
+				Removed MessageSources.
+			</action>
+			<action dev="pcurich" type="update">
+				Updated Spring dependency to version 5.1.4.RELEASE.
+				Moved StepImplementationResolver to package guru.qas.martini.step from guru.qas.martini.
+				Moved MartiniException to package guru.qas.exception from guru.qas.
+				Removed deprecated methods from MartiniException.
+				Adding new SkippedException, extending MartiniException.
+				Moved UnimplementedStepException and AmbiguousStepException to package guru.qas.martini.step.exception.
+				UnimplementedStepException extends SkippedException.
+				Replaced old message handling with cal10n in various classes.
+			</action>
+		</release>
 		<release version="4.1.2" date="2019-01-10" description="Release 4.1.2">
 			<action dev="pcurich" type="update">
 				BeforeStepEvent and AfterStepEvent now returns step.

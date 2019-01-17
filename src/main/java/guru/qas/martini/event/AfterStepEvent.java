@@ -24,7 +24,7 @@ import com.google.common.collect.Iterables;
 
 import gherkin.ast.Step;
 import guru.qas.martini.Martini;
-import guru.qas.martini.MartiniException;
+import exception.MartiniException;
 import guru.qas.martini.result.MartiniResult;
 import guru.qas.martini.result.StepResult;
 

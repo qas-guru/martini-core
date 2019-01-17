@@ -1,5 +1,5 @@
 /*
-Copyright 2017-2018 Penny Rohr Curich
+Copyright 2017-2019 Penny Rohr Curich
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -14,42 +14,38 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package guru.qas.martini.step;
+package guru.qas.martini.step.exception;
 
-import org.springframework.context.MessageSource;
+import javax.annotation.Nullable;
+
 import org.springframework.core.io.Resource;
 
+import exception.SkippedException;
 import gherkin.ast.Location;
 import gherkin.ast.Step;
-import guru.qas.martini.MartiniException;
 import guru.qas.martini.gherkin.FeatureWrapper;
 import guru.qas.martini.gherkin.Recipe;
-import guru.qas.martini.i18n.MessageSources;
 
 import static com.google.common.base.Preconditions.checkNotNull;
+import static guru.qas.martini.step.exception.UnimplementedStepExceptionMessages.*;
 
 @SuppressWarnings("WeakerAccess")
-public class UnimplementedStepException extends MartiniException {
+public class UnimplementedStepException extends SkippedException {
 
-	/**
-	 * {@inheritDoc}
-	 * <p>
-	 * deprecated, use {@link guru.qas.martini.step.UnimplementedStepException.Builder new guru.qas.martini.step.UnimplementedStepException.Builder()}
-	 */
-	@SuppressWarnings("DeprecatedIsStillUsed")
-	@Deprecated
-	protected UnimplementedStepException(String message) {
-		super(message);
+	protected UnimplementedStepException(Enum<?> messageKey, @Nullable Object... messageArgs) {
+		super(checkNotNull(messageKey, "null Enum"), messageArgs);
 	}
 
-	public static class Builder extends MartiniException.Builder {
+	public static Builder builder() {
+		return new Builder();
+	}
 
-		protected static final String KEY = "martini.unimplemented.step";
+	public static class Builder {
 
-		private Recipe recipe;
-		private Step step;
+		protected Recipe recipe;
+		protected Step step;
 
-		public Builder() {
+		protected Builder() {
 			super();
 		}
 
@@ -63,22 +59,15 @@ public class UnimplementedStepException extends MartiniException {
 			return this;
 		}
 
-		@SuppressWarnings("deprecation")
-		@Override
 		public UnimplementedStepException build() {
 			checkNotNull(recipe, "null Recipe");
 			checkNotNull(step, "null Step");
 
-			MessageSource messageSource = MessageSources.getMessageSource(UnimplementedStepException.class);
-			super.setMessageSource(messageSource);
-
-			super.setKey(KEY);
-
-			Object[] arguments = getArguments();
-			super.setArguments(arguments);
-
-			String message = getMessage();
-			return new UnimplementedStepException(message);
+			String description = getDescription();
+			int line = getLine();
+			String keyword = getKeyword();
+			String text = getText();
+			return new UnimplementedStepException(UNIMPLEMENTED_STEP, description, line, keyword, text);
 		}
 
 		protected Object[] getArguments() {

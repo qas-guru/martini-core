@@ -40,6 +40,7 @@ import org.springframework.core.convert.ConversionService;
 import com.google.common.base.Throwables;
 
 import ch.qos.cal10n.IMessageConveyor;
+import exception.SkippedException;
 import gherkin.ast.Examples;
 import gherkin.ast.ScenarioDefinition;
 import gherkin.ast.ScenarioOutline;
@@ -49,7 +50,7 @@ import gherkin.ast.TableRow;
 import gherkin.pickles.Pickle;
 import gherkin.pickles.PickleLocation;
 import guru.qas.martini.Martini;
-import guru.qas.martini.MartiniException;
+import exception.MartiniException;
 import guru.qas.martini.Messages;
 import guru.qas.martini.event.Status;
 import guru.qas.martini.event.SuiteIdentifier;
@@ -60,7 +61,7 @@ import guru.qas.martini.result.MartiniResult;
 import guru.qas.martini.result.StepResult;
 import guru.qas.martini.runtime.event.EventManager;
 import guru.qas.martini.step.StepImplementation;
-import guru.qas.martini.step.UnimplementedStepException;
+import guru.qas.martini.step.exception.UnimplementedStepException;
 import guru.qas.martini.tag.Categories;
 
 import static com.google.common.base.Preconditions.*;
@@ -190,7 +191,8 @@ public class MartiniCallable implements Callable<MartiniResult>, InitializingBea
 		try {
 			Method method = implementation.getMethod().orElseThrow(() -> {
 				Recipe recipe = martini.getRecipe();
-				UnimplementedStepException exception = new UnimplementedStepException.Builder().setRecipe(recipe).setStep(step).build();
+				UnimplementedStepException exception =
+					UnimplementedStepException.builder().setRecipe(recipe).setStep(step).build();
 				String message = exception.getLocalizedMessage();
 				logger.warn(message);
 				return exception;
@@ -205,7 +207,7 @@ public class MartiniCallable implements Callable<MartiniResult>, InitializingBea
 			}
 			result.setStatus(Status.PASSED);
 		}
-		catch (UnimplementedStepException e) {
+		catch (SkippedException e) {
 			result.setException(e);
 			result.setStatus(Status.SKIPPED);
 		}

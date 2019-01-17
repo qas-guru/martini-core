@@ -1,5 +1,5 @@
 /*
-Copyright 2018 Penny Rohr Curich
+Copyright 2019 Penny Rohr Curich
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -14,16 +14,14 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package guru.qas.martini;
+package guru.qas.martini.tag;
 
-import javax.annotation.Nonnull;
+import ch.qos.cal10n.BaseName;
+import ch.qos.cal10n.Locale;
+import ch.qos.cal10n.LocaleData;
 
-import gherkin.ast.Step;
-import guru.qas.martini.step.AmbiguousStepException;
-import guru.qas.martini.step.StepImplementation;
-
-public interface StepImplementationResolver {
-
-	StepImplementation getImplementation(@Nonnull Step step) throws AmbiguousStepException;
-
+@BaseName("guru.qas.martini.tag.defaultMartiniTagMessages")
+@LocaleData({@Locale("en")})
+public enum DefaultMartiniTagMessages {
+	ILLEGAL_SYNTAX
 }

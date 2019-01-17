@@ -1,5 +1,5 @@
 /*
-Copyright 2018 Penny Rohr Curich
+Copyright 2018-2019 Penny Rohr Curich
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -31,8 +31,8 @@ import org.springframework.stereotype.Component;
 import com.google.common.collect.Iterables;
 
 import gherkin.ast.Step;
-import guru.qas.martini.StepImplementationResolver;
-import guru.qas.martini.step.AmbiguousStepException;
+import guru.qas.martini.step.StepImplementationResolver;
+import guru.qas.martini.step.exception.AmbiguousStepException;
 import guru.qas.martini.step.DefaultStepImplementation;
 import guru.qas.martini.step.StepImplementation;
 
@@ -63,7 +63,7 @@ public class DefaultStepImplementationResolver implements StepImplementationReso
 			match = Iterables.getOnlyElement(matches);
 		}
 		else if (count > 1) {
-			throw new AmbiguousStepException.Builder().setStep(step).setMatches(matches).build();
+			throw AmbiguousStepException.builder().setStep(step).setMatches(matches).build();
 		}
 		else {
 			match = getUnimplemented(step);

@@ -1,5 +1,5 @@
 /*
-Copyright 2017-2018 Penny Rohr Curich
+Copyright 2017-2019 Penny Rohr Curich
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -20,13 +20,10 @@ import java.util.Optional;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import org.springframework.context.MessageSource;
-
 import com.google.common.base.Objects;
 
 import gherkin.pickles.PickleTag;
-import guru.qas.martini.MartiniException;
-import guru.qas.martini.i18n.MessageSources;
+import exception.MartiniException;
 
 import static com.google.common.base.Preconditions.*;
 
@@ -74,8 +71,6 @@ public class DefaultMartiniTag implements MartiniTag {
 	@SuppressWarnings({"WeakerAccess", "UnusedReturnValue"})
 	public static class Builder {
 
-		protected static final String KEY_ILLEGAL_SYNTAX = "martini.illegal.tag.syntax";
-
 		protected static final Pattern PATTERN_SIMPLE = Pattern.compile("^@(.+)$");
 		protected static final Pattern PATTERN_ARGUMENTED = Pattern.compile("^@(.+)\\(\"(.+)\"\\)$");
 
@@ -94,13 +89,8 @@ public class DefaultMartiniTag implements MartiniTag {
 
 			DefaultMartiniTag tag = getArgumented().orElseGet(this::getSimple);
 			if (null == tag) {
-				MessageSource messageSource = MessageSources.getMessageSource(DefaultMartiniTag.class);
 				String input = getInput();
-				throw new MartiniException.Builder()
-					.setMessageSource(messageSource)
-					.setKey(KEY_ILLEGAL_SYNTAX)
-					.setArguments(input)
-					.build();
+				throw new MartiniException(DefaultMartiniTagMessages.ILLEGAL_SYNTAX, input);
 			}
 			return tag;
 		}

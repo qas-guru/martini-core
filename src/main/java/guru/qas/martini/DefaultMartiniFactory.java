@@ -31,9 +31,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Configurable;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
-import org.springframework.context.MessageSource;
 import org.springframework.core.io.Resource;
 
+import exception.MartiniException;
 import gherkin.ast.Background;
 import gherkin.ast.ScenarioDefinition;
 import gherkin.ast.Step;
@@ -42,8 +42,8 @@ import guru.qas.martini.gate.MartiniGateFactory;
 import guru.qas.martini.gherkin.GherkinResourceLoader;
 import guru.qas.martini.gherkin.Mixology;
 import guru.qas.martini.gherkin.Recipe;
-import guru.qas.martini.i18n.MessageSources;
 import guru.qas.martini.step.StepImplementation;
+import guru.qas.martini.step.StepImplementationResolver;
 import guru.qas.martini.tag.Categories;
 
 import static com.google.common.base.Preconditions.*;
@@ -98,12 +98,7 @@ public class DefaultMartiniFactory implements MartiniFactory, ApplicationContext
 			return Arrays.stream(resources).collect(Collectors.toList());
 		}
 		catch (IOException e) {
-			MessageSource messageSource = MessageSources.getMessageSource(getClass());
-			throw new MartiniException.Builder()
-				.setCause(e)
-				.setMessageSource(messageSource)
-				.setKey("exception.loading.feature.resources")
-				.build();
+			throw new MartiniException(e, DefaultMartiniFactoryMessages.LOADING_ERROR);
 		}
 	}
 

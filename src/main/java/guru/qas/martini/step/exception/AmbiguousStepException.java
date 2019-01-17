@@ -1,5 +1,5 @@
 /*
-Copyright 2017-2018 Penny Rohr Curich
+Copyright 2017-2019 Penny Rohr Curich
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package guru.qas.martini.step;
+package guru.qas.martini.step.exception;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
@@ -23,43 +23,38 @@ import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
-import org.springframework.context.MessageSource;
+import javax.annotation.Nullable;
 
 import com.google.common.base.Joiner;
 import com.google.common.collect.Lists;
 
 import gherkin.ast.Step;
-import guru.qas.martini.DefaultMartini;
-import guru.qas.martini.MartiniException;
+import exception.MartiniException;
+import guru.qas.martini.Messages;
 import guru.qas.martini.gherkin.Recipe;
-import guru.qas.martini.i18n.MessageSources;
+import guru.qas.martini.step.StepImplementation;
 
 import static com.google.common.base.Preconditions.*;
+import static guru.qas.martini.step.exception.AmbiguousStepExceptionMessages.*;
 
 @SuppressWarnings("WeakerAccess")
 public class AmbiguousStepException extends MartiniException {
 
-	/**
-	 * {@inheritDoc}
-	 * <p>
-	 * deprecated, use {@link guru.qas.martini.step.AmbiguousStepException.Builder new guru.qas.martini.step.AmbiguousStepException.Builder()}
-	 */
-	@SuppressWarnings("DeprecatedIsStillUsed")
-	@Deprecated
-	protected AmbiguousStepException(String message) {
-		super(message);
+	public AmbiguousStepException(Enum<?> messageKey, @Nullable Object... messageArgs) {
+		super(checkNotNull(messageKey, "null Enum"), messageArgs);
 	}
 
-	public static class Builder extends MartiniException.Builder {
+	public static Builder builder() {
+		return new Builder();
+	}
 
-		protected static final String KEY = "martini.ambiguous.step";
-		protected static final String KEY_DETAIL = "martini.ambigious.step.detail";
+	public static class Builder {
 
 		protected Recipe recipe;
 		protected Step step;
 		protected List<StepImplementation> matches;
 
-		public Builder() {
+		protected Builder() {
 			super();
 			this.matches = new ArrayList<>();
 		}
@@ -84,27 +79,34 @@ public class AmbiguousStepException extends MartiniException {
 			return this;
 		}
 
-		@SuppressWarnings("deprecation")
 		public AmbiguousStepException build() {
 			checkState(null != step, "Step not set");
 			checkState(!matches.isEmpty(), "Iterable<StepImplementation> not set");
 
-			MessageSource messageSource = MessageSources.getMessageSource(DefaultMartini.class);
-			super.setMessageSource(messageSource);
-
-			Object[] arguments = getArguments();
-
-			super.setKey(KEY);
-			super.setArguments(arguments);
-			String message = super.getMessage();
-			return new AmbiguousStepException(message);
+			String id = recipe.getId();
+			String stepDescription = getStepDescription(step);
+			List<String> methodDescriptions = getMethodDescriptions();
+			String joined = '\n' + Joiner.on('\n').join(methodDescriptions);
+			return new AmbiguousStepException(AMBIGUOUS_STEP, id, stepDescription, joined);
 		}
 
-		protected Object[] getArguments() {
-			List<String> details = getDetails();
-			String summary = Joiner.on('\n').join(details);
-			String description = getStepDescription(step);
-			return new Object[]{description, summary};
+		protected List<String> getMethodDescriptions() {
+			return matches.stream().map(Builder::getMethodDescription).collect(Collectors.toList());
+		}
+
+		protected static String getMethodDescription(StepImplementation match) {
+			Method method = getMethod(match);
+			Annotation[] annotations = method.getAnnotations();
+			String joinedAnnotations = Joiner.on("\n\t").join(annotations);
+			return Messages.getMessage(METHOD, method, joinedAnnotations);
+		}
+
+		private static Method getMethod(StepImplementation match) {
+			return match.getMethod().orElseThrow(() -> {
+				Class<? extends StepImplementation> implementation = match.getClass();
+				String message = String.format("no method; is StepImplementation %s returning false positives on isMatch()?", implementation);
+				throw new NullPointerException(message);
+			});
 		}
 
 		protected String getStepDescription(Step step) {
@@ -116,23 +118,6 @@ public class AmbiguousStepException extends MartiniException {
 		protected String getKeyword(Step step) {
 			String keyword = step.getKeyword();
 			return null == keyword ? "" : keyword.trim();
-		}
-
-		protected List<String> getDetails() {
-			return matches.stream().map(this::getDetail).collect(Collectors.toList());
-		}
-
-		protected String getDetail(StepImplementation match) {
-			Method method = match.getMethod().orElse(null);
-			checkNotNull(method,
-				"no method; is StepImplementation %s return false positives on isMatch()?", match.getClass());
-
-			Annotation[] annotations = method.getAnnotations();
-			String joinedAnnotations = Joiner.on("\n\t").join(annotations);
-
-			super.setKey(KEY_DETAIL);
-			super.setArguments(method, joinedAnnotations);
-			return super.getMessage();
 		}
 	}
 }

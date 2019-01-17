@@ -30,12 +30,11 @@ import java.util.stream.Stream;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
-import org.springframework.context.MessageSource;
-
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 
+import exception.MartiniException;
 import gherkin.ast.ScenarioDefinition;
 import gherkin.ast.Step;
 import gherkin.pickles.Pickle;
@@ -43,7 +42,6 @@ import gherkin.pickles.PickleLocation;
 import gherkin.pickles.PickleTag;
 import guru.qas.martini.gate.MartiniGate;
 import guru.qas.martini.gherkin.FeatureWrapper;
-import guru.qas.martini.i18n.MessageSources;
 import guru.qas.martini.tag.DefaultMartiniTag;
 import guru.qas.martini.gherkin.Recipe;
 import guru.qas.martini.step.StepImplementation;
@@ -162,8 +160,6 @@ public class DefaultMartini implements Martini {
 
 	protected static class Builder {
 
-		protected static final String MESSAGE_KEY = "martini.creation.exception";
-
 		protected Recipe recipe;
 		protected final LinkedHashMap<Step, StepImplementation> index;
 		protected final LinkedHashSet<MartiniGate> gates;
@@ -216,9 +212,8 @@ public class DefaultMartini implements Martini {
 				return DefaultMartiniTag.builder().setPickleTag(tag).build();
 			}
 			catch (Exception e) {
-				MessageSource messageSource = MessageSources.getMessageSource(DefaultMartini.class);
-				throw new MartiniException.Builder().setCause(e)
-					.setMessageSource(messageSource).setKey(MESSAGE_KEY).setArguments(recipe.getId()).build();
+				String id = recipe.getId();
+				throw new MartiniException(e, DefaultMartiniMessages.MARTINI_CREATION_ERROR, id);
 			}
 		}
 	}

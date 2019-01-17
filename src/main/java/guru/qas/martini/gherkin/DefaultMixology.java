@@ -1,5 +1,5 @@
 /*
-Copyright 2017-2018 Penny Rohr Curich
+Copyright 2017-2019 Penny Rohr Curich
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -26,7 +26,6 @@ import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Configurable;
-import org.springframework.context.MessageSource;
 import org.springframework.core.io.Resource;
 
 import com.google.common.collect.ImmutableList;
@@ -46,16 +45,14 @@ import gherkin.ast.ScenarioDefinition;
 import gherkin.pickles.Compiler;
 import gherkin.pickles.Pickle;
 import gherkin.pickles.PickleLocation;
-import guru.qas.martini.MartiniException;
-import guru.qas.martini.i18n.MessageSources;
+import exception.MartiniException;
 
 import static com.google.common.base.Preconditions.*;
+import static guru.qas.martini.gherkin.DefaultMixologyMessages.*;
 
 @SuppressWarnings("WeakerAccess")
 @Configurable
 public class DefaultMixology implements Mixology {
-
-	protected static final String MESSAGE_KEY = "martini.recipe.creation.exception";
 
 	protected final Parser<GherkinDocument> parser;
 	protected final Compiler compiler;
@@ -78,13 +75,7 @@ public class DefaultMixology implements Mixology {
 			return getRecipes(resource, document);
 		}
 		catch (Exception e) {
-			MessageSource messageSource = MessageSources.getMessageSource(DefaultMixology.class);
-			throw new MartiniException.Builder()
-				.setCause(e)
-				.setMessageSource(messageSource)
-				.setKey(MESSAGE_KEY)
-				.setArguments(resource)
-				.build();
+			throw new MartiniException(e, RECIPE_CREATION_ERROR, resource);
 		}
 	}
 

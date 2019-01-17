@@ -30,14 +30,12 @@ import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Configurable;
 import org.springframework.beans.factory.config.ConfigurableListableBeanFactory;
-import org.springframework.context.MessageSource;
 import org.springframework.core.annotation.AnnotationUtils;
 import org.springframework.util.ReflectionUtils;
 
 import com.google.common.collect.Sets;
 
-import guru.qas.martini.MartiniException;
-import guru.qas.martini.i18n.MessageSources;
+import exception.MartiniException;
 import guru.qas.martini.step.DefaultStepImplementation;
 
 import static com.google.common.base.Preconditions.*;
@@ -47,7 +45,6 @@ import static com.google.common.base.Preconditions.*;
 public class MartiniAnnotationCallback<A extends Annotation> implements ReflectionUtils.MethodCallback, InitializingBean {
 
 	protected static final String REGEX_PATTERN_METHOD = "value";
-	protected static final String KEY_ERROR_MESSAGE = "martini.annotation.exception";
 
 	protected final Class<A> annotationClass;
 	protected final AtomicInteger atomicInteger;
@@ -116,13 +113,7 @@ public class MartiniAnnotationCallback<A extends Annotation> implements Reflecti
 	}
 
 	protected MartiniException getMartiniException(Annotation annotation, Exception cause) {
-		MessageSource messageSource = MessageSources.getMessageSource(MartiniAnnotationCallback.class);
-		throw new MartiniException.Builder()
-			.setCause(cause)
-			.setMessageSource(messageSource)
-			.setKey(KEY_ERROR_MESSAGE)
-			.setArguments(annotation)
-			.build();
+		return new MartiniException(cause, MartiniAnnotationCallbackMessages.ANNOTATION_ERROR, annotation);
 	}
 
 	protected void processAnnotationContainer(Method method) {
