@@ -16,12 +16,20 @@ limitations under the License.
 
 package exception;
 
+import java.io.Serializable;
+
 import javax.annotation.Nullable;
 
-public class SkippedException extends MartiniException {
+public class SkippedException extends MartiniException implements Serializable {
+
+	private static final long serialVersionUID = 4421004826644585630L;
 
 	public SkippedException() {
 		super();
+	}
+
+	public SkippedException(String message) {
+		super(message);
 	}
 
 	public SkippedException(Throwable cause, Enum<?> messageKey, @Nullable Object... messageArgs) {

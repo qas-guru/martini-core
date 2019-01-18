@@ -16,6 +16,7 @@ limitations under the License.
 
 package guru.qas.martini.step.exception;
 
+import java.io.Serializable;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
@@ -38,7 +39,9 @@ import static com.google.common.base.Preconditions.*;
 import static guru.qas.martini.step.exception.AmbiguousStepExceptionMessages.*;
 
 @SuppressWarnings("WeakerAccess")
-public class AmbiguousStepException extends MartiniException {
+public class AmbiguousStepException extends MartiniException implements Serializable {
+
+	private static final long serialVersionUID = -2801224092338477492L;
 
 	public AmbiguousStepException(Enum<?> messageKey, @Nullable Object... messageArgs) {
 		super(checkNotNull(messageKey, "null Enum"), messageArgs);

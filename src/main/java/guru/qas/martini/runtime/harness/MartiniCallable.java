@@ -361,7 +361,13 @@ public class MartiniCallable implements Callable<MartiniResult>, InitializingBea
 			return method.invoke(bean, arguments);
 		}
 		catch (InvocationTargetException e) {
-			throw new MartiniException(e.getCause(), EXECUTION_EXCEPTION);
+			Throwable cause = e.getCause();
+			if (MartiniException.class.isInstance(cause)) {
+				throw MartiniException.class.cast(cause);
+			}
+			else {
+				throw new MartiniException(cause, EXECUTION_EXCEPTION);
+			}
 		}
 		catch (Exception e) {
 			throw new MartiniException(e, EXECUTION_EXCEPTION);

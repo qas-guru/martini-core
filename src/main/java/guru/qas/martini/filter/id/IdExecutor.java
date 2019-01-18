@@ -20,7 +20,6 @@ import guru.qas.martini.Martini;
 
 import static com.google.common.base.Preconditions.*;
 
-@SuppressWarnings("WeakerAccess")
 public class IdExecutor extends AbstractIdentifierExecutor {
 
 	@Override

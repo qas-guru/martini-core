@@ -10,7 +10,7 @@
 	</properties>
 
 	<body>
-		<release version="4.3" date="2019-01-17" description="Release 4.3">
+		<release version="5.0" date="2019-01-18" description="Release 5.0">
 			<action dev="pcurich" type="remove">
 				Removed MessageSources.
 			</action>

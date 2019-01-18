@@ -16,47 +16,18 @@ limitations under the License.
 
 package exception;
 
+import java.io.Serializable;
+
 import javax.annotation.Nullable;
 
 import guru.qas.martini.Messages;
 
 import static com.google.common.base.Preconditions.*;
 
-/**
- * {@inheritDoc}
- */
 @SuppressWarnings({"unused"})
-public class MartiniException extends RuntimeException {
+public class MartiniException extends RuntimeException implements Serializable {
 
-//	/**
-//	 * {@inheritDoc}
-//	 * <p>
-//	 * deprecated, use {@link MartiniException.Builder new guru.qas.martini.MartiniException.Builder()}
-//	 */
-//	@Deprecated
-//	public MartiniException() {
-//		super();
-//	}
-//
-//	/**
-//	 * {@inheritDoc}
-//	 * <p>
-//	 * deprecated, use {@link MartiniException.Builder new guru.qas.martini.MartiniException.Builder()}
-//	 */
-//	@Deprecated
-//	public MartiniException(String message) {
-//		super(message);
-//	}
-//
-//	/**
-//	 * {@inheritDoc}
-//	 * <p>
-//	 * deprecated, use {@link MartiniException.Builder new guru.qas.martini.MartiniException.Builder()}
-//	 */
-//	@Deprecated
-//	public MartiniException(String message, Throwable cause) {
-//		super(message, cause);
-//	}
+	private static final long serialVersionUID = -2855987641286638769L;
 
 	public MartiniException() {
 		super();
@@ -75,55 +46,4 @@ public class MartiniException extends RuntimeException {
 	public MartiniException(Enum<?> messageKey, @Nullable Object... messageArgs) {
 		super(Messages.getMessage(checkNotNull(messageKey, "null Enum"), messageArgs));
 	}
-
-//	@Deprecated
-//	@SuppressWarnings("unused")
-//	public static class Builder {
-//
-//		protected MessageSource messageSource;
-//		protected Locale locale;
-//		protected String key;
-//		protected Object[] arguments;
-//		protected Throwable cause;
-//
-//		public Builder() {
-//			locale = Locale.getDefault();
-//		}
-//
-//		public Builder setMessageSource(MessageSource s) {
-//			this.messageSource = s;
-//			return this;
-//		}
-//
-//		public Builder setLocale(Locale l) {
-//			this.locale = null == l ? Locale.getDefault() : l;
-//			return this;
-//		}
-//
-//		public Builder setKey(String s) {
-//			this.key = s;
-//			return this;
-//		}
-//
-//		public Builder setArguments(Object... o) {
-//			this.arguments = o;
-//			return this;
-//		}
-//
-//		public Builder setCause(Throwable t) {
-//			this.cause = t;
-//			return this;
-//		}
-//
-//		public MartiniException build() {
-//			String message = getMessage();
-//			return null == cause ? new MartiniException(message) : new MartiniException(message, cause);
-//		}
-//
-//		protected String getMessage() {
-//			checkState(null != messageSource, "MessageSource not set");
-//			checkState(null != key, "String key not set");
-//			return messageSource.getMessage(key, arguments, key, locale);
-//		}
-//	}
 }

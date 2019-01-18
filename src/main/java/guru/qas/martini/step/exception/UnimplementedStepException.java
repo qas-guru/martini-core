@@ -16,6 +16,8 @@ limitations under the License.
 
 package guru.qas.martini.step.exception;
 
+import java.io.Serializable;
+
 import javax.annotation.Nullable;
 
 import org.springframework.core.io.Resource;
@@ -30,7 +32,9 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import static guru.qas.martini.step.exception.UnimplementedStepExceptionMessages.*;
 
 @SuppressWarnings("WeakerAccess")
-public class UnimplementedStepException extends SkippedException {
+public class UnimplementedStepException extends SkippedException implements Serializable {
+
+	private static final long serialVersionUID = 2247955629103231508L;
 
 	protected UnimplementedStepException(Enum<?> messageKey, @Nullable Object... messageArgs) {
 		super(checkNotNull(messageKey, "null Enum"), messageArgs);
