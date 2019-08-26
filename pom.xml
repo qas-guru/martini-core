@@ -110,6 +110,9 @@
 					<execution>
 						<id>sign-artifacts</id>
 						<phase>verify</phase>
+						<configuration>
+							<defaultKeyring>false</defaultKeyring>
+						</configuration>
 						<goals>
 							<goal>sign</goal>
 						</goals>
@@ -153,7 +156,7 @@
 		<dependency>
 			<groupId>com.google.guava</groupId>
 			<artifactId>guava</artifactId>
-			<version>27.0.1-jre</version>
+			<version>28.0-jre</version>
 		</dependency>
 
 		<dependency>
