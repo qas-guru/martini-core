@@ -10,6 +10,11 @@
 	</properties>
 
 	<body>
+		<release version="6.0" date="2019-08-26" description="Release 6.0">
+			<action dev="pcurich" type="update">
+				Updated Java version to 12.
+			</action>
+		</release>
 		<release version="5.0" date="2019-01-18" description="Release 5.0">
 			<action dev="pcurich" type="remove">
 				Removed MessageSources.

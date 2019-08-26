@@ -6,7 +6,7 @@
 
 	<groupId>guru.qas</groupId>
 	<artifactId>martini-core</artifactId>
-	<version>5.0.1-SNAPSHOT</version>
+	<version>6.0-SNAPSHOT</version>
 	<packaging>jar</packaging>
 
 	<name>${project.groupId}:${project.artifactId}</name>
@@ -38,9 +38,9 @@
 
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-		<maven.compiler.source>11</maven.compiler.source>
-		<maven.compiler.target>11</maven.compiler.target>
-		<maven.compiler.release>11</maven.compiler.release>
+		<maven.compiler.source>12</maven.compiler.source>
+		<maven.compiler.target>12</maven.compiler.target>
+		<maven.compiler.release>12</maven.compiler.release>
 		<spring.version>5.1.4.RELEASE</spring.version>
 		<slf4j.version>1.7.25</slf4j.version>
 	</properties>
