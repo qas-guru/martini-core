@@ -90,8 +90,6 @@
 				<configuration>
 					<failOnError>true</failOnError>
 					<additionalOptions>-html5</additionalOptions>
-					<!--Excluded for causing havoc with JDK10 Javadoc -->
-					<sourceFileExcludes>guru/qas/martini/annotation/MartiniAnnotationCallback.java</sourceFileExcludes>
 				</configuration>
 				<executions>
 					<execution>
