@@ -10,6 +10,13 @@
 	</properties>
 
 	<body>
+		<release version="7.0-JDK13" date="2020-03-13" description="Release 7.0">
+			<action dev="pcurich" type="update">
+				Merged fixes from version 5.0.
+				Updated Java to 13.
+				Updated dependency versions.
+			</action>
+		</release>
 		<release version="6.0-JDK12" date="2019-08-26" description="Release 6.0">
 			<action dev="pcurich" type="update">
 				Updated Java version to 12.
